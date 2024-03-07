@@ -9,6 +9,14 @@ tags:
     - electronics
 isPublish: true
 ---
+I always wanted to learn elecronics, and I tried some old ESP32's, but the experience was awful, I wasn't familiar with the code and learning both electronics and a new programming language was boring...
+
+One day Raspberry anounced the RPI pico W, to my surprise it was programmed in micropython, I was very excited... bought 1... I tried a few things, lighting a LED felt like too much power, I'm used to the magical powers of code, but interacting with the physical world through code hits different, then I bought 10 more...
+
+Then I started buying sensors, lights, motors, pumps, from all kinds, I kid you not, I was so excited, and I loved every bit of it, minus the tedious aspect of soldering, using breadboards and so on, which felt like a drag in my quick adhd fueled iteration process, this is when I met qwiic, originally desgined from sparkfun, but widely used on adafruit products, of course I bought tons of these, and I loved it.
+
+This is when I realized that the pico deserved to have qwiic and a reset button, those were the things that I constantly missed... this is when I reached out to [Simone](https://www.duppa.net), and we created:
+
 ![soldered without pins](https://github.com/adriangalilea/pico_qwiic_addon/assets/90320947/621e9f45-daf0-4ff9-8bf1-081d0815dfab)
 Plug, Reset, and Prototype Effortlessly.
 
