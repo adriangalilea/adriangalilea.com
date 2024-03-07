@@ -35,7 +35,7 @@ const projects: Project[] = [
     techs: [],
     link: "https://tempo-eta-two.vercel.app/",
     isActive: true,
-  }
+  },
   {
     title: "e-id",
     techs: ["nextjs", "full-stack", "wasm"],
