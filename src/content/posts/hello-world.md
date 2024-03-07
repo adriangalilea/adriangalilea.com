@@ -34,3 +34,5 @@ isPublish: true
 - [ ] feat: tags
 - [ ] feat: AI self
 - [ ] style: improve the timeline
+- [ ] feat: subscriptions
+- [ ] feat: rss
