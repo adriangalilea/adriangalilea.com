@@ -18,6 +18,11 @@ const projects: Project[] = [
     link: "https://t.me/kai_helper_bot",
   },
   {
+    title: "pico qwiicReset",
+    techs: ["electronics", "design"],
+    link: "/posts/pico-qwiic-reset",
+  },
+  {
     title: "portfolio",
     techs: ["astro"],
     link: "/",
