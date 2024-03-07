@@ -17,7 +17,7 @@ Then I started buying sensors, lights, motors, pumps, from all kinds, I kid you 
 
 This is when I realized that the pico deserved to have qwiic and a reset button, those were the things that I constantly missed... this is when I reached out to [Simone](https://www.duppa.net), and we created:
 
-![soldered without pins](https://github.com/adriangalilea/pico_qwiic_addon/assets/90320947/621e9f45-daf0-4ff9-8bf1-081d0815dfab)
+![soldered without pins](/pico-qwiic-reset.webp)
 Plug, Reset, and Prototype Effortlessly.
 
 ## Pico Pain Points
