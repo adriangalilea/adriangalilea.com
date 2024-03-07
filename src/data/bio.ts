@@ -13,7 +13,7 @@ type Presentation = {
 const presentation: Presentation = {
   title: "ADRIAN GALILEA",
   description:
-    "High-school dropout. Entrepenour. Creative. *₿*itcoin believer(since 2012).",
+    "high-school dropout. entrepenour. creative. *₿*itcoin believer(since 2012).",
   socials: [
     {
       label: "e-mail",

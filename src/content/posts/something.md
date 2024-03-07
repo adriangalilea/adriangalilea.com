@@ -1,7 +1,7 @@
 ---
-title: "Hello World"
+title: "hello world"
 publishedAt: 2024-03-07
-description: "Just testing out my new Astro site"
+description: "just testing out my new astro site"
 slug: "hello-world"
 isPublish: true
 ---
