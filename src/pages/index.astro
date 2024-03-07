@@ -9,7 +9,7 @@ import ProjectCard from "@/components/ProjectCard.astro";
 import Link from "@/components/shared/Link.astro";
 import convertAsteriskToStrongTag from "@/utils/convertAsteriskToStrongTag";
 
-import presentation from "@/data/presentation";
+import presentation from "@/data/bio";
 import projects from "@/data/projects";
 
 const posts = (await getCollection("posts")).sort(function (first, second) {
@@ -22,38 +22,20 @@ const posts = (await getCollection("posts")).sort(function (first, second) {
     <article
       class="flex flex-col gap-8 md:flex-row-reverse md:justify-end md:gap-12"
     >
-      {
-        presentation.profile && (
-          <Image
-            src={presentation.profile}
-            class="w-1/4 self-center rounded-full"
-            alt="Your Profile"
-            width="200"
-            height="200"
-          />
-        )
-      }
-
       <div class="flex flex-col gap-8">
-        <h1 class="text-3xl text-neutral-100">
-          {presentation.title}
-        </h1>
-
         <h2
           class="w-auto max-w-[60ch] leading-6"
           set:html={convertAsteriskToStrongTag(presentation.description)}
         />
-
-        <SocialLinks />
       </div>
     </article>
 
     <article class="flex flex-col gap-8">
       <header class="flex w-full flex-row justify-between gap-2">
-        <h3 class="text-lg text-neutral-100">Latest posts</h3>
-        <Link href="/posts" label="See all posts" isUnderline target="_self" />
+        <h3 class="text-lg text-neutral-100">posts</h3>
+        <Link href="/posts" label="see all posts" isUnderline target="_self" />
       </header>
-      {posts.length === 0 && <p>Soon, stay connected 👀...</p>}
+      {posts.length === 0 && <p>soon, stay connected 👀...</p>}
 
       <section class="flex flex-col gap-4 md:flex-row md:flex-wrap">
         {
@@ -75,10 +57,10 @@ const posts = (await getCollection("posts")).sort(function (first, second) {
     <article class="flex flex-col gap-8">
       <header class="flex w-full flex-row justify-between gap-2">
         <h3 class="text-lg text-neutral-100">
-          Selected projects ({projects.length})
+          projects <span class="text-neutral-400">{projects.length}<span/>
         </h3>
       </header>
-      {projects.length === 0 && <p>Oops, I must work^^^^^</p>}
+      {projects.length === 0 && <p>pops, I must work^^^^^</p>}
 
       <section class="flex flex-col gap-4">
         {
@@ -87,19 +69,6 @@ const posts = (await getCollection("posts")).sort(function (first, second) {
         }
       </section>
     </article>
-
-    <article class="flex flex-col gap-8">
-      <header class="flex w-full flex-row justify-between gap-2">
-        <h3 class="text-lg text-neutral-100">Get in touch</h3>
-      </header>
-      <p>
-        Email me at <Link
-          href={`mailto:${presentation.mail}`}
-          label={presentation.mail}
-        /> or follow me via my social links.
-      </p>
-
-      <SocialLinks />
-    </article>
+    <SocialLinks />
   </main>
 </Layout>

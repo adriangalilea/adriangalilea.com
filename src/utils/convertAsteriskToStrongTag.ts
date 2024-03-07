@@ -1,4 +1,4 @@
-import theme from "@/data/theme";
+import theme from "@/styles/theme";
 import { MAP_COLOR_VARIANT_TO_TEXT } from "./mapVariants";
 
 export default function convertAsteriskToStrongTag(str: string) {
