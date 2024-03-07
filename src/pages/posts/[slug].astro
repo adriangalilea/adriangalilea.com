@@ -28,7 +28,7 @@ const { Content } = await post.render();
         {post.data.title}
       </h1>
       <p>
-        {formatDate(post.data.date)}
+        {formatDate(post.data.publishedAt)}
       </p>
       <p>{post.data.description}</p>
       <Content />
