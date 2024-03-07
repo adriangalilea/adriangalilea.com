@@ -17,8 +17,13 @@ const formatTechs = (values: string[]) =>
           <p class="text-neutral-100">{title}</p>
           <p>{formatTechs(techs)}</p>
         </div>
-
-        <p class="w-fit rounded-md bg-neutral-900 px-4 py-1">Soon</p>
+        <div class="flex flex-row items-center gap-2">
+          <p class="w-fit rounded-md bg-neutral-900 px-4 py-1">Soon</p>
+          <span class="relative flex h-3 w-3">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+            <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500" />
+          </span>
+        </div>
       </div>
     )
   }

@@ -25,7 +25,16 @@ const { title, publishedAt, description, slug } = Astro.props;
         {description}
       </p>
     </div>
+
     <div class="flex items-center gap-4">
+      {
+        publishedAt > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) && (
+          <span class="relative flex h-3 w-3">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+            <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500" />
+          </span>
+        )
+      }
       <svg
         width="18"
         height="18"
