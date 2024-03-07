@@ -38,7 +38,7 @@ const posts = (await getCollection("blog")).sort(function (first, second) {
         {
           posts.length !== 0 &&
             posts
-              .slice(0, 2)
+              .slice(0, 4)
               .map((post) => (
                 <PostCard
                   publishedAt={post.data.publishedAt}
