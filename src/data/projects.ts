@@ -28,19 +28,16 @@ const projects: Project[] = [
     title: "portfolio",
     techs: ["astro"],
     link: "https://github.com/adriangalilea/adriangalilea.com",
-    isActive: true,
   },
   {
     title: "tempo",
     techs: [],
     link: "https://tempo-eta-two.vercel.app/",
-    isActive: true,
   },
   {
     title: "e-id",
     techs: ["nextjs", "full-stack", "wasm"],
     link: "https://e-id.to",
-    isActive: true,
   }
 ];
 
