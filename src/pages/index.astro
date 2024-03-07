@@ -17,7 +17,7 @@ const posts = (await getCollection("blog")).sort(function (first, second) {
 ---
 
 <Layout>
-  <main class="flex flex-col gap-20 min-w-full w-full">
+  <main class="flex flex-col gap-12 min-w-full w-full">
     <article
       class="flex flex-col gap-8 md:flex-row-reverse md:justify-end md:gap-12 min-w-full prose prose-zinc dark:prose-invert"
     >
@@ -27,9 +27,11 @@ const posts = (await getCollection("blog")).sort(function (first, second) {
       />
     </article>
 
-    <article class="flex flex-col gap-8">
+    <section class="flex flex-col">
       <header class="flex w-full flex-row justify-between gap-2">
-        <h3 class="text-lg">posts</h3>
+        <h3 class="text-lg mb-2">
+          posts<span class="ml-2 opacity-50">{posts.length}</span>
+        </h3>
         <Link href="/blog" label="see all posts" isUnderline target="_self" />
       </header>
       {posts.length === 0 && <p>soon, stay connected 👀...</p>}
@@ -49,14 +51,12 @@ const posts = (await getCollection("blog")).sort(function (first, second) {
               ))
         }
       </section>
-    </article>
+    </section>
 
-    <article class="flex flex-col gap-8">
-      <header class="flex w-full flex-col justify-between gap-2">
-        <h3 class="text-lg">
-          projects <span class="text-neutral-400"
-            >{projects.length}<span></span>
-          </span>
+    <section>
+      <header>
+        <h3 class="text-lg mb-2">
+          projects <span class="ml-2 opacity-50">{projects.length}</span>
         </h3>
         {projects.length === 0 && <p>pops, I must work^^^^^</p>}
 
@@ -67,13 +67,13 @@ const posts = (await getCollection("blog")).sort(function (first, second) {
           }
         </section>
       </header>
-      <SocialLinks />
-      <link
-        rel="alternate"
-        type="application/rss+xml"
-        title="Your Site's Title"
-        href={`${Astro.site}rss.xml`}
-      />
-    </article>
+    </section>
+    <SocialLinks />
+    <link
+      rel="alternate"
+      type="application/rss+xml"
+      title="Your Site's Title"
+      href={`${Astro.site}rss.xml`}
+    />
   </main>
 </Layout>
