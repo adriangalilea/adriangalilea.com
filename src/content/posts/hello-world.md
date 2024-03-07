@@ -11,16 +11,16 @@ isPublish: true
 ---
 ## TO-WRITE
 - [ ] write: project tempo
-- [ ] write: self.fm 
+- [ ] write: project self.fm 
   - [ ] why
   - [ ] techincal challenges
-- [ ] write: e-id
-- [ ] write: 12v projects
+- [ ] write: project e-id
+- [ ] write: projects 12v
   - [ ] budget product photography light
   - [ ] vetropieno light
   - [ ] battery
-- [ ] write: pico qwiicReset
-- [ ] write: apple ring
+- [ ] write: project pico qwiicReset
+- [ ] write: vision apple ring
 - [ ] write: quantum physics: the academic version of the perpetual motion machine (where is the battery hidden?)
 - [ ] write: /uses https://uses.tech/
 
