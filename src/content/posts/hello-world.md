@@ -19,7 +19,7 @@ isPublish: true
   - [ ] budget product photography light
   - [ ] vetropieno light
   - [ ] battery
-- [x] write: project pico qwiicReset
+- [x] ~~write: project pico qwiicReset~~
 - [ ] write: vision apple ring
 - [ ] write: quantum physics: the academic version of the perpetual motion machine (where is the battery hidden?)
 - [ ] write: /uses https://uses.tech/
