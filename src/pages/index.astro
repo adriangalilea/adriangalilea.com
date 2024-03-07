@@ -17,9 +17,9 @@ const posts = (await getCollection("posts")).sort(function (first, second) {
 ---
 
 <Layout>
-  <main class="flex flex-col gap-20">
+  <main class="flex flex-col gap-20 min-w-full w-full">
     <article
-      class="flex flex-col gap-8 md:flex-row-reverse md:justify-end md:gap-12"
+      class="flex flex-col gap-8 md:flex-row-reverse md:justify-end md:gap-12 min-w-full"
     >
       <div class="flex flex-col gap-8">
         <h2
@@ -36,7 +36,7 @@ const posts = (await getCollection("posts")).sort(function (first, second) {
       </header>
       {posts.length === 0 && <p>soon, stay connected 👀...</p>}
 
-      <section class="flex flex-col gap-4 md:flex-row md:flex-wrap">
+      <section class="flex flex-col gap-4 md:flex-wrap">
         {
           posts.length !== 0 &&
             posts
