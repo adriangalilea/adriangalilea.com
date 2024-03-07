@@ -36,6 +36,12 @@ const projects: Project[] = [
     link: "https://tempo-eta-two.vercel.app/",
     isActive: true,
   }
+  {
+    title: "e-id",
+    techs: ["nextjs", "full-stack", "wasm"],
+    link: "https://e-id.to",
+    isActive: true,
+  }
 ];
 
 export default projects;
