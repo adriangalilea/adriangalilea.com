@@ -20,7 +20,7 @@ const projects: Project[] = [
   {
     title: "pico qwiicReset",
     techs: ["electronics", "design"],
-    link: "/posts/pico-qwiic-reset",
+    link: "/blog/pico-qwiic-reset",
   },
   {
     title: "portfolio",

@@ -27,6 +27,10 @@ const presentation: Presentation = {
       label: "github",
       link: "https://github.com/adriangalilea",
     },
+    {
+      label: "rss",
+      link: "https://adriangalilea.com/rss.xml",
+    }
   ],
 };
 

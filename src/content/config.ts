@@ -11,4 +11,4 @@ const postsCollection = defineCollection({
   }),
 });
 
-export const collections = { posts: postsCollection };
+export const collections = { blog: postsCollection };

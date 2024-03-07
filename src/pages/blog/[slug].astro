@@ -5,7 +5,7 @@ import Layout from "@/layouts/Layout.astro";
 import formatDate from "@/utils/formatDate";
 
 export async function getStaticPaths() {
-  const posts = await getCollection("posts");
+  const posts = await getCollection("blog");
 
   return posts.map((post) => ({
     params: { slug: post.slug },
@@ -14,7 +14,7 @@ export async function getStaticPaths() {
 }
 
 type Props = {
-  post: CollectionEntry<"posts">;
+  post: CollectionEntry<"blog">;
 };
 
 const { post } = Astro.props;
