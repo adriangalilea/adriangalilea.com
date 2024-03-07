@@ -25,7 +25,7 @@ const projects: Project[] = [
   {
     title: "portfolio",
     techs: ["astro"],
-    link: "/",
+    link: "https://github.com/adriangalilea/adriangalilea.com",
   },
 ];
 
