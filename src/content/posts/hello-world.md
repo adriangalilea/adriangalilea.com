@@ -1,7 +1,7 @@
 ---
 title: "hello world"
-publishedAt: 2024-03-07
-updatedAt: 2024-03-07
+publishedAt: 2024-03-06
+updatedAt: 2024-03-06
 description: "public to-do for this site."
 slug: "hello-world"
 tags:
