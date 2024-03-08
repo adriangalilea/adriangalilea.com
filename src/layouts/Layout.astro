@@ -15,10 +15,10 @@ const headTags = Astro.props;
 <html lang="en">
   <SEOTags {...headTags} />
   <body
-    class="mx-auto flex min-h-screen md:max-w-[872px] flex-col dark:bg-neutral-950 px-10 py-8 text-sm dark:text-neutral-400 antialiased"
+    class="mx-auto flex min-h-screen md:max-w-[872px] flex-col dark:bg-neutral-950 px-4 py-2 md:px-8 md:py-4 text-sm dark:text-neutral-400 antialiased"
   >
     <Header />
-    <div class="mx-4 my-8">
+    <div class="my-4 md:my-8">
       <slot />
     </div>
     <Footer />

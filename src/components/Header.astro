@@ -6,9 +6,9 @@ const pathname = removeTrailingSlash(Astro.url.pathname);
 ---
 
 <header
-  class="z-40 flex w-full flex-col gap-2 items-center md:flex-row md:justify-between pb-2 border-b border-neutral-500"
+  class="z-40 flex w-full gap-2 items-center justify-between pb-2 border-b border-neutral-500"
 >
-  <h1 class="prose prose-zinc dark:prose-invert text-3xl">
+  <h1 class="prose prose-zinc dark:prose-invert md:text-3xl">
     <a href="/" class="no-underline font-extrabold dark:text-neutral-300">
       {presentation.title}
     </a>
