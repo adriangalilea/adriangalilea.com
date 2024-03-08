@@ -2,7 +2,7 @@
 title: "pico qwiicReset"
 publishedAt: 2024-03-07
 updatedAt: 2024-03-07
-description: "qwiic and reset button for the rpi pico w"
+description: "qwiic and reset button for the rpi pico w."
 slug: "pico-qwiic-reset"
 tags:
     - design
