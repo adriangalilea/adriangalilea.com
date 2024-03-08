@@ -1,3 +1,53 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+:root {
+    --surface-dim: 0, 0%, 100%;
+    --zinc-500: 0, 0%, 50%;
+    --zinc-300: 0, 0%, 30%;
+    --zinc-200: 0, 0%, 20%;
+    --onsurface-default: 0, 0%, 0%;
+}
+
+ul.contains-task-list {
+  list-style-type: none;
+  padding-left: 0;
+}
+
+ul.contains-task-list .task-list-item {
+  display: flex;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+ul.contains-task-list .task-list-item input[type="checkbox"] {
+  -webkit-appearance: none;
+  appearance: none;
+  background-color: hsl(var(--surface-dim));
+  border: 2px solid hsl(var(--zinc-500));
+  cursor: default;
+  margin-top: 0.3em;
+  margin-right: 0.5em;
+  width: 1.2em;
+  height: 1.2em;
+  border-radius: 0.25rem;
+}
+
+ul.contains-task-list .task-list-item > span {
+  flex: 1;
+  min-width: 0;
+}
+
+ul.contains-task-list .task-list-item ul,
+ul.contains-task-list .task-list-item ol {
+  list-style-type: disc;
+  padding-left: 2em;
+  margin-top: 0.5em;
+  width: 100%; /* Ensure nested lists occupy the full width */
+}
+
+ul.contains-task-list .task-list-item ul,
+ul.contains-task-list .task-list-item ol {
+  margin-left: 1.7em; /* Align nested lists under the text, not the checkbox */
+}
