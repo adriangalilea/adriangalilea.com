@@ -6,7 +6,7 @@ import type { HeadTags } from "@/utils/types/HeadTags";
 
 type Props = HeadTags;
 
-const { title, description, noindex, og } = Astro.props;
+const { title, description, noindex, og, imgLink } = Astro.props;
 
 const DEFAULT_TITLE_PAGE = "Adrian Galilea";
 const DEFAULT_DESCRIPTION_PAGE =
@@ -16,7 +16,7 @@ const DEFAULT_URL_SITE = SITE_URL;
 const openGraph = {
   title: title || og?.title || DEFAULT_TITLE_PAGE,
   type: og?.type || "website",
-  image: og?.image || "/opengraph-image.png",
+  image: imgLink || og?.image || "/opengraph-image.png",
   alt: og?.alt || "Adrian Galilea site image",
   url: DEFAULT_URL_SITE,
   description: og?.description || DEFAULT_DESCRIPTION_PAGE,
