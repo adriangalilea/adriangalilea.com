@@ -3,14 +3,14 @@ import { SEO } from "astro-seo";
 import { AstroFont } from "astro-font";
 import { SITE_URL } from "@/data/site";
 import type { HeadTags } from "@/utils/types/HeadTags";
+import { ViewTransitions } from "astro:transitions";
 
 type Props = HeadTags;
 
 const { title, description, noindex, og, imgLink } = Astro.props;
 
 const DEFAULT_TITLE_PAGE = "Adrian Galilea";
-const DEFAULT_DESCRIPTION_PAGE =
-  "Creative and soloprenour.";
+const DEFAULT_DESCRIPTION_PAGE = "Creative and soloprenour.";
 const DEFAULT_URL_SITE = SITE_URL;
 
 const openGraph = {
@@ -24,6 +24,7 @@ const openGraph = {
 ---
 
 <head>
+  <ViewTransitions />
   <SEO
     charset="UTF-8"
     title={title || DEFAULT_TITLE_PAGE}
