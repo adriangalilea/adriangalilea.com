@@ -1,0 +1,13 @@
+---
+import SocialLinks from "@/components/SocialLinks.astro";
+---
+
+<div class="border-t border-neutral-500 pt-2">
+  <SocialLinks />
+  <link
+    rel="alternate"
+    type="application/rss+xml"
+    title="Your Site's Title"
+    href={`${Astro.site}rss.xml`}
+  />
+</div>
