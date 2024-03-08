@@ -1,0 +1,36 @@
+---
+// Import dayjs and its plugins
+import dayjs from "dayjs";
+import relativeTime from "dayjs/plugin/relativeTime";
+import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
+import LocalizedFormat from "dayjs/plugin/localizedFormat";
+
+// Extend dayjs with the plugins
+dayjs.extend(LocalizedFormat);
+dayjs.extend(relativeTime);
+dayjs.extend(utc);
+dayjs.extend(timezone);
+
+type Props = {
+  compare: Date;
+  type: "edited" | "published";
+};
+
+const { compare, type } = Astro.props;
+
+const now = dayjs();
+const dateDayjs = dayjs(compare);
+const isToday = dateDayjs.isSame(now, "day");
+const isoString = dateDayjs.toISOString();
+const localeString = dateDayjs.format("LLLL");
+
+const formatBasedOnDay = isToday
+  ? dateDayjs.fromNow()
+  : dateDayjs.format("MMM D");
+---
+
+<time datetime={isoString} title={type + " " + localeString} class="text-sm">
+  {type === "edited" ? "✎" : ""}
+  {formatBasedOnDay}
+</time>
