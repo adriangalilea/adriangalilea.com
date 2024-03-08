@@ -38,10 +38,13 @@ const ogImageUrl = `${Astro.site?.origin}/og/${post.slug}.png`;
         <p class="text-balance">{post.data.description}</p>
         <div class="flex justify-between opacity-80">
           <HumanDate compare={post.data.publishedAt} type="published" />
-          <HumanDate compare={post.data.editedAt} type="edited" />
+          {
+            post.data.editedAt && (
+              <HumanDate compare={post.data.editedAt} type="edited" />
+            )
+          }
         </div>
       </div>
-
       <Content />
     </article>
   </main>

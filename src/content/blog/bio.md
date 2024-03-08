@@ -1,7 +1,6 @@
 ---
 title: "bio"
 publishedAt: 2024-03-06
-editedAt: 2024-03-06
 description: "some bits @ my.self."
 slug: "bio"
 tags:
