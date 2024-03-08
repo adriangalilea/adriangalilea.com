@@ -30,7 +30,11 @@ const formatBasedOnDay = isToday
   : dateDayjs.format("MMM D");
 ---
 
-<time datetime={isoString} title={type + " " + localeString} class="text-sm">
+<time
+  datetime={isoString}
+  title={type + " " + localeString}
+  class="text-sm underline underline-offset-2 decoration-transparent hover:decoration-neutral-500 transition-all ease-in-out duration-300"
+>
   {type === "edited" ? "✎" : ""}
   {formatBasedOnDay}
 </time>
