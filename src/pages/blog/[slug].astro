@@ -20,7 +20,7 @@ type Props = {
 const { post } = Astro.props;
 const { Content } = await post.render();
 
-const ogImageUrl = `${Astro.site.origin}/og/${post.slug}.png`;
+const ogImageUrl = `${Astro.site?.origin}/og/${post.slug}.png`;
 ---
 
 <Layout

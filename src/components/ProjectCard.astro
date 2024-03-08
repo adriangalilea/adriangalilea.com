@@ -4,9 +4,7 @@ import ProjectCardContent from "@/components/ProjectCardContent.astro";
 
 type Props = Project;
 
-const { title, techs, link, isComingSoon, isActive } = Astro.props;
-const formatTechs = (values: string[]) =>
-  values.toString().replaceAll(",", " • ");
+const { link, isComingSoon } = Astro.props;
 ---
 
 <>
