@@ -8,6 +8,7 @@ import { SITE_URL } from "./src/data/site";
 // https://astro.build/config
 export default defineConfig({
   integrations: [tailwind(), sitemap(), robotsTxt()],
+  prefetch: true,
   site: SITE_URL,
   markdown: {
     syntaxHighlight: "shiki",

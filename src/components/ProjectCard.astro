@@ -23,6 +23,7 @@ const { link, isComingSoon } = Astro.props;
         href={link}
         target="_blank"
         rel="noreferrer"
+        data-astro-prefetch
       >
         <ProjectCardContent {...Astro.props} />
       </a>
