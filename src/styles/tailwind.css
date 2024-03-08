@@ -55,7 +55,3 @@ ul.contains-task-list .task-list-item ol {
   width: 100%;
 }
 
-ul.contains-task-list .task-list-item ul,
-ul.contains-task-list .task-list-item ol {
-  margin-left: 1.7em;
-}
