@@ -29,7 +29,7 @@ const ogImageUrl = `${Astro.site?.origin}/og/${post.slug}.png`;
   description={post.data.description}
   imgLink={ogImageUrl}
 >
-  <main class="flex-col gap-4">
+  <main class="flex-col gap-4 max-w-full">
     <article class="prose prose-slate lg:prose-lg xl:prose-xl dark:prose-invert text-pretty">
       <div class="border-b border-neutral-300 dark:border-neutral-700">
         <h1 class="text-balance font-light !mb-0">
