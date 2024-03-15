@@ -11,7 +11,7 @@ tags:
     - ADHD
 isPublish: true
 ---
-It was a Friday afternoon spending a week melting my brain reading Tip-Tap and ProseMirror docs non-stop to create the best self.fm editor. I was exhausted and my ADHD demon whispered...
+It was a Friday afternoon after spending a week melting my brain reading Tip-Tap and ProseMirror docs non-stop to create the best self.fm editor. I was exhausted and my ADHD demon whispered...
 
 > Can you create a link aggregator that stores no data?
 
