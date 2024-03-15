@@ -59,14 +59,36 @@ UX:
 3. |> compress it using brotli
 4. |> base64-url encoding so it's url-safe
 
-This is an example URL output:
+input:
+```
+{
+    "version": "1",
+    "name": "Adrian Galilea",
+    "bio": "Be a poem.",
+    "personalSite": "https://adriangalilea.com",
+    "email": "adriangalilea@gmail.com",
+    "telegramHandle": "adriangalilea",
+    "twitterHandle": "adrigalilea",
+    "instagramHandle": "",
+    "facebookHandle": "",
+    "linkedInHandle": "",
+    "other": ""
+}
+```
+
+output:
+
+`G2wAYETdluo5XTCvqMWSB55zuCo65YC52oI6y40PRveUFZMlKA_tP1rR1w8emcxII4YJ5V3bBc-ZlpNx8NyN6NB8M7KQNaEo`
+
+URL:
 
 [👤️️.to/G2wAYETdluo5XTCvqMWSB55zuCo65YC52oI6y40PRveUFZMlKA_tP1rR1w8emcxII4YJ5V3bBc-ZlpNx8NyN6NB8M7KQNaEo](https://e-id.to/ninja/G2wAYETdluo5XTCvqMWSB55zuCo65YC52oI6y40PRveUFZMlKA_tP1rR1w8emcxII4YJ5V3bBc-ZlpNx8NyN6NB8M7KQNaEo
 )
 
-All in all I'm happy with the result, but I'm sure this does not fit with the plans I have for the future of e-ID.
+All in all I'm happy with the result as I proved that it's feasible to store quite a bunch of data.
 
-After all I want to provide readability:
+
+But I'm sure this does not fit with the plans I have for the future of e-ID. After all I want to provide readability:
 - [e-id.to/adrian](https://e-id.to/adrian)
 - [👤️.to/adrian](https://e-id.to/adrian)
 
