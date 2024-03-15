@@ -100,12 +100,13 @@ Style points:
 - dark/light mode
 
 
-But I'm sure this does not fit with the plans I have for the future of e-ID. After all I want to provide readability:
-- [e-id.to/adrian](https://e-id.to/adrian)
-- [👤️.to/adrian](https://e-id.to/adrian)
+Either way this does not fit with the vision I have for e-ID
+- I want to provide readability, and clean URL's
+  - [e-id.to/adrian](https://e-id.to/adrian)
+  - [👤️.to/adrian](https://e-id.to/adrian)
+- I want to allow statitic site generation, so it feels snappy.
 
-
-So I archieved it under the /ninja/ path and preserved the code on the [open sourced repo](https://github.com/adriangalilea/e-id/ninja)
+So I archieved all of this under the /ninja/ path and preserved the code on the [open sourced repo](https://github.com/adriangalilea/e-id/ninja)
 
 Shootout to [teito](https://www.teitoklien.com/)
 
