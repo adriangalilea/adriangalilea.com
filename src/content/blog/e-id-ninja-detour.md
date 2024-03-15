@@ -8,6 +8,7 @@ tags:
     - wasm
     - experiments
     - emoji-domains
+    - ADHD
 isPublish: true
 ---
 It was a Friday afternoon spending a week melting my brain reading Tip-Tap and ProseMirror docs non-stop to create the best self.fm editor. I was exhausted and my ADHD demon whispered...
