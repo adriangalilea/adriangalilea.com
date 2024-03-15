@@ -52,7 +52,7 @@ export const orderedKeys1: (keyof UserProfile1)[] = [
   "other",
 ];
 ```
-__this method saved ~50% of char length__
+_this method saved ~50% of char length_
 
 UX:
 1. fill-out the form
