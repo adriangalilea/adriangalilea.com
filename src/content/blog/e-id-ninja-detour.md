@@ -86,14 +86,14 @@ URL:
 [👤️️.to/G2wAYETdluo5XTCvqMWSB55zuCo65YC52oI6y40PRveUFZMlKA_tP1rR1w8emcxII4YJ5V3bBc-ZlpNx8NyN6NB8M7KQNaEo](https://e-id.to/ninja/G2wAYETdluo5XTCvqMWSB55zuCo65YC52oI6y40PRveUFZMlKA_tP1rR1w8emcxII4YJ5V3bBc-ZlpNx8NyN6NB8M7KQNaEo
 )
 
-All in all I'm happy with the result as I proved that it's feasible to store quite a bunch of data.
+All in all I'm happy with the result as I proved that it's feasible to store quite a bunch of data, here is the decoded data presented in e-ID:
+
+![e-id ninja detour](../e-id_adventures.webp)
 
 Style points:
 - brotli-wasm
 - responsive website
 - dark/light mode
-
-![e-id adventures](../e-id_adventures.webp)
 
 
 But I'm sure this does not fit with the plans I have for the future of e-ID. After all I want to provide readability:
