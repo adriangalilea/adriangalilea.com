@@ -24,7 +24,7 @@ So it began...
 # Ideation
 I jumped into ChatGPT, and asked about the feasibility of my  plan, store all the user links in the URL slug.
 
-After consulting about various encoding and compression options I wrote `code` and pressed enter.
+After consulting about various encoding and compression options I went into the next phase.
 
 # Experimentation
 ![telegram-cloud-photo-size-4-5899819325966110101-y](https://github.com/adriangalilea/e-id/assets/90320947/a06d37a0-54b9-4aec-ae14-a096bcac31f9)
@@ -80,7 +80,9 @@ input:
 
 output:
 
-```G2wAYETdluo5XTCvqMWSB55zuCo65YC52oI6y40PRveUFZMlKA_tP1rR1w8emcxII4YJ5V3bBc-ZlpNx8NyN6NB8M7KQNaEo```
+```
+G2wAYETdluo5XTCvqMWSB55zuCo65YC52oI6y40PRveUFZMlKA_tP1rR1w8emcxII4YJ5V3bBc-ZlpNx8NyN6NB8M7KQNaEo
+```
 
 URL:
 
