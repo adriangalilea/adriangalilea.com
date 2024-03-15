@@ -73,6 +73,8 @@ After all I want to provide readability:
 
 So I archieved it under the /ninja/ path and preserved the code on the [open sourced repo](https://github.com/adriangalilea/e-id/ninja)
 
+Shootout to [teito](https://www.teitoklien.com/)
+
 Thanks for reading!
 
 Time to focus on self.fm
