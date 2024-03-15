@@ -8,18 +8,26 @@ tags:
     - emoji-domains
 isPublish: false
 ---
-A memorable pointer to your ever-changing online presence.
+A constant memorable place for your ever-changing online presence.
 
-[e-id.to/adrian](https://e-id.to/adrian)
-Readable. __e-ID to Adrian__
+| Readable |  |
+| ---- | ---- |
+| e-id.to/adrian | _e-ID to Adrian_ |
 
-[👤️️.to/adrian](https://👤️️.to/adrian)
-Visual. Standsout in your bio.
+| Visual |  |
+| ---- | ---- |
+| 👤️️.to/adrian | 👤️ Adrian |
 
-[I like emoji domains.](/blog/domain-collection)
+
+
+
+Standsout in your bio.
 
 [Open Source](https://github.com/adriangalilea/e-id)
 - **Interchangeable Domains**
   - [e-id.to](https://e-id.to)
   - [eid.to](https://eid.to)
   - [👤️️.to](https://👤️️.to)
+
+---
+[I like emoji domains.](/blog/domain-collection)
