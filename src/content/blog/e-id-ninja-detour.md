@@ -1,7 +1,7 @@
 ---
-title: "ADHD Adventures 1: Private link aggregator"
+title: "Private link aggregator"
 publishedAt: 2024-03-15
-description: "Storing Data in the URL"
+description: "ADHD Adventures part 1"
 slug: "e-ID-detour"
 tags:
     - e-ID
