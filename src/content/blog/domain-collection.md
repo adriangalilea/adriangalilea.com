@@ -33,6 +33,7 @@ Cryogenic preservation for your most valuable data, publicaly verifiable.
 # normal domains
 ## x-ai.ai
 I bought this domain 2 days earlier than Elon anounced his x.ai purchase. I still don't know how to interpret that.
+
 ...
 
 __I have more...__
