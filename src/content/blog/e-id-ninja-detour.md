@@ -15,6 +15,7 @@ isPublish: true
 It was a Friday afternoon, I've spent the whole week melting my brain reading Tip-Tap and ProseMirror docs to create the best self.fm editor.
 
 > Can you create a link aggregator that stores no data?
+
 _my ADHD demon whispered_
 
 Then I remembered about one of my beloved [e-ID](/blog/e-ID) #side-quest
