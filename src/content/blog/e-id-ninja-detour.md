@@ -17,7 +17,7 @@ It was a Friday afternoon, I've spent the whole week melting my brain reading Ti
 > Can you create a link aggregator that stores no data?
 _my ADHD demon whispered_
 
-Then I remembered about one of my beloved #side-quests [e-ID](/blog/e-ID)
+Then I remembered about one of my beloved [e-ID](/blog/e-ID) #side-quest
 
 So it began...
 
