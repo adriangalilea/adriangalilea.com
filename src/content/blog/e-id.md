@@ -2,7 +2,7 @@
 title: "e-ID"
 publishedAt: 2024-03-15
 description: "digital identity"
-slug: "eID"
+slug: "e-ID"
 tags:
     - e-ID
     - emoji-domains
