@@ -39,6 +39,7 @@ const posts = (await getCollection("blog")).sort(function (first, second) {
         {
           posts.length !== 0 &&
             posts
+              .filter((post) => post.data.isPublish)
               .slice(0, 4)
               .map((post) => (
                 <PostCard
@@ -67,6 +68,5 @@ const posts = (await getCollection("blog")).sort(function (first, second) {
         </section>
       </header>
     </section>
-    
   </main>
 </Layout>
