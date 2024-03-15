@@ -17,15 +17,14 @@ A constant memorable place for your ever-changing online presence.
 
 | Visual |  |
 | ---- | ---- |
-| 👤️️.to/adrian | 👤️ Adrian |
+| 👤️️.to/adrian 👤️ Adrian |
 
-Standsout in your bio.
-
-[Open Source](https://github.com/adriangalilea/e-id)
-- Interchangeable Domains
+Interchangeable Domains
   - [e-id.to](https://e-id.to)
   - [eid.to](https://eid.to)
   - [👤️️.to](https://👤️️.to)
+
+[Open Source](https://github.com/adriangalilea/e-id)
 
 ---
 [I like emoji domains.](/blog/domain-collection)
