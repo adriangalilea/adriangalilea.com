@@ -28,7 +28,8 @@ Cryogenic preservation for your most valuable data, publicaly verifiable.
   - [🧊️.to](https://🧊️.to)
   - [icecube.to](https://icecube.to)
 ## ⛓️ chains
-blockchain?
+(blockchain?)
+
 [⛓️.gg](https://⛓️.gg)
 
 # normal domains
