@@ -19,9 +19,6 @@ A constant memorable place for your ever-changing online presence.
 | ---- | ---- |
 | 👤️️.to/adrian | 👤️ Adrian |
 
-
-
-
 Standsout in your bio.
 
 [Open Source](https://github.com/adriangalilea/e-id)
