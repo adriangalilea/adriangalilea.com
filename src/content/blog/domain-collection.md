@@ -14,13 +14,16 @@ But the UX for writing them is not great. Which is why I like to collect them in
 Here are a few examples:
 ## 👤️ e-id
 Idea: Digital identity.
+
 UX: e-id.to/adrian (reads as e-id to adrian)
 ### domains
   - [e-id.to](https://e-id.to)
   - [eid.to](https://eid.to)
   - [👤️️.to](https://👤️️.to)
 ## 🧊 ice cube
-Idea: store information in a block from any blockchain. Freezing it in time, preserving it for posterity, publicaly verifiable.
+Idea: store information in a block from any blockchain.
+
+Cryogenic preservation for your most valuable data, publicaly verifiable.
 ### domains
   - [🧊️.to](https://🧊️.to)
   - [icecube.to](https://icecube.to)
