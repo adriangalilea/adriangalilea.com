@@ -61,7 +61,8 @@ UX:
 
 This is an example URL output:
 
-https://e-id.to/ninja/G2wAYETdluo5XTCvqMWSB55zuCo65YC52oI6y40PRveUFZMlKA_tP1rR1w8emcxII4YJ5V3bBc-ZlpNx8NyN6NB8M7KQNaEo
+[👤️️.to/G2wAYETdluo5XTCvqMWSB55zuCo65YC52oI6y40PRveUFZMlKA_tP1rR1w8emcxII4YJ5V3bBc-ZlpNx8NyN6NB8M7KQNaEo](https://e-id.to/ninja/G2wAYETdluo5XTCvqMWSB55zuCo65YC52oI6y40PRveUFZMlKA_tP1rR1w8emcxII4YJ5V3bBc-ZlpNx8NyN6NB8M7KQNaEo
+)
 
 All in all I'm happy with the result, but I'm this does not belong to the future of e-ID so I archieved it under the /ninja/ path and preserved the code on the [open sourced repo](https://github.com/adriangalilea/e-id/ninja)
 
