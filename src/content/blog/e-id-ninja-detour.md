@@ -65,7 +65,11 @@ This is an example URL output:
 )
 
 All in all I'm happy with the result, but I'm sure this does not fit with the plans I have for the future of e-ID.
-After all I want to provide readability [e-id.to/adrian](https://e-id.to/adrian)
+
+After all I want to provide readability:
+- [e-id.to/adrian](https://e-id.to/adrian)
+- [👤️.to/adrian](https://e-id.to/adrian)
+
 
 So I archieved it under the /ninja/ path and preserved the code on the [open sourced repo](https://github.com/adriangalilea/e-id/ninja)
 
