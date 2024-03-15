@@ -16,7 +16,6 @@ Here are a few examples:
 Idea: Digital identity.
 
 UX: e-id.to/adrian (reads as e-id to adrian)
-### domains
   - [e-id.to](https://e-id.to)
   - [eid.to](https://eid.to)
   - [👤️️.to](https://👤️️.to)
@@ -24,7 +23,6 @@ UX: e-id.to/adrian (reads as e-id to adrian)
 Idea: store information in a block from any blockchain.
 
 Cryogenic preservation for your most valuable data, publicaly verifiable.
-### domains
   - [🧊️.to](https://🧊️.to)
   - [icecube.to](https://icecube.to)
 ## ⛓️ chains
@@ -33,6 +31,8 @@ Cryogenic preservation for your most valuable data, publicaly verifiable.
 [⛓️.gg](https://⛓️.gg)
 
 # normal domains
+## x-ai.ai
+I bought this domain 2 days earlier than Elon anounced his x.ai purchase. I still don't know how to interpret that.
 ...
 
 __I have more...__
