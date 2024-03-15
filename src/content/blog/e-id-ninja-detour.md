@@ -1,13 +1,14 @@
 ---
-title: "e-ID detour"
+title: "ADHD Adventures 1: Private link aggregator"
 publishedAt: 2024-03-15
-description: "digital identity without data storage"
+description: "Storing Data in the URL"
 slug: "e-ID-detour"
 tags:
     - e-ID
     - wasm
-    - experiments
-    - emoji-domains
+    - side-quest
+    - experiment
+    - emoji-domain
     - ADHD
 isPublish: true
 ---
