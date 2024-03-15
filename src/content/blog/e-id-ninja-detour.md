@@ -31,6 +31,7 @@ After consulting about various encoding and compression options I wrote `code` a
 I tried all the encoding methods ChatGPT and I could think of, **base64-URL** produced the shortest URL-safe output.
 ## Compression
 Brotli stood out as the most performant.
+While I was at it I realised I could use wasm brotli to do all this without having to do the compression on the server, so I did.
 ## Serializing the data into a standarised array format
 At first I was storing the whole dictionary like:
 `{'version':'1','name':'Adrian Galilea'...}`
@@ -78,7 +79,7 @@ input:
 
 output:
 
-`G2wAYETdluo5XTCvqMWSB55zuCo65YC52oI6y40PRveUFZMlKA_tP1rR1w8emcxII4YJ5V3bBc-ZlpNx8NyN6NB8M7KQNaEo`
+```G2wAYETdluo5XTCvqMWSB55zuCo65YC52oI6y40PRveUFZMlKA_tP1rR1w8emcxII4YJ5V3bBc-ZlpNx8NyN6NB8M7KQNaEo```
 
 URL:
 
@@ -86,6 +87,13 @@ URL:
 )
 
 All in all I'm happy with the result as I proved that it's feasible to store quite a bunch of data.
+
+Style points:
+- brotli-wasm
+- responsive website
+- dark/light mode
+
+![e-id adventures](../e-id_adventures.webp)
 
 
 But I'm sure this does not fit with the plans I have for the future of e-ID. After all I want to provide readability:
