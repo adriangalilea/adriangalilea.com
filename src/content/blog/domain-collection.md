@@ -9,9 +9,9 @@ tags:
 isPublish: true
 ---
 # emoji domains
-I like emoji domains, as they standout from the crowd.
-The only problem is usually the UX for writing them is not good, which is why I like to collect them in groups and progressively enhance them, so you have a memorable name + it's visual identity(logo)
-Here is a few:
+I like emoji domains, they standout.
+But the UX for writing them is not great. Which is why I like to collect them in groups and progressively enhance them, so you have a memorable name + it's visual identity(logo)
+Here are a few examples:
 ## 👤️ e-id
 Idea: Digital identity.
 UX: e-id.to/adrian (reads as e-id to adrian)
