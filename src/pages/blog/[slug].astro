@@ -21,7 +21,12 @@ type Props = {
 const { post } = Astro.props;
 const { Content } = await post.render();
 
-const ogImageUrl = `${Astro.site?.origin}/og/${post.slug}.png`;
+// Use custom image if provided, otherwise fall back to generated OG image
+const ogImageUrl = post.data.image 
+  ? (post.data.image.startsWith('http') 
+      ? post.data.image 
+      : `${Astro.site?.origin}/og/${post.slug}.png`) // Always use OG image for now
+  : `${Astro.site?.origin}/og/${post.slug}.png`;
 ---
 
 <Layout
