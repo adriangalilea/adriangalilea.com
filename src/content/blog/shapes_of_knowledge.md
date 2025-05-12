@@ -12,21 +12,21 @@ isPublish: true
 ![Knowledge Shapes Header](../knowledge_shapes_header.png)
 ## Genesis
 > In the beginning was the word
-> John 1:1
+> - John 1:1
 
-Throughout history Knowledge was shared through speech. Songs, poems and stories. With a teller and it's listener, a master and it's apprentice.
+**Throughout history Knowledge was shared through speech.** Songs, poems and stories. With a *teller* and it's *listener*, a *master* and it's *apprentice*.
 
-**Knowledge was** *local*, it's fidelity was vulnerable to the *fallible* human memory, and simply *inaccessible* if you didn't directly interacted with someone who knew.
+**Knowledge was _local_**, it's fidelity was vulnerable to the **_fallible_** human memory, and simply **_inaccessible_** if you didn't directly interacted with someone who knew.
 
 > Necessity is the mother of invention
 > - Plato
 
 Thus Necessity, gave birth to The Written Text.
 
-*What Plato didn't tell you, is that each solution creates newer problems.*
+**What Plato didn't tell you, is that each solution creates newer problems.**
 
 > Wait... How do we organise all these books now?
-> Someone somewhere a while ago
+> - Someone somewhere a while ago
 
 And we began experimenting with grouping, labelling and inventories...
 ![Library of Alexandria](../library_of_alexandria.png)
@@ -94,7 +94,7 @@ Relationships feel awkward represented in tables, but let's continue with our ex
 | 1         | Artwork       | 1           |
 And that's how Alien a few simple relationships become when represented in tables.
 
-Now let me enligthen you:
+Now let me enlighten you:
 ![Knowledge Graph Example](../knowledge_graph_example.png)
 > Graphs are the right substrate to represent Knowledge, because Knowledge is not just entities, but their relationships.
 
