@@ -4,6 +4,9 @@ import { getCollection } from "astro:content";
 import Layout from "@/layouts/Layout.astro";
 import formatDate from "@/utils/formatDate";
 import HumanDate from "@/components/HumanDate.astro";
+import { Image } from "astro:assets";
+import fs from 'node:fs';
+import path from 'node:path';
 
 export async function getStaticPaths() {
   const posts = await getCollection("blog");
@@ -21,12 +24,21 @@ type Props = {
 const { post } = Astro.props;
 const { Content } = await post.render();
 
-// Use custom image if provided, otherwise fall back to generated OG image
-const ogImageUrl = post.data.image 
-  ? (post.data.image.startsWith('http') 
-      ? post.data.image 
-      : `${Astro.site?.origin}/og/${post.slug}.png`) // Always use OG image for now
+// Check if this is a directory post with a header.png
+const headerPath = path.join(process.cwd(), 'src/content/blog', post.slug, 'header.png');
+const hasHeaderImage = fs.existsSync(headerPath);
+
+// For OG tags, use the header image if available, otherwise fall back to generated OG
+const ogImageUrl = hasHeaderImage 
+  ? `${Astro.site?.origin}/blog/${post.slug}/header.png` 
   : `${Astro.site?.origin}/og/${post.slug}.png`;
+
+// Dynamically import the header image if it exists
+let headerImage;
+if (hasHeaderImage) {
+  // We use a relative path to import the image as a module
+  headerImage = await import(`../../content/blog/${post.slug}/header.png`);
+}
 ---
 
 <Layout
@@ -35,6 +47,18 @@ const ogImageUrl = post.data.image
   imgLink={ogImageUrl}
 >
   <main class="flex-col gap-4 max-w-full">
+    {headerImage && (
+      <div class="w-full overflow-hidden rounded-xl mb-6">
+        <Image 
+          src={headerImage.default}
+          alt={`Header image for ${post.data.title}`}
+          class="w-full h-auto object-cover max-h-[400px]"
+          width={1200}
+          height={630}
+          loading="eager"
+        />
+      </div>
+    )}
     <article
       class="prose prose-zinc lg:prose-lg xl:prose-xl dark:prose-invert text-pretty prose-a:no-underline prose-a:text-emerald-500 hover:prose-a:underline prose-h1:font-extralight prose-h2:font-extralight prose-h3:font-extralight"
     >

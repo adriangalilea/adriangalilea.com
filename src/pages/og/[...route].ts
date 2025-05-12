@@ -10,7 +10,7 @@ export const { getStaticPaths, GET } = OGImageRoute({
   pages: pages,
 
   getImageOptions: (_path, page) => ({
-    title: "Adrian Galilea - Blog",
+    title: page.title, 
     description: page.description,
     border: { width: 10 },
     padding: 40,

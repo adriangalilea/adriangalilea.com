@@ -15,5 +15,14 @@ export default defineConfig({
       theme: "nord",
       wrap: false
     }
+  },
+  // Handle folder-based blog posts with static assets
+  build: {
+    assets: 'assets'
+  },
+  vite: {
+    build: {
+      assetsInlineLimit: 0
+    }
   }
 });
