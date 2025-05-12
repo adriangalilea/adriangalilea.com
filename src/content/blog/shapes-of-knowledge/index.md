@@ -1,7 +1,8 @@
 ---
 title: "The Shapes of Knowledge"
 publishedAt: 2024-05-12
-description: "Exploring how knowledge representation has evolved through history and modern information systems."
+description: "From spoken word to knowledge graphs and beyond."
+image: "./header.png"
 slug: "shapes-of-knowledge"
 tags:
     - ontology
@@ -9,7 +10,6 @@ tags:
     - knowledge-graphs
 isPublish: true
 ---
-![Knowledge Shapes Header](../knowledge_shapes_header.png)
 ## Genesis
 > In the beginning was the word
 > - John 1:1
@@ -29,11 +29,11 @@ Thus Necessity, gave birth to The Written Text.
 > - Someone somewhere a while ago
 
 And we began experimenting with grouping, labelling and inventories...
-![Library of Alexandria](../library_of_alexandria.png)
+![Library of Alexandria](./library.png)
 *The Library of Alexandria being the earliest known example, ~250 BC.* 
 
 But with books neatly organized in categories, knowledge is stale. And emergent practices such as the Commonplace Book weave connections.
-![Newton's Memorandum Book](../newton_memorandum_book.png)
+![Newton's Memorandum Book](./newton.png)
 *Sir Isaac Newton (1642–1727) kept this pocket-sized "memorandum book", filling it with notes distilled from his reading.*
 
 By extracting, combining, and annotating knowledge from diverse sources, one could create personalized webs of information.
@@ -42,13 +42,13 @@ By extracting, combining, and annotating knowledge from diverse sources, one cou
 *Slime mold ~~solving complex network optimization problems~~*
 ## Digital Redux
 
-![Memex Concept](../memex_concept.png)
+![Memex Concept](./memex.png)
 In "[As We May Think](https://en.wikipedia.org/wiki/As_We_May_Think "As We May Think")", 1945, [Vannevar Bush](https://en.wikipedia.org/wiki/Vannevar_Bush "Vannevar Bush") describes a **memex** (from "**mem**ory **ex**pansion") as an electromechanical device enabling individuals to develop and read a large self-contained research library, create and follow associative trails of links and personal annotations, and recall these trails at any time to share them with other researchers. This device would closely mimic the [associative](https://en.wikipedia.org/wiki/Association_\(psychology\) "Association (psychology)") processes of the human mind, but it would be gifted with permanent recollection.
 
 > Thus science may implement the ways in which man produces, stores, and consults the record of the race.
 > - Vannevar Bush
 
-![Ted Nelson Transclusions](../ted_nelson_transclusions.png)
+![Ted Nelson Transclusions](./transclusions.png)
 [Ted Nelson, transclusions, 1980. expand or remove ... ?]
 
 ## Challenge
@@ -95,7 +95,7 @@ Relationships feel awkward represented in tables, but let's continue with our ex
 And that's how Alien a few simple relationships become when represented in tables.
 
 Now let me enlighten you:
-![Knowledge Graph Example](../knowledge_graph_example.png)
+![Knowledge Graph Example](./graph.png)
 > Graphs are the right substrate to represent Knowledge, because Knowledge is not just entities, but their relationships.
 
 However, reality, is dynamic. Facts hold true for specific durations.
