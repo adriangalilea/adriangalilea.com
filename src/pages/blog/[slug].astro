@@ -55,18 +55,6 @@ if (hasHeaderImage) {
   og={ogMetadata}
 >
   <main class="flex-col gap-4 max-w-full">
-    {headerImage && (
-      <div class="w-full overflow-hidden rounded-xl mb-6">
-        <Image 
-          src={headerImage.default}
-          alt={`Header image for ${post.data.title}`}
-          class="w-full h-auto object-cover max-h-[400px]"
-          width={1200}
-          height={630}
-          loading="eager"
-        />
-      </div>
-    )}
     <article
       class="prose prose-zinc lg:prose-lg xl:prose-xl dark:prose-invert text-pretty prose-a:no-underline prose-a:text-emerald-500 hover:prose-a:underline prose-h1:font-extralight prose-h2:font-extralight prose-h3:font-extralight"
     >
@@ -84,6 +72,21 @@ if (hasHeaderImage) {
           }
         </div>
       </div>
+      
+      {/* Header image placed after title and description, full-width */}
+      {headerImage && (
+        <div class="w-[calc(100%+2rem)] -mx-4 md:w-[calc(100%+4rem)] md:-mx-8 my-8 overflow-hidden rounded-lg">
+          <Image 
+            src={headerImage.default}
+            alt={`Header image for ${post.data.title}`}
+            class="w-full h-auto object-cover"
+            width={1200}
+            height={630}
+            loading="eager"
+          />
+        </div>
+      )}
+      
       <Content />
     </article>
   </main>

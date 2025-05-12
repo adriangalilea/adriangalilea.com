@@ -13,13 +13,17 @@ const DEFAULT_TITLE_PAGE = "Adrian Galilea";
 const DEFAULT_DESCRIPTION_PAGE = "Personal site and blog.";
 const DEFAULT_URL_SITE = SITE_URL;
 
+// For blog posts we don't want to default to the site description if there's no post description
+const isMainPage = !title || title === DEFAULT_TITLE_PAGE;
+
 const openGraph = {
   title: og?.title || title || DEFAULT_TITLE_PAGE,  // Prioritize og.title if provided
   type: og?.type || "website",
   image: imgLink || og?.image || "/opengraph-image.png",
   alt: og?.alt || "Adrian Galilea site image",
   url: DEFAULT_URL_SITE,
-  description: og?.description || description || DEFAULT_DESCRIPTION_PAGE,  // Prioritize og.description if provided
+  // Only use default description for the main site, not for blog posts without descriptions
+  description: og?.description || description || (isMainPage ? DEFAULT_DESCRIPTION_PAGE : ''),
 };
 ---
 
