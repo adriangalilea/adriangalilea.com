@@ -9,7 +9,6 @@ tags:
     - knowledge-graphs
 isPublish: true
 ---
-# The Shapes of Knowledge
 ![Knowledge Shapes Header](../knowledge_shapes_header.png)
 ## Genesis
 > In the beginning was the word
