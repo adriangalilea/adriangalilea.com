@@ -2,7 +2,6 @@
 import type { CollectionEntry } from "astro:content";
 import { getCollection } from "astro:content";
 import Layout from "@/layouts/Layout.astro";
-import formatDate from "@/utils/formatDate";
 import HumanDate from "@/components/HumanDate.astro";
 import { Image } from "astro:assets";
 import fs from 'node:fs';
@@ -35,7 +34,10 @@ const ogImageUrl = `${Astro.site?.origin}/og/${post.slug}.png`;
 // Direct overrides for Twitter/OG description
 const ogMetadata = {
   title: post.data.title,
-  description: post.data.description
+  description: post.data.description,
+  type: "website",
+  image: ogImageUrl,
+  alt: `Header image for ${post.data.title}`
 };
 
 // Dynamically import the header image if it exists
