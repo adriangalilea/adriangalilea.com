@@ -17,7 +17,7 @@ isPublish: true
 
 Throughout history Knowledge was shared through speech. Songs, poems and stories. With a teller and it's listener, a master and it's apprentice.
 
-==Knowledge was== **==local==**, it's fidelity was vulnerable to the **==fallible==** human memory, and simply ==**inaccesible**== if you didn't directly interacted with someone who knew.
+**Knowledge was _local_**, it's fidelity was vulnerable to the **_fallible_** human memory, and simply **_inaccessible_** if you didn't directly interacted with someone who knew.
 
 > Necessity is the mother of invention
 > - Plato
