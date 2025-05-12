@@ -40,7 +40,7 @@ By extracting, combining, and annotating knowledge from diverse sources, one cou
 
 ![Biohaviour | Slime Mold](https://biohaviour.com/wp-content/uploads/2020/11/SlimeMold.gif)
 *Slime mold ~~solving complex network optimization problems~~*
-## Redux
+## Digital Redux
 
 ![Memex Concept](../memex_concept.png)
 In "[As We May Think](https://en.wikipedia.org/wiki/As_We_May_Think "As We May Think")", 1945, [Vannevar Bush](https://en.wikipedia.org/wiki/Vannevar_Bush "Vannevar Bush") describes a **memex** (from "**mem**ory **ex**pansion") as an electromechanical device enabling individuals to develop and read a large self-contained research library, create and follow associative trails of links and personal annotations, and recall these trails at any time to share them with other researchers. This device would closely mimic the [associative](https://en.wikipedia.org/wiki/Association_\(psychology\) "Association (psychology)") processes of the human mind, but it would be gifted with permanent recollection.
