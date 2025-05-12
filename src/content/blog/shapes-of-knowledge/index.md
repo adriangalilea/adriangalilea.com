@@ -1,7 +1,7 @@
 ---
 title: "The Shapes of Knowledge"
 publishedAt: 2024-05-12
-description: "From spoken word to knowledge graphs and beyond."
+description: "From spoken word to knowledge graphs"
 slug: "shapes-of-knowledge"
 tags:
     - ontology
