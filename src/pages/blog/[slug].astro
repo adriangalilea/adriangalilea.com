@@ -28,10 +28,8 @@ const { Content } = await post.render();
 const headerPath = path.join(process.cwd(), 'src/content/blog', post.slug, 'header.png');
 const hasHeaderImage = fs.existsSync(headerPath);
 
-// For OG tags, use the header image if available, otherwise fall back to generated OG
-const ogImageUrl = hasHeaderImage 
-  ? `${Astro.site?.origin}/blog/${post.slug}/header.png` 
-  : `${Astro.site?.origin}/og/${post.slug}.png`;
+// Always use generated OG image for consistent SEO
+const ogImageUrl = `${Astro.site?.origin}/og/${post.slug}.png`;
 
 // Dynamically import the header image if it exists
 let headerImage;
