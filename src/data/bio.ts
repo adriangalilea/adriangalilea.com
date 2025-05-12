@@ -13,7 +13,7 @@ type Presentation = {
 const presentation: Presentation = {
   title: "ADRIAN GALILEA",
   description:
-    "creative.",
+    "creative",
   socials: [
     {
       label: "telegram",
