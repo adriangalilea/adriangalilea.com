@@ -16,14 +16,14 @@ isPublish: true
 
 Throughout history Knowledge was shared through speech. Songs, poems and stories. With a teller and it's listener, a master and it's apprentice.
 
-**Knowledge was _local_**, it's fidelity was vulnerable to the **_fallible_** human memory, and simply **_inaccessible_** if you didn't directly interacted with someone who knew.
+**Knowledge was** *local*, it's fidelity was vulnerable to the *fallible* human memory, and simply *inaccessible* if you didn't directly interacted with someone who knew.
 
 > Necessity is the mother of invention
 > - Plato
 
 Thus Necessity, gave birth to The Written Text.
 
-__ What Plato didn't tell you, is that each solution creates newer problems. __
+*What Plato didn't tell you, is that each solution creates newer problems.*
 
 > Wait... How do we organise all these books now?
 > Someone somewhere a while ago
