@@ -7,6 +7,7 @@ const postsCollection = defineCollection({
     publishedAt: z.date(),
     editedAt: z.date().optional(),
     description: z.string(),
+    image: z.string().optional(),
     isPublish: z.boolean(),
     isDraft: z.boolean().default(false),
     tags: z.array(z.string()),
