@@ -29,7 +29,14 @@ const headerPath = path.join(process.cwd(), 'src/content/blog', post.slug, 'head
 const hasHeaderImage = fs.existsSync(headerPath);
 
 // Always use generated OG image for consistent SEO
+// Use post OG image
 const ogImageUrl = `${Astro.site?.origin}/og/${post.slug}.png`;
+
+// Direct overrides for Twitter/OG description
+const ogMetadata = {
+  title: post.data.title,
+  description: post.data.description
+};
 
 // Dynamically import the header image if it exists
 let headerImage;
@@ -43,6 +50,7 @@ if (hasHeaderImage) {
   title={post.data.title}
   description={post.data.description}
   imgLink={ogImageUrl}
+  og={ogMetadata}
 >
   <main class="flex-col gap-4 max-w-full">
     {headerImage && (

@@ -27,7 +27,7 @@ export const { getStaticPaths, GET } = OGImageRoute({
         description: page.description,
         bgImage: {
           path: path.join(process.cwd(), 'src/content/blog', slug, 'header.png'),
-          fit: 'cover' 
+          fit: 'cover'
         },
         border: { width: 0 },
         padding: 60,
@@ -41,7 +41,8 @@ export const { getStaticPaths, GET } = OGImageRoute({
             color: 'white',
             shadow: '0 0 10px rgba(0,0,0,0.8)'
           }
-        }
+        },
+        logo: false  // Remove the default logo
       };
     }
     
@@ -51,6 +52,7 @@ export const { getStaticPaths, GET } = OGImageRoute({
       description: page.description,
       border: { width: 10 },
       padding: 40,
+      logo: false  // Remove the default logo
     };
   },
 });
