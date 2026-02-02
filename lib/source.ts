@@ -2,8 +2,9 @@ import { blog } from "fumadocs-mdx:collections/server";
 import { toFumadocsSource } from "fumadocs-mdx/runtime/server";
 import { loader } from "fumadocs-core/source";
 import type { MDXContent } from "mdx/types";
-import { existsSync, cpSync, mkdirSync } from "node:fs";
+import { existsSync, cpSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
+import sharp from "sharp";
 
 export const blogSource = loader({
 	baseUrl: "/blog",
@@ -38,6 +39,60 @@ export function resolveCover(page: AnyPage): string | null {
 			return `/blog/${slug}/cover${ext}`;
 		}
 	}
+	return null;
+}
+
+const OG_WIDTH = 1200;
+const OG_HEIGHT = 630;
+
+const ogCache = new Map<string, string | null>();
+
+export async function resolveOG(page: AnyPage): Promise<string | null> {
+	const slug = page.slugs[0];
+	if (ogCache.has(slug)) return ogCache.get(slug)!;
+
+	const info = getPageInfo(page);
+	if (!info?.fullPath) { ogCache.set(slug, null); return null; }
+
+	const dir = dirname(info.fullPath);
+	const destDir = join(process.cwd(), "public", "blog", slug);
+	const dest = join(destDir, "og.png");
+	const url = `/blog/${slug}/og.png`;
+
+	if (existsSync(dest)) { ogCache.set(slug, url); return url; }
+
+	for (const ext of COVER_EXTENSIONS) {
+		const src = join(dir, `cover${ext}`);
+		if (existsSync(src)) {
+			mkdirSync(destDir, { recursive: true });
+			try {
+				const bg = await sharp(src)
+					.resize(OG_WIDTH, OG_HEIGHT, { fit: "cover" })
+					.blur(50)
+					.modulate({ brightness: 0.7 })
+					.png()
+					.toBuffer();
+
+				const meta = await sharp(src).metadata();
+				const scale = OG_HEIGHT / (meta.height ?? OG_HEIGHT);
+				const fgW = Math.round((meta.width ?? OG_WIDTH) * scale);
+				const fgH = OG_HEIGHT;
+				const fg = await sharp(src).resize(fgW, fgH, { fit: "inside" }).png().toBuffer();
+
+				await sharp(bg)
+					.composite([{ input: fg, gravity: "centre" }])
+					.png()
+					.toFile(dest);
+
+				ogCache.set(slug, url);
+				return url;
+			} catch {
+				ogCache.set(slug, null);
+				return null;
+			}
+		}
+	}
+	ogCache.set(slug, null);
 	return null;
 }
 

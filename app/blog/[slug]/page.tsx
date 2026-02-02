@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { blogSource, blogData, resolveCover } from "@/lib/source";
+import { blogSource, blogData, resolveCover, resolveOG } from "@/lib/source";
 import { getMDXComponents } from "@/mdx-components";
 import { slugToGradient } from "@/lib/gradient";
 
@@ -107,9 +107,24 @@ export async function generateMetadata(props: {
 
 	if (!page) notFound();
 
+	const ogUrl = await resolveOG(page);
+
 	return {
 		title: page.data.title,
 		description: page.data.description,
+		openGraph: {
+			title: page.data.title,
+			description: page.data.description,
+			...(ogUrl && {
+				images: [{ url: ogUrl, width: 1200, height: 630 }],
+			}),
+		},
+		twitter: {
+			card: "summary_large_image",
+			title: page.data.title,
+			description: page.data.description,
+			...(ogUrl && { images: [ogUrl] }),
+		},
 	};
 }
 

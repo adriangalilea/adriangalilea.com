@@ -22,6 +22,9 @@ export const metadata: Metadata = {
 	},
 	description: "Adrian Galilea's personal site",
 	metadataBase: new URL("https://adriangalilea.com"),
+	openGraph: {
+		siteName: "Adrian Galilea",
+	},
 };
 
 const socialLinks = [
