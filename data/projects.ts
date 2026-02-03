@@ -15,6 +15,20 @@ export const projects: Project[] = [
 		status: "shipped",
 	},
 	{
+		title: "namecheap-python",
+		description: "Modern Python client for the Namecheap API — 1.4k downloads a month",
+		techs: ["python"],
+		link: "https://github.com/adriangalilea/namecheap-python",
+		status: "lab",
+	},
+	{
+		title: "telos",
+		description: "Self-improving functions defined by purpose — declare WHAT, not HOW",
+		techs: ["python", "ai"],
+		link: "https://github.com/adriangalilea/telos",
+		status: "soon",
+	},
+	{
 		title: "self.fm",
 		description: "World's OS",
 		techs: ["nextjs", "full-stack"],
