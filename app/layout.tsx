@@ -65,21 +65,21 @@ export default function RootLayout({
 					<div className="flex-1">
 						{children}
 					</div>
-					<footer className="border-t border-border/50">
+					<LiquidGlass as="footer" tint="rgba(0,0,0,0.05)">
 						<div className="mx-auto flex h-12 max-w-6xl items-center justify-center gap-3 px-6">
 							{socialLinks.map((l) => (
 								<Link
 									key={l.label}
 									href={l.href}
 									{...(l.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
-									className="flex h-8 w-8 items-center justify-center rounded-full bg-accent-pop/10 text-accent-pop transition-colors hover:bg-accent-pop/20"
+									className="group/social flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground/40 transition-colors hover:text-accent-pop hover:bg-accent-pop/10"
 									aria-label={l.label}
 								>
 									<l.icon size={16} strokeWidth={1.5} />
 								</Link>
 							))}
 						</div>
-					</footer>
+					</LiquidGlass>
 				</RootProvider>
 			</body>
 		</html>
