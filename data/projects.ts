@@ -8,6 +8,13 @@ export type Project = {
 
 export const projects: Project[] = [
 	{
+		title: "streamlit-shortcuts",
+		description: "Keyboard shortcuts for Streamlit buttons — 44k downloads a month",
+		techs: ["python", "streamlit"],
+		link: "https://github.com/adriangalilea/streamlit-shortcuts",
+		status: "shipped",
+	},
+	{
 		title: "self.fm",
 		description: "World's OS",
 		techs: ["nextjs", "full-stack"],
@@ -23,7 +30,7 @@ export const projects: Project[] = [
 	},
 	{
 		title: "pico qwiicReset",
-		description: "Raspberry Pi Pico addon — Qwiic connector and reset button. First physical product sold",
+		description: "Raspberry Pi Pico addon — Qwiic connector and reset button. Hundreds sold",
 		techs: ["electronics", "design"],
 		link: "/blog/pico-qwiic-reset",
 		status: "shipped",
