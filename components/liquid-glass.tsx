@@ -11,7 +11,7 @@ type LiquidGlassProps<T extends ElementType = "div"> = {
 
 export function LiquidGlass<T extends ElementType = "div">({
 	as,
-	tint = "rgba(255,255,255,0.03)",
+	tint = "rgba(0,0,0,0.35)",
 	blur = 16,
 	shadow = "none",
 	shine = "inset 0 0.5px 0 0 rgba(255,255,255,0.04)",

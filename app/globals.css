@@ -92,8 +92,8 @@
 
 .dark {
   --accent-pop: oklch(0.75 0.18 175);
-  /* L0: canvas — true black */
-  --background: oklch(0.1 0 0);
+  /* L0: canvas */
+  --background: oklch(0.17 0 0);
   --foreground: oklch(0.93 0 0);
   /* L1: elevated surfaces */
   --card: oklch(0.16 0 0);
@@ -134,7 +134,9 @@
   }
   body {
     @apply bg-background text-foreground;
-    background-image: none;
+    background-image:
+      radial-gradient(ellipse 150% 100% at 30% 90%, oklch(0.21 0.003 175) 0%, oklch(0.17 0 0) 80%),
+      radial-gradient(ellipse 130% 90% at 75% 10%, oklch(0.20 0.002 260) 0%, oklch(0.17 0 0) 80%);
   }
   body::before {
     content: "";

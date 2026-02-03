@@ -47,11 +47,11 @@ export default function RootLayout({
 			>
 				<RootProvider>
 					<LiquidGlassFilter />
-					<LiquidGlass as="nav" className="sticky top-0 z-50">
+					<LiquidGlass as="nav" tint="rgba(0,0,0,0.05)" className="sticky top-0 z-50">
 						<div className="mx-auto flex h-12 max-w-6xl items-center justify-between px-6">
 							<Link
 								href="/"
-								className="font-bold text-base tracking-tight hover:underline decoration-accent-pop underline-offset-4"
+								className="font-semibold text-lg tracking-tight hover:underline decoration-accent-pop underline-offset-4"
 							>
 								Adrian Galilea
 							</Link>

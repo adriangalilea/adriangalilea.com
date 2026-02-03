@@ -14,7 +14,7 @@ export default function Home() {
 		<main className="relative z-[1]">
 			<div className="mx-auto w-full max-w-6xl px-6 pt-12 sm:pt-20">
 				<LiquidGlass as="section" className="mb-20 rounded-2xl p-6 sm:p-8">
-					<h2 className="mb-6 text-lg font-semibold tracking-tight">
+					<h2 className="mb-6 text-xl font-semibold tracking-tight">
 						Projects
 					</h2>
 					<ul className="space-y-1">
@@ -28,19 +28,19 @@ export default function Home() {
 										: {})}
 								>
 									<span className="flex items-center gap-2">
-										<span className="font-medium group-hover:underline decoration-accent-pop underline-offset-4">
+										<span className="font-semibold group-hover:underline decoration-accent-pop underline-offset-4">
 											{p.title}
 										</span>
 										{p.status && <StatusBadge status={p.status} />}
 										<span className="flex-1 border-b border-dotted border-border/50" />
 										{p.techs.length > 0 && (
-											<span className="shrink-0 text-muted-foreground text-xs">
+											<span className="shrink-0 text-muted-foreground/70 text-sm">
 												{p.techs.join(" · ")}
 											</span>
 										)}
 									</span>
 									{p.description && (
-										<span className="mt-0.5 block text-muted-foreground text-sm">
+										<span className="mt-0.5 block text-muted-foreground/80 text-sm">
 											{p.description}
 										</span>
 									)}
@@ -54,7 +54,7 @@ export default function Home() {
 			{featured && (
 				<div className="mx-auto w-full max-w-6xl px-6 pb-20">
 					<LiquidGlass as="section" className="rounded-2xl p-6 sm:p-8">
-						<h2 className="mb-6 text-lg font-semibold tracking-tight">
+						<h2 className="mb-6 text-xl font-semibold tracking-tight">
 							Writing
 						</h2>
 						<div className="grid gap-8 lg:grid-cols-[3fr_2fr]">
