@@ -20,25 +20,28 @@ function formatDate(date: string) {
 	});
 }
 
-export function CoverImage({ coverUrl, slug, title }: { coverUrl: string | null; slug: string; title: string }) {
+function GrainOverlay() {
+	return <div className="cover-grain absolute inset-0 z-10 pointer-events-none" />;
+}
+
+export function CoverImage({ coverUrl, slug, title, size = "large" }: { coverUrl: string | null; slug: string; title: string; size?: "large" | "small" }) {
 	if (coverUrl) {
+		const blur = size === "small"
+			? "absolute inset-0 h-full w-full scale-[2] object-cover blur-2xl"
+			: "absolute inset-0 h-full w-full scale-150 object-cover blur-3xl opacity-60";
 		return (
-			<div className="relative h-full w-full overflow-hidden bg-black">
-				<img
-					src={coverUrl}
-					alt=""
-					aria-hidden
-					className="absolute inset-0 h-full w-full scale-150 object-cover blur-3xl opacity-60"
-				/>
-				<img
-					src={coverUrl}
-					alt={title}
-					className="relative h-full w-full object-contain"
-				/>
+			<div className={`relative h-full w-full overflow-hidden ${size === "large" ? "bg-black" : ""}`}>
+				<img src={coverUrl} alt="" aria-hidden className={blur} />
+				<img src={coverUrl} alt={title} className="relative h-full w-full object-contain" />
+				<GrainOverlay />
 			</div>
 		);
 	}
-	return <div className="h-full w-full" style={{ background: slugToGradient(slug) }} />;
+	return (
+		<div className="relative h-full w-full overflow-hidden" style={{ background: slugToGradient(slug) }}>
+			<GrainOverlay />
+		</div>
+	);
 }
 
 export function PostCard({ post }: { post: CardPost }) {
@@ -89,7 +92,7 @@ export function PostCardCompact({ post }: { post: CardPost }) {
 				</time>
 			</div>
 			<div className="shrink-0 overflow-hidden rounded-lg w-[100px] h-[70px] sm:w-[120px] sm:h-[80px]">
-				<CoverImage coverUrl={post.coverUrl} slug={post.slug} title={post.title} />
+				<CoverImage coverUrl={post.coverUrl} slug={post.slug} title={post.title} size="small" />
 			</div>
 		</Link>
 	);

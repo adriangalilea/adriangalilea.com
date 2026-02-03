@@ -3,8 +3,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { blogSource, blogData, resolveCover, resolveOG, getRelatedPosts, toCardPost } from "@/lib/source";
 import { getMDXComponents } from "@/mdx-components";
-import { slugToGradient } from "@/lib/gradient";
-import { PostCard } from "@/components/post-cards";
+import { PostCard, CoverImage } from "@/components/post-cards";
 
 export default async function BlogPost(props: {
 	params: Promise<{ slug: string }>;
@@ -20,26 +19,9 @@ export default async function BlogPost(props: {
 	return (
 		<article className="pb-16">
 			<figure className="mx-auto max-w-5xl px-4 pt-4 sm:pt-6">
-				{coverUrl ? (
-					<div className="relative aspect-[2/1] w-full overflow-hidden rounded-2xl bg-black">
-						<img
-							src={coverUrl}
-							alt=""
-							aria-hidden
-							className="absolute inset-0 h-full w-full scale-150 object-cover blur-3xl opacity-60"
-						/>
-						<img
-							src={coverUrl}
-							alt={page.data.title ?? ""}
-							className="relative h-full w-full object-contain drop-shadow-lg"
-						/>
-					</div>
-				) : (
-					<div
-						className="aspect-[3/1] w-full rounded-2xl"
-						style={{ background: slugToGradient(params.slug) }}
-					/>
-				)}
+				<div className={`w-full overflow-hidden rounded-2xl ${coverUrl ? "aspect-[2/1]" : "aspect-[3/1]"}`}>
+					<CoverImage coverUrl={coverUrl} slug={params.slug} title={page.data.title ?? ""} />
+				</div>
 			</figure>
 
 			<header className="mx-auto max-w-2xl px-4 pt-8">
