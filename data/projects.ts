@@ -22,6 +22,13 @@ export const projects: Project[] = [
 		status: "shipped",
 	},
 	{
+		title: "icecore",
+		description: "Trustless proofs for digital documents using Bitcoin — free, permanent, self-contained",
+		techs: ["go", "typescript", "wasm", "bitcoin"],
+		link: "https://github.com/adriangalilea/icecore",
+		status: "soon",
+	},
+	{
 		title: "namecheap-python",
 		description: "Modern Python client for the Namecheap API — 1.4k downloads a month",
 		techs: ["python"],
