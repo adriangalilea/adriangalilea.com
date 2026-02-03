@@ -11,28 +11,28 @@ const STATUS_CONFIG: Record<
 	shipped: { icon: Trophy, label: "shipped", color: "yellow" },
 };
 
-const COLORS: Record<string, { tint: string; text: string; border: string; shadow: string }> = {
+const COLORS: Record<string, { tint: string; color: string; border: string; shadow: string }> = {
 	violet: {
 		tint: "rgba(139,92,246,0.15)",
-		text: "text-violet-400/90",
+		color: "rgb(167,139,250)",
 		border: "border-white/[0.08]",
 		shadow: "inset 0 1px 0 0 rgba(255,255,255,0.12), 0 1px 3px rgba(0,0,0,0.4)",
 	},
 	rose: {
 		tint: "rgba(251,113,133,0.15)",
-		text: "text-rose-400/90",
+		color: "rgb(251,113,133)",
 		border: "border-white/[0.08]",
 		shadow: "inset 0 1px 0 0 rgba(255,255,255,0.12), 0 1px 3px rgba(0,0,0,0.4)",
 	},
 	cyan: {
 		tint: "rgba(34,211,238,0.15)",
-		text: "text-cyan-400/90",
+		color: "rgb(34,211,238)",
 		border: "border-white/[0.08]",
 		shadow: "inset 0 1px 0 0 rgba(255,255,255,0.12), 0 1px 3px rgba(0,0,0,0.4)",
 	},
 	yellow: {
 		tint: "rgba(250,204,21,0.15)",
-		text: "text-yellow-400/90",
+		color: "rgb(250,204,21)",
 		border: "border-white/[0.08]",
 		shadow: "inset 0 1px 0 0 rgba(255,255,255,0.12), 0 1px 3px rgba(0,0,0,0.4)",
 	},
@@ -42,11 +42,14 @@ function Glass({ className, color, children }: { className?: string; color: stri
 	const c = COLORS[color];
 	return (
 		<span
-			className={`isolate relative border ${c.text} ${c.border} ${className}`}
-			style={{ boxShadow: c.shadow }}
+			className={`isolate relative border text-muted-foreground/50 group-hover:text-[var(--badge-color)] ${c.border} transition-colors duration-200 ${className}`}
+			style={{ boxShadow: c.shadow, "--badge-color": c.color } as React.CSSProperties}
 		>
 			<span className="absolute inset-0 rounded-[inherit] -z-2 backdrop-blur-[12px]" />
-			<span className="absolute inset-0 rounded-[inherit] -z-1" style={{ background: c.tint }} />
+			<span
+				className="absolute inset-0 rounded-[inherit] -z-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+				style={{ background: c.tint }}
+			/>
 			{children}
 		</span>
 	);
