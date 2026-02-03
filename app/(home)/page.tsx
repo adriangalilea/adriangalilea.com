@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getBlogPosts } from "@/lib/source";
 import { projects } from "@/data/projects";
 import { FeaturedHero, PublishedList, DraftList } from "@/components/post-cards";
+import { StatusBadge } from "@/components/status-badge";
 
 export default function Home() {
 	const { published, drafts } = getBlogPosts();
@@ -28,11 +29,7 @@ export default function Home() {
 									<span className="font-medium group-hover:underline decoration-accent-pop underline-offset-4">
 										{p.title}
 									</span>
-									{p.isComingSoon && (
-										<span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">
-											soon
-										</span>
-									)}
+									{p.status && <StatusBadge status={p.status} />}
 									<span className="flex-1 border-b border-dotted border-border/50" />
 									{p.techs.length > 0 && (
 										<span className="text-muted-foreground text-xs">
