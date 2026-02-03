@@ -67,7 +67,7 @@ export default async function BlogPost(props: {
 					{page.data.title}
 				</h1>
 				{page.data.description && (
-					<p className="mt-4 text-xl leading-relaxed text-foreground/60 sm:text-2xl sm:leading-relaxed">
+					<p className="mt-4 text-xl leading-relaxed text-foreground/85 sm:text-2xl sm:leading-relaxed">
 						{page.data.description}
 					</p>
 				)}
