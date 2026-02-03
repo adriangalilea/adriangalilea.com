@@ -17,59 +17,8 @@ export default async function BlogPost(props: {
 	const coverUrl = resolveCover(page);
 
 	return (
-		<article className="mx-auto w-full max-w-2xl px-4 pb-16 pt-24">
-			{d.draft && (
-				<div className="mb-8 rounded-lg border border-border/50 bg-muted/50 px-4 py-3 text-muted-foreground text-sm">
-					This is a draft — unfinished and subject to change.
-				</div>
-			)}
-			<header className="mb-12">
-				<div className="mb-5 flex flex-wrap items-center gap-x-2 gap-y-1 text-muted-foreground text-xs uppercase tracking-wide">
-					<time className="tabular-nums">
-						{new Date(d.publishedAt).toLocaleDateString("en-US", {
-							year: "numeric",
-							month: "long",
-							day: "numeric",
-						})}
-					</time>
-					{d.tags.length > 0 && (
-						<>
-							<span>/</span>
-							{d.tags.map((tag: string, i: number) => (
-								<span key={tag}>
-									<Link
-										href={`/blog?tag=${encodeURIComponent(tag)}`}
-										className="hover:text-foreground hover:underline decoration-accent-pop underline-offset-4"
-									>
-										{tag}
-									</Link>
-									{i < d.tags.length - 1 && ", "}
-								</span>
-							))}
-						</>
-					)}
-				</div>
-				<h1 className="font-bold text-4xl leading-[1.1] tracking-tight sm:text-5xl">
-					{page.data.title}
-				</h1>
-				{page.data.description && (
-					<p className="mt-5 text-xl leading-relaxed text-foreground/60 sm:text-2xl sm:leading-relaxed">
-						{page.data.description}
-					</p>
-				)}
-				{d.editedAt && (
-					<p className="mt-4 text-muted-foreground text-xs tabular-nums">
-						Last edited{" "}
-						{new Date(d.editedAt).toLocaleDateString("en-US", {
-							year: "numeric",
-							month: "long",
-							day: "numeric",
-						})}
-					</p>
-				)}
-			</header>
-
-			<figure className="-mx-4 mb-14 sm:-mx-12 md:-mx-24 lg:-mx-32">
+		<article className="pb-16">
+			<figure className="mx-auto max-w-5xl px-4 pt-4 sm:pt-6">
 				{coverUrl ? (
 					<div className="relative aspect-[2/1] w-full overflow-hidden rounded-2xl bg-black">
 						<img
@@ -92,7 +41,60 @@ export default async function BlogPost(props: {
 				)}
 			</figure>
 
-			<div className="prose max-w-none prose-p:leading-[1.8]">
+			<header className="mx-auto max-w-2xl px-4 pt-8">
+				{d.draft && (
+					<div className="mb-6 rounded-lg border border-border/50 bg-muted/50 px-4 py-3 text-muted-foreground text-sm">
+						This is a draft — unfinished and subject to change.
+					</div>
+				)}
+				{d.tags.length > 0 && (
+					<div className="mb-4 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs uppercase tracking-wide">
+						{d.tags.map((tag: string, i: number) => (
+							<span key={tag}>
+								<Link
+									href={`/blog?tag=${encodeURIComponent(tag)}`}
+									className="text-accent-pop hover:underline underline-offset-4"
+								>
+									{tag}
+								</Link>
+								{i < d.tags.length - 1 && <span className="text-muted-foreground">,</span>}
+							</span>
+						))}
+					</div>
+				)}
+				<h1 className="font-bold text-4xl leading-[1.1] tracking-tight sm:text-5xl">
+					{page.data.title}
+				</h1>
+				{page.data.description && (
+					<p className="mt-4 text-xl leading-relaxed text-foreground/60 sm:text-2xl sm:leading-relaxed">
+						{page.data.description}
+					</p>
+				)}
+				<div className="mt-4 flex flex-wrap items-center gap-x-3 text-muted-foreground text-xs tabular-nums">
+					<time>
+						{new Date(d.publishedAt).toLocaleDateString("en-US", {
+							year: "numeric",
+							month: "long",
+							day: "numeric",
+						})}
+					</time>
+					{d.editedAt && (
+						<>
+							<span>·</span>
+							<span>
+								Edited{" "}
+								{new Date(d.editedAt).toLocaleDateString("en-US", {
+									year: "numeric",
+									month: "long",
+									day: "numeric",
+								})}
+							</span>
+						</>
+					)}
+				</div>
+			</header>
+
+			<div className="mx-auto max-w-2xl px-4 pt-12 prose prose-p:leading-[1.8]">
 				<Mdx components={getMDXComponents()} />
 			</div>
 		</article>
