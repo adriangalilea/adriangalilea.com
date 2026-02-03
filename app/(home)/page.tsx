@@ -1,9 +1,16 @@
 import Link from "next/link";
 import { getBlogPosts } from "@/lib/source";
-import { projects } from "@/data/projects";
+import { projects, type Project } from "@/data/projects";
 import { FeaturedHero, PublishedList, DraftList } from "@/components/post-cards";
 import { StatusBadge } from "@/components/status-badge";
 import { LiquidGlass } from "@/components/liquid-glass";
+
+const STATUS_HOVER: Record<NonNullable<Project["status"]>, { bg: string; text: string }> = {
+	soon: { bg: "rgba(139,92,246,0.06)", text: "rgb(167,139,250)" },
+	sunset: { bg: "rgba(251,113,133,0.06)", text: "rgb(251,113,133)" },
+	lab: { bg: "rgba(34,211,238,0.06)", text: "rgb(34,211,238)" },
+	shipped: { bg: "rgba(250,204,21,0.06)", text: "rgb(250,204,21)" },
+};
 
 export default function Home() {
 	const { published, drafts } = getBlogPosts();
@@ -22,13 +29,14 @@ export default function Home() {
 							<li key={p.title}>
 								<Link
 									href={p.link}
-									className="group block rounded-lg px-3 py-2.5 -mx-3 transition-colors hover:bg-white/[0.04]"
+									className="group block rounded-lg px-3 py-2.5 -mx-3 transition-colors hover:bg-[var(--row-hover)]"
+									style={{ "--row-hover": p.status ? STATUS_HOVER[p.status].bg : "rgba(255,255,255,0.04)", "--row-text": p.status ? STATUS_HOVER[p.status].text : "inherit" } as React.CSSProperties}
 									{...(p.link.startsWith("http")
 										? { target: "_blank", rel: "noopener noreferrer" }
 										: {})}
 								>
 									<span className="flex items-center gap-2">
-										<span className="font-semibold group-hover:underline decoration-accent-pop underline-offset-4">
+										<span className="font-semibold transition-colors group-hover:text-[var(--row-text)]">
 											{p.title}
 										</span>
 										{p.status && <StatusBadge status={p.status} />}
