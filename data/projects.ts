@@ -15,6 +15,13 @@ export const projects: Project[] = [
 		status: "shipped",
 	},
 	{
+		title: "theSummaryBot",
+		description: "Instant summaries and auto-translation for YouTube and articles — 100+ monthly active users",
+		techs: ["telegram bots", "python", "ai"],
+		link: "https://t.me/theSummaryBot",
+		status: "shipped",
+	},
+	{
 		title: "namecheap-python",
 		description: "Modern Python client for the Namecheap API — 1.4k downloads a month",
 		techs: ["python"],
