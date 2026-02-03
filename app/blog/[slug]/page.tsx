@@ -99,13 +99,17 @@ export default async function BlogPost(props: {
 				<Mdx components={getMDXComponents()} />
 			</div>
 
-			<RelatedPosts slug={params.slug} />
+			<RelatedPosts slug={params.slug} currentTags={d.tags} />
 		</article>
 	);
 }
 
-function RelatedPosts({ slug }: { slug: string }) {
-	const related = getRelatedPosts(slug).map(toCardPost);
+function RelatedPosts({ slug, currentTags }: { slug: string; currentTags: string[] }) {
+	const related = getRelatedPosts(slug).map((p) => {
+		const card = toCardPost(p);
+		const shared = card.tags.filter((t) => currentTags.includes(t));
+		return { ...card, tags: shared };
+	});
 	if (related.length === 0) return null;
 
 	return (
