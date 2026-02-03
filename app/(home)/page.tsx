@@ -63,7 +63,7 @@ export default function Home() {
 				<div className="mx-auto w-full max-w-6xl px-6 pb-20">
 					<LiquidGlass as="section" className="rounded-2xl p-6 sm:p-8">
 						<h2 className="mb-6 text-xl font-semibold tracking-tight">
-							Writing
+							Writings
 						</h2>
 						<div className="grid gap-8 lg:grid-cols-[3fr_2fr]">
 							<FeaturedHero post={featured} />
