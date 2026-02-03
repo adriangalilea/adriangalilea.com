@@ -48,25 +48,23 @@ export default function RootLayout({
 				<RootProvider>
 					<LiquidGlassFilter />
 					<LiquidGlass as="nav" tint="var(--glass-l0)" className="sticky top-0 z-50 border-b border-border/20">
-						<div className="mx-auto flex h-12 max-w-6xl items-center justify-between px-6">
+						<div className="mx-auto flex h-14 w-full max-w-[90rem] items-center px-6 gap-6">
 							<Link
 								href="/"
-								className="font-semibold text-lg tracking-tight hover:underline decoration-accent-pop underline-offset-4"
+								className="font-bold text-2xl tracking-tight hover:underline decoration-accent-pop underline-offset-4"
 							>
 								Adrian Galilea
 							</Link>
-							<div className="flex items-center gap-6">
-								<Link href="/blog" className="text-muted-foreground text-sm hover:underline decoration-accent-pop underline-offset-4">
-									Blog
-								</Link>
-							</div>
+							<Link href="/blog" className="text-foreground/60 text-sm hover:underline decoration-accent-pop underline-offset-4">
+								Blog
+							</Link>
 						</div>
 					</LiquidGlass>
 					<div className="flex-1">
 						{children}
 					</div>
 					<LiquidGlass as="footer" tint="var(--glass-l0)" className="border-t border-border/20">
-						<div className="mx-auto flex h-12 max-w-6xl items-center justify-center gap-3 px-6">
+						<div className="mx-auto flex h-12 max-w-7xl items-center justify-center gap-3 px-6">
 							{socialLinks.map((l) => (
 								<Link
 									key={l.label}

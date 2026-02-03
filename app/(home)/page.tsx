@@ -21,8 +21,34 @@ export default function Home() {
 
 	return (
 		<main className="relative z-[1]">
-			<div className="mx-auto w-full max-w-6xl px-6 pt-12 sm:pt-20">
-				<LiquidGlass as="section" tint="var(--glass-l1)" className="mb-20 rounded-2xl p-6 sm:p-8">
+			{featured && (
+				<div className="mx-auto w-full max-w-7xl px-6 pt-12 sm:pt-20">
+					<LiquidGlass as="section" tint="var(--glass-l1)" className="mb-10 rounded-2xl p-6 sm:p-8">
+						<h2 className="mb-6 text-xl font-semibold tracking-tight">
+							Writings
+						</h2>
+						<div className="grid gap-8 lg:grid-cols-[1.618fr_1fr]">
+							<FeaturedHero post={featured} />
+
+							<div className="flex flex-col">
+								{rest.length > 0 && (
+									<PostCardCompactList posts={rest} />
+								)}
+
+								<Link
+									href="/blog"
+									className="mt-6 inline-block text-muted-foreground text-sm hover:text-foreground hover:underline decoration-accent-pop underline-offset-4"
+								>
+									all posts →
+								</Link>
+							</div>
+						</div>
+					</LiquidGlass>
+				</div>
+			)}
+
+			<div className="mx-auto w-full max-w-7xl px-6 pb-20">
+				<LiquidGlass as="section" tint="var(--glass-l1)" className="rounded-2xl p-6 sm:p-8">
 					<h2 className="mb-6 text-xl font-semibold tracking-tight">
 						Projects
 					</h2>
@@ -60,32 +86,6 @@ export default function Home() {
 					</ul>
 				</LiquidGlass>
 			</div>
-
-			{featured && (
-				<div className="mx-auto w-full max-w-6xl px-6 pb-20">
-					<LiquidGlass as="section" tint="var(--glass-l1)" className="rounded-2xl p-6 sm:p-8">
-						<h2 className="mb-6 text-xl font-semibold tracking-tight">
-							Writings
-						</h2>
-						<div className="grid gap-8 lg:grid-cols-[1.618fr_1fr]">
-							<FeaturedHero post={featured} />
-
-							<div className="flex flex-col">
-								{rest.length > 0 && (
-									<PostCardCompactList posts={rest} />
-								)}
-
-								<Link
-									href="/blog"
-									className="mt-6 inline-block text-muted-foreground text-sm hover:text-foreground hover:underline decoration-accent-pop underline-offset-4"
-								>
-									all posts →
-								</Link>
-							</div>
-						</div>
-					</LiquidGlass>
-				</div>
-			)}
 		</main>
 	);
 }
