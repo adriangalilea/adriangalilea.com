@@ -61,11 +61,6 @@ export function PostCard({ post }: { post: CardPost }) {
 				<h3 className="font-semibold text-lg leading-tight tracking-tight group-hover:text-accent-pop transition-colors">
 					{post.title}
 				</h3>
-				{post.description && (
-					<p className="mt-1.5 text-muted-foreground text-sm leading-relaxed line-clamp-2">
-						{post.description}
-					</p>
-				)}
 				<time className="mt-1.5 block text-muted-foreground text-xs tabular-nums">
 					{formatDate(post.date)}
 				</time>
@@ -94,11 +89,6 @@ export function PostCardCompact({ post, index }: { post: CardPost; index?: numbe
 				<h3 className="font-bold leading-snug group-hover:underline decoration-accent-pop underline-offset-4">
 					{post.title}
 				</h3>
-				{post.description && (
-					<p className="mt-0.5 text-muted-foreground text-sm line-clamp-1">
-						{post.description}
-					</p>
-				)}
 				<time className="mt-1 block text-muted-foreground text-xs tabular-nums uppercase">
 					{formatDate(post.date)}
 				</time>
@@ -117,11 +107,6 @@ export function PostCardCompactDraft({ post }: { post: CardPost }) {
 				<h3 className="font-semibold leading-snug text-sm group-hover:underline decoration-accent-pop underline-offset-4">
 					{post.title}
 				</h3>
-				{post.description && (
-					<p className="mt-0.5 text-muted-foreground text-xs line-clamp-1">
-						{post.description}
-					</p>
-				)}
 				<time className="mt-0.5 block text-muted-foreground text-xs tabular-nums uppercase">
 					{formatDate(post.date)}
 				</time>
@@ -144,11 +129,6 @@ export function FeaturedHero({ post }: { post: CardPost }) {
 				<h2 className="font-bold text-2xl leading-tight text-white group-hover:underline decoration-accent-pop underline-offset-4 sm:text-3xl lg:text-4xl">
 					{post.title}
 				</h2>
-				{post.description && (
-					<p className="mt-2 text-white/70 text-sm line-clamp-2 sm:text-base">
-						{post.description}
-					</p>
-				)}
 				<time className="mt-3 block text-white/50 text-xs tabular-nums uppercase">
 					{formatDate(post.date)}
 				</time>
