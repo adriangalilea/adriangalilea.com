@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { RootProvider } from "fumadocs-ui/provider/next";
 import Link from "next/link";
 import { Github, Send, Mail, Rss } from "lucide-react";
+import { LiquidGlass, LiquidGlassFilter } from "@/components/liquid-glass";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -45,7 +46,8 @@ export default function RootLayout({
 				className={`${geistSans.variable} ${geistMono.variable} flex min-h-screen flex-col antialiased`}
 			>
 				<RootProvider>
-					<nav className="sticky top-0 z-50 border-b border-border/50 bg-card/90 backdrop-blur-sm">
+					<LiquidGlassFilter />
+					<LiquidGlass as="nav" className="sticky top-0 z-50">
 						<div className="mx-auto flex h-12 max-w-6xl items-center justify-between px-6">
 							<Link
 								href="/"
@@ -59,7 +61,7 @@ export default function RootLayout({
 								</Link>
 							</div>
 						</div>
-					</nav>
+					</LiquidGlass>
 					<div className="flex-1">
 						{children}
 					</div>
