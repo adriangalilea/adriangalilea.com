@@ -20,7 +20,7 @@ export default function Home() {
 	return (
 		<main className="relative z-[1]">
 			<div className="mx-auto w-full max-w-6xl px-6 pt-12 sm:pt-20">
-				<LiquidGlass as="section" className="mb-20 rounded-2xl p-6 sm:p-8">
+				<LiquidGlass as="section" tint="var(--glass-l1)" className="mb-20 rounded-2xl p-6 sm:p-8">
 					<h2 className="mb-6 text-xl font-semibold tracking-tight">
 						Projects
 					</h2>
@@ -61,7 +61,7 @@ export default function Home() {
 
 			{featured && (
 				<div className="mx-auto w-full max-w-6xl px-6 pb-20">
-					<LiquidGlass as="section" className="rounded-2xl p-6 sm:p-8">
+					<LiquidGlass as="section" tint="var(--glass-l1)" className="rounded-2xl p-6 sm:p-8">
 						<h2 className="mb-6 text-xl font-semibold tracking-tight">
 							Writings
 						</h2>

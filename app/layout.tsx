@@ -47,7 +47,7 @@ export default function RootLayout({
 			>
 				<RootProvider>
 					<LiquidGlassFilter />
-					<LiquidGlass as="nav" tint="rgba(0,0,0,0.05)" className="sticky top-0 z-50">
+					<LiquidGlass as="nav" tint="var(--glass-l0)" className="sticky top-0 z-50">
 						<div className="mx-auto flex h-12 max-w-6xl items-center justify-between px-6">
 							<Link
 								href="/"
@@ -65,7 +65,7 @@ export default function RootLayout({
 					<div className="flex-1">
 						{children}
 					</div>
-					<LiquidGlass as="footer" tint="rgba(0,0,0,0.05)">
+					<LiquidGlass as="footer" tint="var(--glass-l0)">
 						<div className="mx-auto flex h-12 max-w-6xl items-center justify-center gap-3 px-6">
 							{socialLinks.map((l) => (
 								<Link

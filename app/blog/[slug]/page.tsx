@@ -53,7 +53,7 @@ export default async function BlogPost(props: {
 					{page.data.title}
 				</h1>
 				{page.data.description && (
-					<p className="mt-5 text-xl leading-relaxed text-muted-foreground sm:text-2xl sm:leading-relaxed">
+					<p className="mt-5 text-xl leading-relaxed text-foreground/60 sm:text-2xl sm:leading-relaxed">
 						{page.data.description}
 					</p>
 				)}
@@ -92,7 +92,7 @@ export default async function BlogPost(props: {
 				)}
 			</figure>
 
-			<div className="prose dark:prose-invert max-w-none prose-p:leading-[1.8]">
+			<div className="prose max-w-none prose-p:leading-[1.8]">
 				<Mdx components={getMDXComponents()} />
 			</div>
 		</article>
