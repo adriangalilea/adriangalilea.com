@@ -254,15 +254,16 @@
 /* Links — exclude heading anchors (fumadocs auto-links headings) */
 
 .prose :where(a):not(:where(h1 *, h2 *, h3 *, h4 *, h5 *, h6 *, [class~="not-prose"] *)) {
-  text-decoration: underline;
-  text-decoration-color: var(--accent-pop);
-  text-underline-offset: 3px;
-  text-decoration-thickness: 1px;
-  transition: text-decoration-color 0.15s;
+  color: var(--foreground);
+  text-decoration: none;
+  box-shadow: inset 0 -1px 0 0 currentColor;
+  transition: box-shadow 0.15s;
 }
 
 .prose :where(a):not(:where(h1 *, h2 *, h3 *, h4 *, h5 *, h6 *, [class~="not-prose"] *)):hover {
-  text-decoration-thickness: 2px;
+  color: var(--foreground) !important;
+  opacity: 1 !important;
+  box-shadow: inset 0 -0.5em 0 0 color-mix(in oklch, var(--accent-pop) 40%, transparent);
 }
 
 .prose :where(h1, h2, h3, h4, h5, h6):not(:where([class~="not-prose"] *)) a {
