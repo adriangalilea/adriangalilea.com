@@ -3,6 +3,7 @@ import { getBlogPosts } from "@/lib/source";
 import { projects } from "@/data/projects";
 import { FeaturedHero, PublishedList, DraftList } from "@/components/post-cards";
 import { StatusBadge } from "@/components/status-badge";
+import { LiquidGlass } from "@/components/liquid-glass";
 
 export default function Home() {
 	const { published, drafts } = getBlogPosts();
@@ -10,9 +11,9 @@ export default function Home() {
 	const rest = published.slice(1, 6);
 
 	return (
-		<main>
+		<main className="relative z-[1]">
 			<div className="mx-auto w-full max-w-6xl px-6 pt-12 sm:pt-20">
-				<section className="mb-20">
+				<LiquidGlass as="section" className="mb-20 rounded-2xl p-6 sm:p-8">
 					<h2 className="mb-6 text-lg font-semibold tracking-tight">
 						Projects
 					</h2>
@@ -21,7 +22,7 @@ export default function Home() {
 							<li key={p.title}>
 								<Link
 									href={p.link}
-									className="group block rounded-lg px-3 py-2.5 -mx-3 transition-colors hover:bg-card"
+									className="group block rounded-lg px-3 py-2.5 -mx-3 transition-colors hover:bg-white/[0.04]"
 									{...(p.link.startsWith("http")
 										? { target: "_blank", rel: "noopener noreferrer" }
 										: {})}
@@ -47,45 +48,47 @@ export default function Home() {
 							</li>
 						))}
 					</ul>
-				</section>
+				</LiquidGlass>
 			</div>
 
 			{featured && (
-				<section className="mx-auto w-full max-w-6xl px-6 pb-20">
-					<h2 className="mb-6 text-lg font-semibold tracking-tight">
-						Writing
-					</h2>
-					<div className="grid gap-8 lg:grid-cols-[3fr_2fr]">
-						<FeaturedHero post={featured} />
+				<div className="mx-auto w-full max-w-6xl px-6 pb-20">
+					<LiquidGlass as="section" className="rounded-2xl p-6 sm:p-8">
+						<h2 className="mb-6 text-lg font-semibold tracking-tight">
+							Writing
+						</h2>
+						<div className="grid gap-8 lg:grid-cols-[3fr_2fr]">
+							<FeaturedHero post={featured} />
 
-						<div className="flex flex-col">
-							{rest.length > 0 && (
-								<div>
-									<p className="mb-4 text-muted-foreground text-xs uppercase tracking-widest">
-										Published
-									</p>
-									<PublishedList posts={rest} startIndex={2} />
-								</div>
-							)}
+							<div className="flex flex-col">
+								{rest.length > 0 && (
+									<div>
+										<p className="mb-4 text-muted-foreground text-xs uppercase tracking-widest">
+											Published
+										</p>
+										<PublishedList posts={rest} startIndex={2} />
+									</div>
+								)}
 
-							{drafts.length > 0 && (
-								<div className={rest.length > 0 ? "mt-6 border-t border-border pt-6" : ""}>
-									<p className="mb-3 text-muted-foreground text-xs uppercase tracking-widest">
-										Drafts
-									</p>
-									<DraftList posts={drafts.slice(0, 5)} />
-								</div>
-							)}
+								{drafts.length > 0 && (
+									<div className={rest.length > 0 ? "mt-6 border-t border-border pt-6" : ""}>
+										<p className="mb-3 text-muted-foreground text-xs uppercase tracking-widest">
+											Drafts
+										</p>
+										<DraftList posts={drafts.slice(0, 5)} />
+									</div>
+								)}
 
-							<Link
-								href="/blog"
-								className="mt-6 inline-block text-muted-foreground text-sm hover:text-foreground hover:underline decoration-accent-pop underline-offset-4"
-							>
-								all posts →
-							</Link>
+								<Link
+									href="/blog"
+									className="mt-6 inline-block text-muted-foreground text-sm hover:text-foreground hover:underline decoration-accent-pop underline-offset-4"
+								>
+									all posts →
+								</Link>
+							</div>
 						</div>
-					</div>
-				</section>
+					</LiquidGlass>
+				</div>
 			)}
 		</main>
 	);
