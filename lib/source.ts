@@ -122,3 +122,38 @@ export function getBlogPosts() {
 		drafts: all.filter((p) => blogData(p).draft),
 	};
 }
+
+export function toCardPost(page: AnyPage) {
+	const d = blogData(page);
+	return {
+		url: page.url,
+		slug: page.slugs[0],
+		title: (page.data as { title?: string }).title ?? "",
+		description: d.description,
+		date: new Date(d.publishedAt).toISOString(),
+		tags: d.tags,
+		coverUrl: resolveCover(page),
+		draft: d.draft,
+	};
+}
+
+export function getRelatedPosts(currentSlug: string, limit = 3) {
+	const current = blogSource.getPage([currentSlug]);
+	if (!current) return [];
+
+	const currentTags = blogData(current).tags;
+	const published = blogSource.getPages()
+		.filter((p) => !blogData(p).draft && p.slugs[0] !== currentSlug)
+		.sort(byDate);
+
+	if (currentTags.length === 0) return published.slice(0, limit);
+
+	return published
+		.map((p) => {
+			const shared = blogData(p).tags.filter((t) => currentTags.includes(t)).length;
+			return { page: p, shared };
+		})
+		.sort((a, b) => b.shared - a.shared || byDate(a.page, b.page))
+		.slice(0, limit)
+		.map((r) => r.page);
+}

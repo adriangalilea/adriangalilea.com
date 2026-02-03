@@ -1,7 +1,7 @@
 import Link from "next/link";
-import { getBlogPosts } from "@/lib/source";
+import { getBlogPosts, toCardPost } from "@/lib/source";
 import { projects, type Project } from "@/data/projects";
-import { FeaturedHero, PublishedList, DraftList } from "@/components/post-cards";
+import { FeaturedHero, PostCardCompactList, PostCardCompactDraftList } from "@/components/post-cards";
 import { StatusBadge } from "@/components/status-badge";
 import { LiquidGlass } from "@/components/liquid-glass";
 
@@ -14,8 +14,10 @@ const STATUS_HOVER: Record<NonNullable<Project["status"]>, { bg: string; text: s
 
 export default function Home() {
 	const { published, drafts } = getBlogPosts();
-	const featured = published[0];
-	const rest = published.slice(1, 6);
+	const cards = published.map(toCardPost);
+	const draftCards = drafts.map(toCardPost);
+	const featured = cards[0];
+	const rest = cards.slice(1, 6);
 
 	return (
 		<main className="relative z-[1]">
@@ -74,16 +76,16 @@ export default function Home() {
 										<p className="mb-4 text-muted-foreground text-xs uppercase tracking-widest">
 											Published
 										</p>
-										<PublishedList posts={rest} startIndex={2} />
+										<PostCardCompactList posts={rest} startIndex={2} />
 									</div>
 								)}
 
-								{drafts.length > 0 && (
+								{draftCards.length > 0 && (
 									<div className={rest.length > 0 ? "mt-6 border-t border-border pt-6" : ""}>
 										<p className="mb-3 text-muted-foreground text-xs uppercase tracking-widest">
 											Drafts
 										</p>
-										<DraftList posts={drafts.slice(0, 5)} />
+										<PostCardCompactDraftList posts={draftCards.slice(0, 5)} />
 									</div>
 								)}
 

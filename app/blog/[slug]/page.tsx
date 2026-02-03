@@ -1,9 +1,10 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { blogSource, blogData, resolveCover, resolveOG } from "@/lib/source";
+import { blogSource, blogData, resolveCover, resolveOG, getRelatedPosts, toCardPost } from "@/lib/source";
 import { getMDXComponents } from "@/mdx-components";
 import { slugToGradient } from "@/lib/gradient";
+import { PostCard } from "@/components/post-cards";
 
 export default async function BlogPost(props: {
 	params: Promise<{ slug: string }>;
@@ -97,7 +98,25 @@ export default async function BlogPost(props: {
 			<div className="mx-auto max-w-2xl px-4 pt-12 prose prose-p:leading-[1.8]">
 				<Mdx components={getMDXComponents()} />
 			</div>
+
+			<RelatedPosts slug={params.slug} />
 		</article>
+	);
+}
+
+function RelatedPosts({ slug }: { slug: string }) {
+	const related = getRelatedPosts(slug).map(toCardPost);
+	if (related.length === 0) return null;
+
+	return (
+		<nav className="mx-auto max-w-5xl px-4 mt-16 pt-12 border-t border-border">
+			<p className="text-muted-foreground text-xs uppercase tracking-widest mb-6">Keep reading</p>
+			<div className="grid gap-6 sm:grid-cols-3">
+				{related.map((post) => (
+					<PostCard key={post.url} post={post} />
+				))}
+			</div>
+		</nav>
 	);
 }
 
