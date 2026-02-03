@@ -77,14 +77,9 @@ export function PostCardDraft({ post }: { post: CardPost }) {
 	);
 }
 
-export function PostCardCompact({ post, index }: { post: CardPost; index?: number }) {
+export function PostCardCompact({ post }: { post: CardPost }) {
 	return (
 		<Link href={post.url} className="group flex gap-4">
-			{index !== undefined && (
-				<span className="mt-0.5 shrink-0 font-mono text-accent-pop text-lg font-bold tabular-nums">
-					{index}
-				</span>
-			)}
 			<div className="flex-1 min-w-0">
 				<h3 className="font-bold leading-snug group-hover:underline decoration-accent-pop underline-offset-4">
 					{post.title}
@@ -102,25 +97,15 @@ export function PostCardCompact({ post, index }: { post: CardPost; index?: numbe
 
 export function PostCardCompactDraft({ post }: { post: CardPost }) {
 	return (
-		<Link href={post.url} className="group flex gap-4 opacity-50 hover:opacity-75 transition-opacity">
-			<div className="flex-1 min-w-0">
-				<h3 className="font-semibold leading-snug text-sm group-hover:underline decoration-accent-pop underline-offset-4">
-					{post.title}
-				</h3>
-				<time className="mt-0.5 block text-muted-foreground text-xs tabular-nums uppercase">
-					{formatDate(post.date)}
-				</time>
-			</div>
-			<div className="shrink-0 overflow-hidden rounded-lg w-[80px] h-[56px]">
-				<CoverImage coverUrl={post.coverUrl} slug={post.slug} title={post.title} />
-			</div>
-		</Link>
+		<div className="opacity-50 hover:opacity-75 transition-opacity">
+			<PostCardCompact post={post} />
+		</div>
 	);
 }
 
 export function FeaturedHero({ post }: { post: CardPost }) {
 	return (
-		<Link href={post.url} className="group relative block aspect-[4/3] overflow-hidden rounded-2xl">
+		<Link href={post.url} className="group relative block h-full min-h-[300px] overflow-hidden rounded-2xl">
 			<div className="absolute inset-0">
 				<CoverImage coverUrl={post.coverUrl} slug={post.slug} title={post.title} />
 			</div>
@@ -137,13 +122,13 @@ export function FeaturedHero({ post }: { post: CardPost }) {
 	);
 }
 
-export function PostCardCompactList({ posts, startIndex = 1 }: { posts: CardPost[]; startIndex?: number }) {
+export function PostCardCompactList({ posts }: { posts: CardPost[] }) {
 	if (posts.length === 0) return null;
 	return (
 		<ul className="divide-y divide-border">
-			{posts.map((post, i) => (
+			{posts.map((post) => (
 				<li key={post.url} className="py-5 first:pt-0 last:pb-0">
-					<PostCardCompact post={post} index={startIndex + i} />
+					{post.draft ? <PostCardCompactDraft post={post} /> : <PostCardCompact post={post} />}
 				</li>
 			))}
 		</ul>
@@ -153,9 +138,9 @@ export function PostCardCompactList({ posts, startIndex = 1 }: { posts: CardPost
 export function PostCardCompactDraftList({ posts }: { posts: CardPost[] }) {
 	if (posts.length === 0) return null;
 	return (
-		<ul className="divide-y divide-border/50">
+		<ul className="divide-y divide-border">
 			{posts.map((post) => (
-				<li key={post.url} className="py-4 first:pt-0 last:pb-0">
+				<li key={post.url} className="py-5 first:pt-0 last:pb-0">
 					<PostCardCompactDraft post={post} />
 				</li>
 			))}

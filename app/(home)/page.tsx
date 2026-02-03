@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { getBlogPosts, toCardPost } from "@/lib/source";
 import { projects, type Project } from "@/data/projects";
-import { FeaturedHero, PostCardCompactList, PostCardCompactDraftList } from "@/components/post-cards";
+import { FeaturedHero, PostCardCompactList } from "@/components/post-cards";
 import { StatusBadge } from "@/components/status-badge";
 import { LiquidGlass } from "@/components/liquid-glass";
 
@@ -17,7 +17,7 @@ export default function Home() {
 	const cards = published.map(toCardPost);
 	const draftCards = drafts.map(toCardPost);
 	const featured = cards[0];
-	const rest = cards.slice(1, 6);
+	const rest = [...cards.slice(1, 4), ...draftCards.slice(0, 2)];
 
 	return (
 		<main className="relative z-[1]">
@@ -67,26 +67,12 @@ export default function Home() {
 						<h2 className="mb-6 text-xl font-semibold tracking-tight">
 							Writings
 						</h2>
-						<div className="grid gap-8 lg:grid-cols-[3fr_2fr]">
+						<div className="grid gap-8 lg:grid-cols-[1.618fr_1fr]">
 							<FeaturedHero post={featured} />
 
 							<div className="flex flex-col">
 								{rest.length > 0 && (
-									<div>
-										<p className="mb-4 text-muted-foreground text-xs uppercase tracking-widest">
-											Published
-										</p>
-										<PostCardCompactList posts={rest} startIndex={2} />
-									</div>
-								)}
-
-								{draftCards.length > 0 && (
-									<div className={rest.length > 0 ? "mt-6 border-t border-border pt-6" : ""}>
-										<p className="mb-3 text-muted-foreground text-xs uppercase tracking-widest">
-											Drafts
-										</p>
-										<PostCardCompactDraftList posts={draftCards.slice(0, 5)} />
-									</div>
+									<PostCardCompactList posts={rest} />
 								)}
 
 								<Link
