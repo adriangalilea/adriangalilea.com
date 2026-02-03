@@ -61,7 +61,7 @@ export function PostCard({ post }: { post: CardPost }) {
 						))}
 					</p>
 				)}
-				<h3 className="font-semibold text-lg leading-tight tracking-tight group-hover:text-accent-pop transition-colors">
+				<h3 className="font-semibold text-lg leading-tight tracking-tight group-hover:underline decoration-accent-pop underline-offset-4">
 					{post.title}
 				</h3>
 				<time className="mt-1.5 block text-muted-foreground text-xs tabular-nums">
@@ -91,7 +91,7 @@ export function PostCardCompact({ post }: { post: CardPost }) {
 					{formatDate(post.date)}
 				</time>
 			</div>
-			<div className="shrink-0 overflow-hidden rounded-lg w-[100px] h-[70px] sm:w-[120px] sm:h-[80px]">
+			<div className="shrink-0 overflow-hidden rounded-lg w-[100px] h-[70px] sm:w-[120px] sm:h-[80px] transition-transform duration-300 group-hover:scale-[1.03]">
 				<CoverImage coverUrl={post.coverUrl} slug={post.slug} title={post.title} size="small" />
 			</div>
 		</Link>
@@ -108,18 +108,20 @@ export function PostCardCompactDraft({ post }: { post: CardPost }) {
 
 export function FeaturedHero({ post }: { post: CardPost }) {
 	return (
-		<Link href={post.url} className="group relative block h-full min-h-[300px] overflow-hidden rounded-2xl">
-			<div className="absolute inset-0">
-				<CoverImage coverUrl={post.coverUrl} slug={post.slug} title={post.title} />
-			</div>
-			<div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
-			<div className="absolute bottom-0 left-0 right-0 p-6 sm:p-8">
-				<h2 className="font-bold text-2xl leading-tight text-white group-hover:underline decoration-accent-pop underline-offset-4 sm:text-3xl lg:text-4xl">
-					{post.title}
-				</h2>
-				<time className="mt-3 block text-white/50 text-xs tabular-nums uppercase">
-					{formatDate(post.date)}
-				</time>
+		<Link href={post.url} className="group block h-full">
+			<div className="relative h-full min-h-[300px] overflow-hidden rounded-2xl transition-transform duration-300 group-hover:scale-[1.02] origin-center">
+				<div className="absolute inset-0">
+					<CoverImage coverUrl={post.coverUrl} slug={post.slug} title={post.title} />
+				</div>
+				<div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
+				<div className="absolute bottom-0 left-0 right-0 p-6 sm:p-8">
+					<h2 className="font-bold text-2xl leading-tight text-white group-hover:underline decoration-accent-pop underline-offset-4 sm:text-3xl lg:text-4xl">
+						{post.title}
+					</h2>
+					<time className="mt-3 block text-white/50 text-xs tabular-nums uppercase">
+						{formatDate(post.date)}
+					</time>
+				</div>
 			</div>
 		</Link>
 	);
