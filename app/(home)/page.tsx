@@ -11,29 +11,36 @@ export default function Home() {
 
 	return (
 		<main>
-			<div className="mx-auto w-full max-w-6xl px-6 pt-10 sm:pt-16">
-				<section className="mb-16">
-					<p className="mb-4 text-muted-foreground text-xs uppercase tracking-widest">
+			<div className="mx-auto w-full max-w-6xl px-6 pt-12 sm:pt-20">
+				<section className="mb-20">
+					<h2 className="mb-6 text-lg font-semibold tracking-tight">
 						Projects
-					</p>
+					</h2>
 					<ul className="space-y-1">
 						{projects.map((p) => (
 							<li key={p.title}>
 								<Link
 									href={p.link}
-									className="group flex items-baseline gap-2 rounded-lg px-3 py-2 -mx-3 transition-colors hover:bg-card"
+									className="group block rounded-lg px-3 py-2.5 -mx-3 transition-colors hover:bg-card"
 									{...(p.link.startsWith("http")
 										? { target: "_blank", rel: "noopener noreferrer" }
 										: {})}
 								>
-									<span className="font-medium group-hover:underline decoration-accent-pop underline-offset-4">
-										{p.title}
+									<span className="flex items-center gap-2">
+										<span className="font-medium group-hover:underline decoration-accent-pop underline-offset-4">
+											{p.title}
+										</span>
+										{p.status && <StatusBadge status={p.status} />}
+										<span className="flex-1 border-b border-dotted border-border/50" />
+										{p.techs.length > 0 && (
+											<span className="shrink-0 text-muted-foreground text-xs">
+												{p.techs.join(" · ")}
+											</span>
+										)}
 									</span>
-									{p.status && <StatusBadge status={p.status} />}
-									<span className="flex-1 border-b border-dotted border-border/50" />
-									{p.techs.length > 0 && (
-										<span className="text-muted-foreground text-xs">
-											{p.techs.join(" · ")}
+									{p.description && (
+										<span className="mt-0.5 block text-muted-foreground text-sm">
+											{p.description}
 										</span>
 									)}
 								</Link>
@@ -44,7 +51,10 @@ export default function Home() {
 			</div>
 
 			{featured && (
-				<section className="mx-auto w-full max-w-6xl px-6 pb-16">
+				<section className="mx-auto w-full max-w-6xl px-6 pb-20">
+					<h2 className="mb-6 text-lg font-semibold tracking-tight">
+						Writing
+					</h2>
 					<div className="grid gap-8 lg:grid-cols-[3fr_2fr]">
 						<FeaturedHero post={featured} />
 

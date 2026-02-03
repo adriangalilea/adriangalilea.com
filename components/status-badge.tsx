@@ -57,10 +57,10 @@ export function StatusBadge({ status }: { status: NonNullable<Project["status"]>
 	const Icon = config.icon;
 
 	return (
-		<span className="group/status relative inline-flex h-6 w-6">
+		<span className="group/status relative inline-flex h-6 w-6 shrink-0">
 			<Glass
 				color={config.color}
-				className="absolute left-0 top-0 flex h-6 items-center gap-0 rounded-full px-[7px] transition-all duration-250 ease-[cubic-bezier(0.25,1,0.5,1)] group-hover/status:gap-1.5 group-hover/status:pr-2.5"
+				className="absolute left-0 top-0 flex h-6 items-center gap-0 rounded-full px-[6px] transition-all duration-250 ease-[cubic-bezier(0.25,1,0.5,1)] group-hover/status:gap-1.5 group-hover/status:pr-2.5"
 			>
 				<Icon className="relative z-10 size-2.5 shrink-0" />
 				<span className="relative z-10 max-w-0 overflow-hidden text-[10px] font-medium leading-none whitespace-nowrap opacity-0 transition-all duration-250 ease-[cubic-bezier(0.25,1,0.5,1)] group-hover/status:max-w-20 group-hover/status:opacity-100">
