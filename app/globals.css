@@ -326,6 +326,8 @@
 
 .prose :where(img):not(:where([class~="not-prose"] *)) {
   border-radius: 0.75rem;
+  width: 100%;
+  height: auto;
 }
 
 .prose :where(figcaption):not(:where([class~="not-prose"] *)) {
