@@ -1,6 +1,7 @@
-import Image from "next/image";
 import Link from "next/link";
-import { slugToGradient } from "@/lib/gradient";
+import { CoverImage } from "@/components/cover-image";
+
+export { CoverImage };
 
 export type CardPost = {
 	url: string;
@@ -19,30 +20,6 @@ function formatDate(date: string) {
 		month: "short",
 		day: "numeric",
 	});
-}
-
-function GrainOverlay() {
-	return <div className="cover-grain absolute inset-0 z-10 pointer-events-none" />;
-}
-
-export function CoverImage({ coverUrl, slug, title, size = "large", sizes, priority }: { coverUrl: string | null; slug: string; title: string; size?: "large" | "small"; sizes?: string; priority?: boolean }) {
-	if (coverUrl) {
-		const blur = size === "small"
-			? "absolute inset-0 h-full w-full scale-[2] object-cover blur-2xl"
-			: "absolute inset-0 h-full w-full scale-150 object-cover blur-3xl opacity-60";
-		return (
-			<div className={`relative h-full w-full overflow-hidden ${size === "large" ? "bg-black" : ""}`}>
-				<img src={coverUrl} alt="" aria-hidden className={blur} />
-				<Image src={coverUrl} alt={title} fill className="relative object-contain" sizes={sizes ?? "100vw"} priority={priority} />
-				<GrainOverlay />
-			</div>
-		);
-	}
-	return (
-		<div className="relative h-full w-full overflow-hidden" style={{ background: slugToGradient(slug) }}>
-			<GrainOverlay />
-		</div>
-	);
 }
 
 export function PostCard({ post }: { post: CardPost }) {
