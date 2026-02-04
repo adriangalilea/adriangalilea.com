@@ -1,6 +1,7 @@
 import { defineCollections, defineConfig } from "fumadocs-mdx/config";
 import lastModified from "fumadocs-mdx/plugins/last-modified";
 import remarkBreaks from "remark-breaks";
+
 import { z } from "zod";
 
 export const blog = defineCollections({

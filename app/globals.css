@@ -336,6 +336,25 @@
   color: var(--muted-foreground);
 }
 
+/* Image captions: *italic text* on the line after an image (remark-breaks joins them with <br>) */
+.prose p:has(> img) > br {
+  display: none;
+}
+
+.prose p:has(> img) > img {
+  margin-bottom: 0;
+}
+
+.prose p:has(> img) > em:last-child {
+  display: block;
+  margin-top: 0.625em;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--foreground);
+  opacity: 0.6;
+  font-style: italic;
+}
+
 /* ── Cover image grain ── */
 
 .cover-grain {
