@@ -3,6 +3,7 @@ title: "The Shapes of Knowledge"
 publishedAt: 2024-05-12
 description: "From spoken word to the web"
 tags:
+  - essay
   - ontology
   - taxonomy
   - hypertext
