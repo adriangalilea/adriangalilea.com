@@ -51,11 +51,11 @@ export default function RootLayout({
 						<div className="mx-auto flex h-14 w-full max-w-[90rem] items-center px-6 gap-6">
 							<Link
 								href="/"
-								className="font-bold text-2xl tracking-tight hover:underline decoration-accent-pop underline-offset-4"
+								className="font-bold text-2xl tracking-tight transition-colors hover:text-accent-pop"
 							>
 								Adrian Galilea
 							</Link>
-							<Link href="/blog" className="text-foreground-low text-sm hover:underline decoration-accent-pop underline-offset-4">
+							<Link href="/blog" className="text-foreground-low text-sm transition-colors hover:text-accent-pop">
 								Blog
 							</Link>
 						</div>
