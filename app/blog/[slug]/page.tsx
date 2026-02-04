@@ -61,12 +61,12 @@ export default async function BlogPost(props: {
 							day: "numeric",
 						})}
 					</time>
-					{d.editedAt && (
+					{d.lastModified && (
 						<>
 							<span>·</span>
 							<span>
 								Edited{" "}
-								{new Date(d.editedAt).toLocaleDateString("en-US", {
+								{new Date(d.lastModified).toLocaleDateString("en-US", {
 									year: "numeric",
 									month: "long",
 									day: "numeric",
@@ -77,7 +77,7 @@ export default async function BlogPost(props: {
 				</div>
 			</header>
 
-			<div className="mx-auto max-w-2xl px-4 pt-12 prose prose-p:leading-[1.8]">
+			<div className="mx-auto max-w-2xl px-4 pt-8 prose prose-p:leading-[1.8]">
 				<Mdx components={getMDXComponents()} />
 			</div>
 

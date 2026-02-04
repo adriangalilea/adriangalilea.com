@@ -101,7 +101,7 @@ export function blogData(page: AnyPage) {
 	return {
 		body: d.body as MDXContent,
 		publishedAt: d.publishedAt as Date,
-		editedAt: d.editedAt as Date | undefined,
+		lastModified: d.lastModified as Date | undefined,
 		tags: (d.tags as string[]) ?? [],
 		isPublished: (d.isPublished as boolean) ?? true,
 		isDraft: (d.isDraft as boolean) ?? false,

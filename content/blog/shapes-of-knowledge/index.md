@@ -6,7 +6,6 @@ tags:
   - ontology
   - taxonomy
   - hypertext
-editedAt: 2026-02-04
 ---
 
 ## Genesis
