@@ -38,13 +38,14 @@ it's fidelity was as **_fallible_** as the human mind.
 
 And we began grouping, labelling... But with books neatly organized in categories, knowledge is stranded, starved, becomes stale.
 
+![Biohaviour | Slime Mold](./slime-mold.gif)
+*Slime mold ~~solving complex network optimization problems~~*
+
+So, we began extracting, combining, and annotating knowledge from diverse sources,  weaving webs of information with emergent practices such as the Commonplace Book.
+
 ![Newton's Memorandum Book](./newton.png)
 *Sir Isaac Newton (1642–1727) kept this pocket-sized "memorandum book", filling it with notes distilled from his reading.*
 
-So, again, we began extracting, combining, and annotating knowledge from diverse sources,  weaving webs of information with emergent practices such as the Commonplace Book.
-
-![Biohaviour | Slime Mold](./slime-mold.gif)
-*Slime mold ~~solving complex network optimization problems~~*
 ## Digital Redux
 
 ![Memex Concept](./memex.png)
