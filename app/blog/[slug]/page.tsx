@@ -4,6 +4,8 @@ import { notFound } from "next/navigation";
 import { blogSource, blogData, resolveCover, resolveOG, getRelatedPosts, toCardPost } from "@/lib/source";
 import { getMDXComponents } from "@/mdx-components";
 import { PostCard, CoverImage } from "@/components/post-cards";
+import { BlogTOC } from "@/components/blog-toc";
+import type { TOCItemType } from "fumadocs-core/toc";
 
 export default async function BlogPost(props: {
 	params: Promise<{ slug: string }>;
@@ -16,69 +18,83 @@ export default async function BlogPost(props: {
 	const Mdx = d.body;
 	const coverUrl = resolveCover(page);
 
+	const toc = d.toc;
+
 	return (
 		<article className="pb-16">
-			<figure className="mx-auto max-w-5xl px-4 pt-4 sm:pt-6">
-				<div className={`w-full overflow-hidden rounded-2xl ${coverUrl ? "aspect-[2/1]" : "aspect-[3/1]"}`}>
-					<CoverImage coverUrl={coverUrl} slug={params.slug} title={page.data.title ?? ""} sizes="(max-width: 1024px) 100vw, 1024px" priority />
-				</div>
-			</figure>
+			<div className="mx-auto max-w-[90rem] px-6">
+				{coverUrl && (
+					<figure className="pt-4 sm:pt-6 mb-8 max-w-2xl lg:ml-[248px]">
+						<div className="w-full overflow-hidden rounded-2xl aspect-[16/9]">
+							<CoverImage coverUrl={coverUrl} slug={params.slug} title={page.data.title ?? ""} sizes="(max-width: 1024px) 100vw, 672px" priority />
+						</div>
+					</figure>
+				)}
 
-			<header className="mx-auto max-w-2xl px-4 pt-8">
-				{d.isDraft && (
-					<div className="mb-6 rounded-lg border border-border/50 bg-muted/50 px-4 py-3 text-muted-foreground text-sm">
-						This is a draft — unfinished and subject to change.
-					</div>
-				)}
-				{d.tags.length > 0 && (
-					<div className="mb-4 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs uppercase tracking-wide">
-						{d.tags.map((tag: string, i: number) => (
-							<span key={tag}>
-								<Link
-									href={`/blog?tag=${encodeURIComponent(tag)}`}
-									className="text-accent-pop hover:underline underline-offset-4"
-								>
-									{tag}
-								</Link>
-								{i < d.tags.length - 1 && <span className="text-muted-foreground">,</span>}
-							</span>
-						))}
-					</div>
-				)}
-				<h1 className="font-bold text-4xl leading-[1.1] tracking-tight sm:text-5xl">
-					{page.data.title}
-				</h1>
-				{page.data.description && (
-					<p className="mt-4 text-xl leading-relaxed text-foreground/85 sm:text-2xl sm:leading-relaxed">
-						{page.data.description}
-					</p>
-				)}
-				<div className="mt-4 flex flex-wrap items-center gap-x-3 text-muted-foreground text-xs tabular-nums">
-					<time>
-						{new Date(d.publishedAt).toLocaleDateString("en-US", {
-							year: "numeric",
-							month: "long",
-							day: "numeric",
-						})}
-					</time>
-					{d.lastModified && (
-						<>
-							<span>·</span>
-							<span>
-								Edited{" "}
-								{new Date(d.lastModified).toLocaleDateString("en-US", {
+				<div className={`${!coverUrl ? "pt-4 sm:pt-6" : ""} lg:flex lg:gap-12`}>
+					<aside className="hidden lg:block lg:w-[200px] lg:shrink-0">
+						<BlogTOC items={toc} />
+					</aside>
+
+					<div className="min-w-0 max-w-2xl">
+						<header>
+						{d.isDraft && (
+							<div className="mb-6 rounded-lg border border-border/50 bg-muted/50 px-4 py-3 text-muted-foreground text-sm">
+								This is a draft — unfinished and subject to change.
+							</div>
+						)}
+						{d.tags.length > 0 && (
+							<div className="mb-4 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs uppercase tracking-wide">
+								{d.tags.map((tag: string, i: number) => (
+									<span key={tag}>
+										<Link
+											href={`/blog?tag=${encodeURIComponent(tag)}`}
+											className="text-accent-pop hover:underline underline-offset-4"
+										>
+											{tag}
+										</Link>
+										{i < d.tags.length - 1 && <span className="text-muted-foreground">,</span>}
+									</span>
+								))}
+							</div>
+						)}
+						<h1 className="font-bold text-4xl leading-[1.1] tracking-tight sm:text-5xl">
+							{page.data.title}
+						</h1>
+						{page.data.description && (
+							<p className="mt-4 text-xl leading-relaxed text-foreground/85 sm:text-2xl sm:leading-relaxed">
+								{page.data.description}
+							</p>
+						)}
+						<div className="mt-4 flex flex-wrap items-center gap-x-3 text-muted-foreground text-xs tabular-nums">
+							<time>
+								{new Date(d.publishedAt).toLocaleDateString("en-US", {
 									year: "numeric",
 									month: "long",
 									day: "numeric",
 								})}
-							</span>
-						</>
-					)}
-				</div>
-			</header>
+							</time>
+							{d.lastModified && (
+								<>
+									<span>·</span>
+									<span>
+										Edited{" "}
+										{new Date(d.lastModified).toLocaleDateString("en-US", {
+											year: "numeric",
+											month: "long",
+											day: "numeric",
+										})}
+									</span>
+								</>
+							)}
+						</div>
+					</header>
 
-			<div className="mx-auto max-w-2xl px-4 pt-8 prose prose-p:leading-[1.8]">
-				<Mdx components={getMDXComponents()} />
+					<div className="pt-8 prose prose-p:leading-[1.8]">
+						<Mdx components={getMDXComponents()} />
+					</div>
+				</div>
+			</div>
 			</div>
 
 			<RelatedPosts slug={params.slug} currentTags={d.tags} />

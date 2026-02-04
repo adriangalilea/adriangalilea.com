@@ -2,6 +2,7 @@ import { blog } from "fumadocs-mdx:collections/server";
 import { toFumadocsSource } from "fumadocs-mdx/runtime/server";
 import { loader } from "fumadocs-core/source";
 import type { MDXContent } from "mdx/types";
+import type { TOCItemType } from "fumadocs-core/toc";
 import { existsSync, cpSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import sharp from "sharp";
@@ -100,6 +101,7 @@ export function blogData(page: AnyPage) {
 	const d = page.data as unknown as Record<string, unknown>;
 	return {
 		body: d.body as MDXContent,
+		toc: (d.toc as TOCItemType[]) ?? [],
 		publishedAt: d.publishedAt as Date,
 		lastModified: d.lastModified as Date | undefined,
 		tags: (d.tags as string[]) ?? [],
