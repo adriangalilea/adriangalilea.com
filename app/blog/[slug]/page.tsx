@@ -90,7 +90,7 @@ export default async function BlogPost(props: {
 						</div>
 					</header>
 
-					<div className="pt-8 prose prose-p:leading-[1.8]">
+					<div className="prose prose-p:leading-[1.8]">
 						<Mdx components={getMDXComponents()} />
 					</div>
 				</div>
