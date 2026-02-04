@@ -39,7 +39,7 @@ export default async function BlogPost(props: {
 					<div className="min-w-0 max-w-2xl">
 						<header>
 						{d.isDraft && (
-							<div className="mb-6 rounded-lg border border-border/50 bg-muted/50 px-4 py-3 text-muted-foreground text-sm">
+							<div className="mb-6 rounded-lg border border-border/50 bg-muted/50 px-4 py-3 text-foreground-low text-sm">
 								This is a draft — unfinished and subject to change.
 							</div>
 						)}
@@ -53,7 +53,7 @@ export default async function BlogPost(props: {
 										>
 											{tag}
 										</Link>
-										{i < d.tags.length - 1 && <span className="text-muted-foreground">,</span>}
+										{i < d.tags.length - 1 && <span className="text-foreground-lowest">,</span>}
 									</span>
 								))}
 							</div>
@@ -62,11 +62,11 @@ export default async function BlogPost(props: {
 							{page.data.title}
 						</h1>
 						{page.data.description && (
-							<p className="mt-4 text-xl leading-relaxed text-foreground/85 sm:text-2xl sm:leading-relaxed">
+							<p className="mt-4 text-xl leading-relaxed text-foreground-low sm:text-2xl sm:leading-relaxed">
 								{page.data.description}
 							</p>
 						)}
-						<div className="mt-4 flex flex-wrap items-center gap-x-3 text-muted-foreground text-xs tabular-nums">
+						<div className="mt-4 flex flex-wrap items-center gap-x-3 text-foreground-lowest text-xs tabular-nums">
 							<time>
 								{new Date(d.publishedAt).toLocaleDateString("en-US", {
 									year: "numeric",
@@ -112,7 +112,7 @@ function RelatedPosts({ slug, currentTags }: { slug: string; currentTags: string
 
 	return (
 		<nav className="mx-auto max-w-5xl px-4 mt-16 pt-12 border-t border-border">
-			<p className="text-muted-foreground text-xs uppercase tracking-widest mb-6">Keep reading</p>
+			<p className="text-foreground-lowest text-xs uppercase tracking-widest mb-6">Keep reading</p>
 			<div className="grid gap-6 sm:grid-cols-3">
 				{related.map((post) => (
 					<PostCard key={post.url} post={post} />

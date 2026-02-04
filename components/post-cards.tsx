@@ -57,7 +57,7 @@ export function PostCard({ post }: { post: CardPost }) {
 						{post.tags.map((t, i) => (
 							<span key={t}>
 								<span className="text-accent-pop">{t}</span>
-								{i < post.tags.length - 1 && <span className="text-muted-foreground">,</span>}
+								{i < post.tags.length - 1 && <span className="text-foreground-lowest">,</span>}
 							</span>
 						))}
 					</p>
@@ -65,7 +65,7 @@ export function PostCard({ post }: { post: CardPost }) {
 				<h3 className="font-semibold text-lg leading-tight tracking-tight group-hover:underline decoration-accent-pop underline-offset-4">
 					{post.title}
 				</h3>
-				<time className="mt-1.5 block text-muted-foreground text-xs tabular-nums">
+				<time className="mt-1.5 block text-foreground-lowest text-xs tabular-nums">
 					{formatDate(post.date)}
 				</time>
 			</div>
@@ -88,7 +88,7 @@ export function PostCardCompact({ post }: { post: CardPost }) {
 				<h3 className="font-bold leading-snug group-hover:underline decoration-accent-pop underline-offset-4">
 					{post.title}
 				</h3>
-				<time className="mt-1 block text-muted-foreground text-xs tabular-nums uppercase">
+				<time className="mt-1 block text-foreground-lowest text-xs tabular-nums uppercase">
 					{formatDate(post.date)}
 				</time>
 			</div>

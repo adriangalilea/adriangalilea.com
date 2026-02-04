@@ -10,7 +10,7 @@ export function BlogTOC({ items }: { items: TOCItemType[] }) {
 
 	return (
 		<nav className="hidden lg:block sticky top-20 h-fit max-h-[calc(100vh-6rem)] w-[200px] shrink-0">
-			<p className="text-xs uppercase tracking-widest text-muted-foreground mb-3">On this page</p>
+			<p className="text-xs uppercase tracking-widest text-foreground-lowest mb-3">On this page</p>
 			<AnchorProvider toc={items} single>
 				<div ref={containerRef} className="overflow-y-auto max-h-[calc(100vh-8rem)] scrollbar-none">
 					<ScrollProvider containerRef={containerRef}>
@@ -18,7 +18,7 @@ export function BlogTOC({ items }: { items: TOCItemType[] }) {
 							<TOCItem
 								key={item.url}
 								href={item.url}
-								className="block py-1 text-sm text-muted-foreground/70 transition-colors hover:text-foreground data-[active=true]:text-foreground"
+								className="block py-1 text-sm text-foreground-lowest transition-colors hover:text-foreground data-[active=true]:text-foreground"
 								style={{ paddingLeft: `${(item.depth - 2) * 12}px` }}
 							>
 								{item.title}

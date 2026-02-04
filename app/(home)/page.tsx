@@ -37,7 +37,7 @@ export default function Home() {
 
 								<Link
 									href="/blog"
-									className="mt-6 inline-block text-muted-foreground text-sm hover:text-foreground hover:underline decoration-accent-pop underline-offset-4"
+									className="mt-6 inline-block text-foreground-lowest text-sm hover:text-foreground hover:underline decoration-accent-pop underline-offset-4"
 								>
 									all posts →
 								</Link>
@@ -70,13 +70,13 @@ export default function Home() {
 										{p.status && <StatusBadge status={p.status} />}
 										<span className="flex-1 border-b border-dotted border-border/50" />
 										{p.techs.length > 0 && (
-											<span className="shrink-0 text-muted-foreground/70 text-sm">
+											<span className="shrink-0 text-foreground-lowest text-sm">
 												{p.techs.join(" · ")}
 											</span>
 										)}
 									</span>
 									{p.description && (
-										<span className="mt-0.5 block text-muted-foreground/80 text-sm">
+										<span className="mt-0.5 block text-foreground-low text-sm">
 											{p.description}
 										</span>
 									)}

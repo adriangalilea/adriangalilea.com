@@ -42,7 +42,7 @@ function Glass({ className, color, children }: { className?: string; color: stri
 	const c = COLORS[color];
 	return (
 		<span
-			className={`isolate relative border text-muted-foreground/50 group-hover:text-[var(--badge-color)] ${c.border} transition-colors duration-200 ${className}`}
+			className={`isolate relative border text-foreground-lowest group-hover:text-[var(--badge-color)] ${c.border} transition-colors duration-200 ${className}`}
 			style={{ boxShadow: c.shadow, "--badge-color": c.color } as React.CSSProperties}
 		>
 			<span className="absolute inset-0 rounded-[inherit] -z-2 backdrop-blur-[12px]" />

@@ -55,7 +55,7 @@ export default function RootLayout({
 							>
 								Adrian Galilea
 							</Link>
-							<Link href="/blog" className="text-foreground/60 text-sm hover:underline decoration-accent-pop underline-offset-4">
+							<Link href="/blog" className="text-foreground-low text-sm hover:underline decoration-accent-pop underline-offset-4">
 								Blog
 							</Link>
 						</div>
@@ -70,7 +70,7 @@ export default function RootLayout({
 									key={l.label}
 									href={l.href}
 									{...(l.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
-									className="group/social flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground/40 transition-colors hover:text-accent-pop hover:bg-accent-pop/10"
+									className="group/social flex h-8 w-8 items-center justify-center rounded-full text-foreground-lowest transition-colors hover:text-accent-pop hover:bg-accent-pop/10"
 									aria-label={l.label}
 								>
 									<l.icon size={16} strokeWidth={1.5} />

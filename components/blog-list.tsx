@@ -42,7 +42,7 @@ export function BlogFilteredList({ published, drafts, allTags }: {
 						className={`text-sm transition-colors ${
 							activeTag === null
 								? "text-foreground"
-								: "text-muted-foreground hover:text-foreground"
+								: "text-foreground-lowest hover:text-foreground"
 						}`}
 					>
 						All
@@ -55,7 +55,7 @@ export function BlogFilteredList({ published, drafts, allTags }: {
 							className={`text-sm transition-colors ${
 								tag === activeTag
 									? "text-foreground"
-									: "text-muted-foreground hover:text-foreground"
+									: "text-foreground-lowest hover:text-foreground"
 							}`}
 						>
 							{tag}
@@ -74,7 +74,7 @@ export function BlogFilteredList({ published, drafts, allTags }: {
 
 			{filteredDrafts.length > 0 && (
 				<div className={filteredPublished.length > 0 ? "mt-16" : ""}>
-					<p className="mb-6 text-muted-foreground text-xs uppercase tracking-widest">
+					<p className="mb-6 text-foreground-lowest text-xs uppercase tracking-widest">
 						Drafts
 					</p>
 					<div className="grid gap-x-8 gap-y-10 sm:grid-cols-2">
@@ -86,7 +86,7 @@ export function BlogFilteredList({ published, drafts, allTags }: {
 			)}
 
 			{filteredPublished.length === 0 && filteredDrafts.length === 0 && (
-				<p className="py-20 text-center text-muted-foreground text-sm">No posts found.</p>
+				<p className="py-20 text-center text-foreground-lowest text-sm">No posts found.</p>
 			)}
 		</>
 	);
