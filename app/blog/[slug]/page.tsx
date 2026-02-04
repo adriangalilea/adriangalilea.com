@@ -20,7 +20,7 @@ export default async function BlogPost(props: {
 		<article className="pb-16">
 			<figure className="mx-auto max-w-5xl px-4 pt-4 sm:pt-6">
 				<div className={`w-full overflow-hidden rounded-2xl ${coverUrl ? "aspect-[2/1]" : "aspect-[3/1]"}`}>
-					<CoverImage coverUrl={coverUrl} slug={params.slug} title={page.data.title ?? ""} />
+					<CoverImage coverUrl={coverUrl} slug={params.slug} title={page.data.title ?? ""} sizes="(max-width: 1024px) 100vw, 1024px" priority />
 				</div>
 			</figure>
 

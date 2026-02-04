@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { slugToGradient } from "@/lib/gradient";
 
@@ -24,7 +25,7 @@ function GrainOverlay() {
 	return <div className="cover-grain absolute inset-0 z-10 pointer-events-none" />;
 }
 
-export function CoverImage({ coverUrl, slug, title, size = "large" }: { coverUrl: string | null; slug: string; title: string; size?: "large" | "small" }) {
+export function CoverImage({ coverUrl, slug, title, size = "large", sizes, priority }: { coverUrl: string | null; slug: string; title: string; size?: "large" | "small"; sizes?: string; priority?: boolean }) {
 	if (coverUrl) {
 		const blur = size === "small"
 			? "absolute inset-0 h-full w-full scale-[2] object-cover blur-2xl"
@@ -32,7 +33,7 @@ export function CoverImage({ coverUrl, slug, title, size = "large" }: { coverUrl
 		return (
 			<div className={`relative h-full w-full overflow-hidden ${size === "large" ? "bg-black" : ""}`}>
 				<img src={coverUrl} alt="" aria-hidden className={blur} />
-				<img src={coverUrl} alt={title} className="relative h-full w-full object-contain" />
+				<Image src={coverUrl} alt={title} fill className="relative object-contain" sizes={sizes ?? "100vw"} priority={priority} />
 				<GrainOverlay />
 			</div>
 		);
@@ -48,7 +49,7 @@ export function PostCard({ post }: { post: CardPost }) {
 	return (
 		<Link href={post.url} className="group block">
 			<div className="aspect-[16/9] w-full overflow-hidden rounded-lg bg-muted transition-transform duration-300 group-hover:scale-[1.01]">
-				<CoverImage coverUrl={post.coverUrl} slug={post.slug} title={post.title} />
+				<CoverImage coverUrl={post.coverUrl} slug={post.slug} title={post.title} sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" />
 			</div>
 			<div className="mt-3.5">
 				{post.tags.length > 0 && (
@@ -92,7 +93,7 @@ export function PostCardCompact({ post }: { post: CardPost }) {
 				</time>
 			</div>
 			<div className="shrink-0 overflow-hidden rounded-lg w-[100px] h-[70px] sm:w-[120px] sm:h-[80px] transition-transform duration-300 group-hover:scale-[1.03]">
-				<CoverImage coverUrl={post.coverUrl} slug={post.slug} title={post.title} size="small" />
+				<CoverImage coverUrl={post.coverUrl} slug={post.slug} title={post.title} size="small" sizes="120px" />
 			</div>
 		</Link>
 	);
@@ -111,7 +112,7 @@ export function FeaturedHero({ post }: { post: CardPost }) {
 		<Link href={post.url} className="group block h-full">
 			<div className="relative h-full min-h-[300px] overflow-hidden rounded-2xl transition-transform duration-300 group-hover:scale-[1.02] origin-center">
 				<div className="absolute inset-0">
-					<CoverImage coverUrl={post.coverUrl} slug={post.slug} title={post.title} />
+					<CoverImage coverUrl={post.coverUrl} slug={post.slug} title={post.title} sizes="(max-width: 1024px) 100vw, 62vw" priority />
 				</div>
 				<div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
 				<div className="absolute bottom-0 left-0 right-0 p-6 sm:p-8">
