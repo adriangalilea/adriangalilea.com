@@ -11,7 +11,8 @@ export const blog = defineCollections({
 		editedAt: z.coerce.date().optional(),
 		image: z.string().optional(),
 		tags: z.array(z.string()).default([]),
-		draft: z.boolean().default(false),
+		isPublished: z.boolean().default(true),
+		isDraft: z.boolean().default(false),
 	}),
 });
 

@@ -103,7 +103,8 @@ export function blogData(page: AnyPage) {
 		publishedAt: d.publishedAt as Date,
 		editedAt: d.editedAt as Date | undefined,
 		tags: (d.tags as string[]) ?? [],
-		draft: (d.draft as boolean) ?? false,
+		isPublished: (d.isPublished as boolean) ?? true,
+		isDraft: (d.isDraft as boolean) ?? false,
 		description: d.description as string | undefined,
 	};
 }
@@ -116,10 +117,10 @@ function byDate(a: AnyPage, b: AnyPage) {
 }
 
 export function getBlogPosts() {
-	const all = blogSource.getPages().sort(byDate);
+	const visible = blogSource.getPages().filter((p) => blogData(p).isPublished).sort(byDate);
 	return {
-		published: all.filter((p) => !blogData(p).draft),
-		drafts: all.filter((p) => blogData(p).draft),
+		published: visible.filter((p) => !blogData(p).isDraft),
+		drafts: visible.filter((p) => blogData(p).isDraft),
 	};
 }
 
@@ -133,7 +134,7 @@ export function toCardPost(page: AnyPage) {
 		date: new Date(d.publishedAt).toISOString(),
 		tags: d.tags,
 		coverUrl: resolveCover(page),
-		draft: d.draft,
+		isDraft: d.isDraft,
 	};
 }
 
@@ -143,7 +144,7 @@ export function getRelatedPosts(currentSlug: string, limit = 3) {
 
 	const currentTags = blogData(current).tags;
 	const published = blogSource.getPages()
-		.filter((p) => !blogData(p).draft && p.slugs[0] !== currentSlug)
+		.filter((p) => blogData(p).isPublished && !blogData(p).isDraft && p.slugs[0] !== currentSlug)
 		.sort(byDate);
 
 	if (currentTags.length === 0) return published.slice(0, limit);

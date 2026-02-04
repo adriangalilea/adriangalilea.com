@@ -25,7 +25,7 @@ export default async function BlogPost(props: {
 			</figure>
 
 			<header className="mx-auto max-w-2xl px-4 pt-8">
-				{d.draft && (
+				{d.isDraft && (
 					<div className="mb-6 rounded-lg border border-border/50 bg-muted/50 px-4 py-3 text-muted-foreground text-sm">
 						This is a draft — unfinished and subject to change.
 					</div>

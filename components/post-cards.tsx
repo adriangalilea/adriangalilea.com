@@ -10,7 +10,7 @@ export type CardPost = {
 	date: string;
 	tags: string[];
 	coverUrl: string | null;
-	draft?: boolean;
+	isDraft?: boolean;
 };
 
 function formatDate(date: string) {
@@ -134,7 +134,7 @@ export function PostCardCompactList({ posts }: { posts: CardPost[] }) {
 		<ul className="divide-y divide-border">
 			{posts.map((post) => (
 				<li key={post.url} className="py-5 first:pt-0 last:pb-0">
-					{post.draft ? <PostCardCompactDraft post={post} /> : <PostCardCompact post={post} />}
+					{post.isDraft ? <PostCardCompactDraft post={post} /> : <PostCardCompact post={post} />}
 				</li>
 			))}
 		</ul>
