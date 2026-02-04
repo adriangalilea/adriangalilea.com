@@ -47,15 +47,15 @@ export default function RootLayout({
 			>
 				<RootProvider>
 					<LiquidGlassFilter />
-					<LiquidGlass as="nav" tint="var(--glass-l0)" className="sticky top-0 z-50 border-b border-border/20">
-						<div className="mx-auto flex h-14 w-full max-w-[90rem] items-center px-6 gap-6">
+					<LiquidGlass as="nav" tint="var(--glass-l0)" className="sticky top-0 z-50 border-b border-glass-l0-border">
+						<div className="mx-auto flex h-14 w-full max-w-[90rem] items-baseline px-6 gap-4 pt-3.5">
 							<Link
 								href="/"
 								className="font-bold text-2xl tracking-tight transition-colors hover:text-accent-pop"
 							>
 								Adrian Galilea
 							</Link>
-							<Link href="/blog" className="text-foreground-low text-sm transition-colors hover:text-accent-pop">
+							<Link href="/blog" className="text-base font-medium text-foreground-low transition-colors hover:text-accent-pop">
 								Blog
 							</Link>
 						</div>
@@ -63,7 +63,7 @@ export default function RootLayout({
 					<div className="flex-1">
 						{children}
 					</div>
-					<LiquidGlass as="footer" tint="var(--glass-l0)" className="border-t border-border/20">
+					<LiquidGlass as="footer" tint="var(--glass-l0)" className="border-t border-glass-l0-border">
 						<div className="mx-auto flex h-12 max-w-7xl items-center justify-center gap-3 px-6">
 							{socialLinks.map((l) => (
 								<Link

@@ -17,7 +17,7 @@ export default function BlogIndex() {
 	const allTags = [...new Set([...serializedPublished, ...serializedDrafts].flatMap((p) => p.tags))].sort();
 
 	return (
-		<main className="mx-auto w-full max-w-6xl px-6 py-16">
+		<main className="mx-auto w-full max-w-[90rem] px-6 py-16">
 			<Suspense>
 				<BlogFilteredList
 					published={serializedPublished}

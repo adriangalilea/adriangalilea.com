@@ -22,8 +22,8 @@ export default function Home() {
 	return (
 		<main className="relative z-[1]">
 			{featured && (
-				<div className="mx-auto w-full max-w-7xl px-6 pt-12 sm:pt-20">
-					<LiquidGlass as="section" tint="var(--glass-l1)" className="mb-10 rounded-2xl border border-border/20 p-6 sm:p-8">
+				<div className="mx-auto w-full max-w-[90rem] px-6 pt-8">
+					<LiquidGlass as="section" tint="var(--glass-l1)" className="mb-10 rounded-2xl border border-glass-l1-border p-6 sm:p-8">
 						<h2 className="mb-6 text-xl font-semibold tracking-tight">
 							Writings
 						</h2>
@@ -47,8 +47,8 @@ export default function Home() {
 				</div>
 			)}
 
-			<div className="mx-auto w-full max-w-7xl px-6 pb-20">
-				<LiquidGlass as="section" tint="var(--glass-l1)" className="rounded-2xl border border-border/20 p-6 sm:p-8">
+			<div className="mx-auto w-full max-w-[90rem] px-6 pb-20">
+				<LiquidGlass as="section" tint="var(--glass-l1)" className="rounded-2xl border border-glass-l1-border p-6 sm:p-8">
 					<h2 className="mb-6 text-xl font-semibold tracking-tight">
 						Projects
 					</h2>
