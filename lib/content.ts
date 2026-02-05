@@ -13,6 +13,10 @@ const IMAGE_EXTENSIONS = [".png", ".webp", ".jpg", ".jpeg", ".gif"];
 const OG_WIDTH = 1200;
 const OG_HEIGHT = 630;
 
+// ============================================================================
+// TYPES - Clean discriminated union, each type has exactly what it needs
+// ============================================================================
+
 export type Status = "soon" | "shipped" | "lab" | "sunset";
 
 export type TOCItem = {
@@ -21,51 +25,59 @@ export type TOCItem = {
 	id: string;
 };
 
-// Flat DTO - shared fields
+type ReadingTime = { text: string; minutes: number; words: number };
+
+// Shared fields all content has
 type ContentBase = {
 	slug: string[];
 	path: string;
 	content: string;
-	readingTime: { text: string; minutes: number; words: number };
+	readingTime: ReadingTime;
 	media: string[];
-	toc: TOCItem[];
 	cover: string | null;
 	og: string | null;
+	publishedAt: Date | null;
+	isDraft: boolean;
 	_dir: string;
 };
 
-// Post: article, note, or page
-export type Post = ContentBase & {
-	type: "post";
-	isNote: boolean;
-	hasTodos: boolean;
-	title?: string;
-	description?: string;
-	publishedAt?: Date;
-	updatedAt?: Date;
-	pinned?: boolean;
-	folder?: string;
-	tags?: string[];
-	isDraft?: boolean;
-	prediction?: boolean;
-	resolveBy?: Date;
-	outcome?: "correct" | "wrong" | null;
+// Note: Short-form content, no title, max 280 chars
+export type Note = ContentBase & {
+	type: "note";
 };
 
-// Folder: project or collection
+// Post: Long-form content with title
+export type Post = ContentBase & {
+	type: "post";
+	title: string;
+	description: string | null;
+	toc: TOCItem[];
+	tags: string[];
+	updatedAt: Date | null;
+	pinned: boolean;
+};
+
+// Folder: Project or collection container
 export type Folder = ContentBase & {
 	type: "folder";
 	title: string;
-	description?: string;
-	status?: Status;
-	links?: Record<string, string>;
-	kpis?: { label: string; value: string }[];
-	techs?: string[];
+	description: string | null;
+	status: Status | null;
+	links: Record<string, string>;
+	kpis: { label: string; value: string }[];
+	techs: string[];
 };
 
-export type Content = Post | Folder;
+export type Content = Note | Post | Folder;
 
-// Type guards
+// ============================================================================
+// TYPE GUARDS
+// ============================================================================
+
+export function isNote(c: Content): c is Note {
+	return c.type === "note";
+}
+
 export function isPost(c: Content): c is Post {
 	return c.type === "post";
 }
@@ -74,7 +86,10 @@ export function isFolder(c: Content): c is Folder {
 	return c.type === "folder";
 }
 
-// Helpers
+// ============================================================================
+// HELPERS
+// ============================================================================
+
 function isMediaFile(filename: string): boolean {
 	const ext = parse(filename).ext.toLowerCase();
 	return MEDIA_EXTENSIONS.includes(ext);
@@ -103,7 +118,6 @@ function extractTOC(content: string): TOCItem[] {
 	return items;
 }
 
-// Copy media from content dir to public, return filenames
 function copyMedia(dir: string, slug: string[]): string[] {
 	try {
 		const files = readdirSync(dir).filter(isMediaFile);
@@ -124,7 +138,6 @@ function copyMedia(dir: string, slug: string[]): string[] {
 	}
 }
 
-// Rewrite ./foo.png to /slug/foo.png
 function rewriteMediaPaths(content: string, slug: string[]): string {
 	const slugPath = slug.join("/");
 	return content
@@ -132,7 +145,6 @@ function rewriteMediaPaths(content: string, slug: string[]): string {
 		.replace(/src=[\"']\.\//g, `src="/${slugPath}/`);
 }
 
-// Copy cover and return public URL
 function resolveCover(dir: string, slug: string[]): string | null {
 	for (const ext of COVER_EXTENSIONS) {
 		const src = join(dir, `cover${ext}`);
@@ -148,7 +160,6 @@ function resolveCover(dir: string, slug: string[]): string | null {
 	return null;
 }
 
-// Generate OG image lazily
 export async function resolveOG(content: Content): Promise<string | null> {
 	const slugPath = content.slug.join("/");
 	const destDir = join(PUBLIC_DIR, slugPath);
@@ -184,7 +195,10 @@ export async function resolveOG(content: Content): Promise<string | null> {
 	return null;
 }
 
-// Parse file into Content
+// ============================================================================
+// PARSING
+// ============================================================================
+
 function parseContent(filePath: string, slug: string[]): Content | null {
 	try {
 		const raw = readFileSync(filePath, "utf-8");
@@ -192,7 +206,6 @@ function parseContent(filePath: string, slug: string[]): Content | null {
 		const stats = readingTime(content);
 		const dir = parse(filePath).dir;
 		const media = copyMedia(dir, slug);
-		const toc = extractTOC(content);
 		const cover = resolveCover(dir, slug);
 		const rewritten = rewriteMediaPaths(content, slug);
 
@@ -202,54 +215,61 @@ function parseContent(filePath: string, slug: string[]): Content | null {
 			content: rewritten,
 			readingTime: stats,
 			media,
-			toc,
 			cover,
 			og: null,
+			publishedAt: data.publishedAt ?? null,
+			isDraft: data.isDraft ?? false,
 			_dir: dir,
 		};
 
-		// Folder type
+		// Folder: explicit type in frontmatter
 		if (data.type === "folder") {
 			return {
 				...base,
 				type: "folder",
-				title: data.title,
-				description: data.description,
-				status: data.status,
-				links: data.links,
-				kpis: data.kpis,
-				techs: data.techs,
+				title: data.title ?? slug[slug.length - 1],
+				description: data.description ?? null,
+				status: data.status ?? null,
+				links: data.links ?? {},
+				kpis: data.kpis ?? [],
+				techs: data.techs ?? [],
 			};
 		}
 
-		// Note = no title, no description (content speaks for itself)
-		const isNote = !data.title && !data.description;
-		if (isNote && content.trim().length > NOTE_MAX_CHARS) {
-			throw new Error(`Note exceeds ${NOTE_MAX_CHARS} chars: ${filePath} (${content.trim().length} chars). Add a title to make it a post.`);
+		// Note: no title, max 280 chars
+		if (!data.title) {
+			if (content.trim().length > NOTE_MAX_CHARS) {
+				throw new Error(
+					`Note exceeds ${NOTE_MAX_CHARS} chars: ${filePath} (${content.trim().length} chars). Add a title to make it a post.`
+				);
+			}
+			return {
+				...base,
+				type: "note",
+			};
 		}
+
+		// Post: has title
 		return {
 			...base,
 			type: "post",
-			isNote,
-			hasTodos: content.includes("- [ ]"),
 			title: data.title,
-			description: data.description,
-			publishedAt: data.publishedAt,
-			updatedAt: data.updatedAt,
-			pinned: data.pinned,
-			folder: data.folder,
-			tags: data.tags,
-			isDraft: data.isDraft,
-			prediction: data.prediction,
-			resolveBy: data.resolveBy,
-			outcome: data.outcome,
+			description: data.description ?? null,
+			toc: extractTOC(content),
+			tags: data.tags ?? [],
+			updatedAt: data.updatedAt ?? null,
+			pinned: data.pinned ?? false,
 		};
-	} catch {
+	} catch (e) {
+		console.error(`Error parsing ${filePath}:`, e);
 		return null;
 	}
 }
 
-// Scan directory recursively
+// ============================================================================
+// SCANNING
+// ============================================================================
+
 function scanDirectory(dir: string, basePath: string[] = []): Content[] {
 	const results: Content[] = [];
 	const entries = readdirSync(dir, { withFileTypes: true });
@@ -260,7 +280,6 @@ function scanDirectory(dir: string, basePath: string[] = []): Content[] {
 		const fullPath = join(dir, entry.name);
 
 		if (entry.isDirectory()) {
-			// Check for index.mdx or index.md
 			const indexPath = [join(fullPath, "index.mdx"), join(fullPath, "index.md")].find((p) => {
 				try {
 					statSync(p);
@@ -276,7 +295,6 @@ function scanDirectory(dir: string, basePath: string[] = []): Content[] {
 				if (content) results.push(content);
 			}
 
-			// Recurse into subdirectories
 			results.push(...scanDirectory(fullPath, [...basePath, entry.name]));
 		} else if (entry.name.endsWith(".mdx") || entry.name.endsWith(".md")) {
 			if (entry.name === "index.mdx" || entry.name === "index.md") continue;
@@ -291,16 +309,19 @@ function scanDirectory(dir: string, basePath: string[] = []): Content[] {
 	return results;
 }
 
-// Public API
+// ============================================================================
+// PUBLIC API
+// ============================================================================
+
 export function getAllContent(): Content[] {
 	const all = scanDirectory(CONTENT_DIR);
 
-	// Deduplicate: folder wins over post with same slug
+	// Deduplicate: folder wins over note/post with same slug
 	const seen = new Map<string, Content>();
 	for (const c of all) {
 		const existing = seen.get(c.path);
 		if (existing) {
-			if (c.type === "folder" && existing.type === "post") {
+			if (c.type === "folder" && existing.type !== "folder") {
 				seen.set(c.path, c);
 			}
 			console.warn(`Duplicate slug: ${c.path} - keeping ${seen.get(c.path)!.type}, discarding ${c.type}`);
@@ -331,7 +352,7 @@ export function getRootContent(): Content[] {
 export function getAllTags(): string[] {
 	const tags = new Set<string>();
 	for (const c of getAllContent()) {
-		if (isPost(c) && c.tags) {
+		if (isPost(c)) {
 			for (const tag of c.tags) tags.add(tag);
 		}
 	}
@@ -346,41 +367,50 @@ export function getAllPosts(): Post[] {
 	return getAllContent().filter(isPost);
 }
 
-// Featured scoring for posts
-function scoreFeaturedPost(post: Post): number {
+export function getAllNotes(): Note[] {
+	return getAllContent().filter(isNote);
+}
+
+// ============================================================================
+// SCORING & RECOMMENDATIONS
+// ============================================================================
+
+function scoreForFeatured(c: Content): number {
 	let score = 0;
-	if (post.pinned) score += 10000;
-	if (post.updatedAt) {
-		const days = (Date.now() - new Date(post.updatedAt).getTime()) / (1000 * 60 * 60 * 24);
-		if (days < 30) score += 1000 - days * 10;
+
+	if (isPost(c)) {
+		if (c.pinned) score += 10000;
+		if (c.updatedAt) {
+			const days = (Date.now() - new Date(c.updatedAt).getTime()) / (1000 * 60 * 60 * 24);
+			if (days < 30) score += 1000 - days * 10;
+		}
 	}
-	if (post.cover) score += 500;
-	if (post.publishedAt) {
-		const days = (Date.now() - new Date(post.publishedAt).getTime()) / (1000 * 60 * 60 * 24);
+
+	if (c.cover) score += 500;
+
+	if (c.publishedAt) {
+		const days = (Date.now() - new Date(c.publishedAt).getTime()) / (1000 * 60 * 60 * 24);
 		score += Math.max(0, 365 - days);
 	}
+
 	return score;
 }
 
-// Get featured children (published, non-draft posts only)
-export function getFeaturedChildren(folderSlug: string[]): Post[] {
+export function getFeaturedChildren(folderSlug: string[]): Content[] {
 	return getChildren(folderSlug)
-		.filter(isPost)
-		.filter((p) => p.publishedAt && !p.isDraft)
-		.sort((a, b) => scoreFeaturedPost(b) - scoreFeaturedPost(a));
+		.filter((c) => c.publishedAt && !c.isDraft)
+		.sort((a, b) => scoreForFeatured(b) - scoreForFeatured(a));
 }
 
-export function wasRecentlyUpdated(post: Post): boolean {
-	if (!post.updatedAt) return false;
-	const days = (Date.now() - new Date(post.updatedAt).getTime()) / (1000 * 60 * 60 * 24);
+export function wasRecentlyUpdated(c: Content): boolean {
+	if (!isPost(c) || !c.updatedAt) return false;
+	const days = (Date.now() - new Date(c.updatedAt).getTime()) / (1000 * 60 * 60 * 24);
 	return days < 30;
 }
 
-// Get recommended content for a given piece of content
 export function getRecommendations(content: Content, limit = 3): Content[] {
 	const all = getAllContent().filter((c) => c.path !== content.path);
 
-	// Score each item by relevance
 	const scored = all.map((c) => {
 		let score = 0;
 
@@ -391,23 +421,23 @@ export function getRecommendations(content: Content, limit = 3): Content[] {
 			if (contentParent === cParent) score += 100;
 		}
 
-		// Shared tags
-		if (isPost(content) && isPost(c) && content.tags && c.tags) {
-			const shared = content.tags.filter((t) => c.tags!.includes(t)).length;
+		// Shared tags (posts only)
+		if (isPost(content) && isPost(c)) {
+			const shared = content.tags.filter((t) => c.tags.includes(t)).length;
 			score += shared * 20;
 		}
 
 		// Same type bonus
 		if (content.type === c.type) score += 5;
 
-		// Recency bonus for posts
-		if (isPost(c) && c.publishedAt) {
+		// Recency bonus
+		if (c.publishedAt) {
 			const days = (Date.now() - new Date(c.publishedAt).getTime()) / (1000 * 60 * 60 * 24);
 			score += Math.max(0, 10 - days / 30);
 		}
 
-		// Exclude drafts and unpublished from recommendations
-		if (isPost(c) && (c.isDraft || !c.publishedAt)) score = -1;
+		// Exclude drafts and unpublished
+		if (c.isDraft || !c.publishedAt) score = -1;
 
 		return { content: c, score };
 	});
@@ -419,25 +449,56 @@ export function getRecommendations(content: Content, limit = 3): Content[] {
 		.map((s) => s.content);
 }
 
-// Feed content (excludes unpublished, excludes posts inside folders)
+// ============================================================================
+// FEED
+// ============================================================================
+
 export function getFeedContent(): Content[] {
 	const folderPaths = new Set(getAllFolders().map((f) => f.slug.join("/")));
 
 	return getAllContent()
 		.filter((c) => {
-			if (isPost(c)) {
-				if (!c.publishedAt) return false;
-				if (c.slug.length > 1) {
-					const parentPath = c.slug.slice(0, -1).join("/");
-					if (folderPaths.has(parentPath)) return false;
-				}
+			// Folders always show (they're containers)
+			if (isFolder(c)) return true;
+
+			// Non-folders must be published
+			if (!c.publishedAt) return false;
+
+			// Hide content inside folders (shown via folder page)
+			if (c.slug.length > 1) {
+				const parentPath = c.slug.slice(0, -1).join("/");
+				if (folderPaths.has(parentPath)) return false;
 			}
+
 			return true;
 		})
 		.sort((a, b) => {
-			const aDate = isPost(a) ? a.publishedAt : null;
-			const bDate = isPost(b) ? b.publishedAt : null;
-			if (!aDate || !bDate) return 0;
-			return new Date(bDate).getTime() - new Date(aDate).getTime();
+			// Get best date for sorting (folders use children's dates)
+			const aDate = getBestDateForSort(a);
+			const bDate = getBestDateForSort(b);
+			if (!aDate && !bDate) return 0;
+			if (!aDate) return 1;
+			if (!bDate) return -1;
+			return bDate.getTime() - aDate.getTime();
 		});
+}
+
+function getBestDateForSort(content: Content): Date | null {
+	if (content.publishedAt) {
+		return new Date(content.publishedAt);
+	}
+
+	// For folders without publishedAt, use best child date
+	if (isFolder(content)) {
+		const children = getChildren(content.slug);
+		const dates = children
+			.map((c) => c.publishedAt)
+			.filter((d): d is Date => d != null)
+			.map((d) => new Date(d));
+		if (dates.length > 0) {
+			return new Date(Math.max(...dates.map((d) => d.getTime())));
+		}
+	}
+
+	return null;
 }

@@ -1,13 +1,25 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import type { Metadata } from "next";
-import { getContentByPath, getChildren, getAllContent, resolveOG, isPost, isFolder, getRecommendations, type Post, type Folder } from "@/lib/content";
+import {
+	getContentByPath,
+	getChildren,
+	getAllContent,
+	resolveOG,
+	isNote,
+	isPost,
+	isFolder,
+	getRecommendations,
+	type Note,
+	type Post,
+	type Folder,
+} from "@/lib/content";
 import { renderMDX } from "@/lib/mdx";
 import { getMDXComponents } from "@/mdx-components";
 import { StatusBadge } from "@/components/status-badge";
 import { TOC } from "@/components/toc";
 import { CoverImage } from "@/components/cover-image";
-import { MasonryGrid } from "@/components/masonry-grid";
+import { MasonryGrid } from "@/components/masonry";
 import { RelatedSection } from "@/components/related-section";
 
 type Props = {
@@ -20,19 +32,76 @@ export default async function ContentPage({ params }: Props) {
 
 	if (!content) notFound();
 
-	if (isFolder(content)) {
-		return <FolderView folder={content} />;
+	if (isNote(content)) {
+		return <NoteView note={content} />;
 	}
 
 	if (isPost(content)) {
 		return <PostView post={content} />;
 	}
 
+	if (isFolder(content)) {
+		return <FolderView folder={content} />;
+	}
+
 	notFound();
 }
 
+// ============================================================================
+// NOTE VIEW - minimal, just content + date
+// ============================================================================
+
+async function NoteView({ note }: { note: Note }) {
+	const { mdxContent } = await renderMDX(note, getMDXComponents());
+	const recs = getRecommendations(note, 6);
+
+	return (
+		<article className="pb-16">
+			<div className="mx-auto max-w-[90rem] px-6">
+				<div className="pt-4 sm:pt-6 lg:flex lg:gap-12">
+					{/* Empty aside for alignment with PostView */}
+					<aside className="hidden lg:block lg:w-[200px] lg:shrink-0" />
+
+					<div className="min-w-0 max-w-2xl">
+						{note.isDraft && (
+							<div className="mb-6 rounded-lg border border-border/50 bg-muted/50 px-4 py-3 text-muted-foreground text-sm">
+								This is a draft — unfinished and subject to change.
+							</div>
+						)}
+
+						<div className="prose prose-p:leading-[1.8]">
+							{mdxContent}
+						</div>
+
+						{note.publishedAt && (
+							<time className="mt-6 block text-xs text-foreground-lowest tabular-nums">
+								{new Date(note.publishedAt).toLocaleDateString("en-US", {
+									year: "numeric",
+									month: "long",
+									day: "numeric",
+								})}
+							</time>
+						)}
+					</div>
+				</div>
+			</div>
+
+			{recs.length > 0 && (
+				<RelatedSection>
+					<MasonryGrid items={recs} />
+				</RelatedSection>
+			)}
+		</article>
+	);
+}
+
+// ============================================================================
+// POST VIEW - full article with TOC
+// ============================================================================
+
 async function PostView({ post }: { post: Post }) {
 	const { mdxContent } = await renderMDX(post, getMDXComponents());
+	const recs = getRecommendations(post, 6);
 
 	return (
 		<article className="pb-16">
@@ -43,7 +112,7 @@ async function PostView({ post }: { post: Post }) {
 							<CoverImage
 								cover={post.cover}
 								slug={post.slug.join("/")}
-								title={post.title ?? ""}
+								title={post.title}
 								sizes="(max-width: 1024px) 100vw, 672px"
 								priority
 							/>
@@ -63,28 +132,26 @@ async function PostView({ post }: { post: Post }) {
 									This is a draft — unfinished and subject to change.
 								</div>
 							)}
-							{post.tags && post.tags.length > 0 && (
+							{post.tags.length > 0 && (
 								<div className="mb-4 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs uppercase tracking-wide">
 									{post.tags.map((tag, i) => (
 										<span key={tag}>
 											<span className="text-accent-pop">{tag}</span>
-											{i < post.tags!.length - 1 && <span className="text-muted-foreground">,</span>}
+											{i < post.tags.length - 1 && <span className="text-muted-foreground">,</span>}
 										</span>
 									))}
 								</div>
 							)}
-							{post.title && (
-								<h1 className="font-bold text-4xl leading-[1.1] tracking-tight sm:text-5xl">
-									{post.title}
-								</h1>
-							)}
+							<h1 className="font-bold text-4xl leading-[1.1] tracking-tight sm:text-5xl">
+								{post.title}
+							</h1>
 							{post.description && (
 								<p className="mt-4 text-xl leading-relaxed text-foreground/85 sm:text-2xl sm:leading-relaxed">
 									{post.description}
 								</p>
 							)}
 							{post.publishedAt && (
-								<div className={`${post.title ? "mt-4" : ""} text-muted-foreground text-xs tabular-nums`}>
+								<div className="mt-4 text-muted-foreground text-xs tabular-nums">
 									<time>
 										{new Date(post.publishedAt).toLocaleDateString("en-US", {
 											year: "numeric",
@@ -99,27 +166,22 @@ async function PostView({ post }: { post: Post }) {
 						<div className="pt-8 prose prose-p:leading-[1.8]">
 							{mdxContent}
 						</div>
-
 					</div>
 				</div>
 			</div>
 
-			{/* Recommendations - full width, dimmed until scroll/hover */}
-			<RecommendationsSection post={post} />
+			{recs.length > 0 && (
+				<RelatedSection>
+					<MasonryGrid items={recs} />
+				</RelatedSection>
+			)}
 		</article>
 	);
 }
 
-function RecommendationsSection({ post }: { post: Post }) {
-	const recs = getRecommendations(post, 6);
-	if (recs.length === 0) return null;
-
-	return (
-		<RelatedSection>
-			<MasonryGrid items={recs} />
-		</RelatedSection>
-	);
-}
+// ============================================================================
+// FOLDER VIEW - header + children masonry
+// ============================================================================
 
 async function FolderView({ folder }: { folder: Folder }) {
 	const children = getChildren(folder.slug);
@@ -153,7 +215,7 @@ async function FolderView({ folder }: { folder: Folder }) {
 				)}
 
 				{/* Links */}
-				{folder.links && Object.keys(folder.links).length > 0 && (
+				{Object.keys(folder.links).length > 0 && (
 					<div className="mt-4 flex flex-wrap gap-3">
 						{Object.entries(folder.links).map(([key, url]) => (
 							<a
@@ -170,7 +232,7 @@ async function FolderView({ folder }: { folder: Folder }) {
 				)}
 
 				{/* KPIs */}
-				{folder.kpis && folder.kpis.length > 0 && (
+				{folder.kpis.length > 0 && (
 					<div className="mt-6 flex flex-wrap gap-6">
 						{folder.kpis.map((kpi) => (
 							<div key={kpi.label}>
@@ -182,7 +244,7 @@ async function FolderView({ folder }: { folder: Folder }) {
 				)}
 
 				{/* Techs */}
-				{folder.techs && folder.techs.length > 0 && (
+				{folder.techs.length > 0 && (
 					<div className="mt-4 flex flex-wrap gap-2">
 						{folder.techs.map((tech) => (
 							<span key={tech} className="text-xs text-foreground-lowest bg-muted px-2 py-1 rounded">
@@ -210,6 +272,10 @@ async function FolderView({ folder }: { folder: Folder }) {
 	);
 }
 
+// ============================================================================
+// STATIC PARAMS & METADATA
+// ============================================================================
+
 export async function generateStaticParams() {
 	return getAllContent().map((c) => ({ slug: c.slug }));
 }
@@ -220,8 +286,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 	if (!content) return {};
 
-	const title = isPost(content) ? content.title : content.title;
-	const description = content.description;
+	const title = isNote(content) ? undefined : (content as Post | Folder).title;
+	const description = isNote(content) ? content.content.slice(0, 160) : ((content as Post | Folder).description ?? undefined);
 	const ogUrl = await resolveOG(content);
 
 	return {
@@ -229,7 +295,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 		description,
 		openGraph: {
 			title,
-			description,
+			description: description ?? undefined,
 			...(ogUrl && {
 				images: [{ url: ogUrl, width: 1200, height: 630 }],
 			}),

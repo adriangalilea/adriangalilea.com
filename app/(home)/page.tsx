@@ -1,5 +1,5 @@
 import { getFeedContent } from "@/lib/content";
-import { MasonryGrid } from "@/components/masonry-grid";
+import { MasonryGrid } from "@/components/masonry";
 
 export default function Home() {
 	const content = getFeedContent();
