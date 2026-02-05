@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import Link from "next/link";
+import { useEffect, useRef, useState, type MouseEvent } from "react";
+import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 
 type RelatedItem = {
@@ -17,11 +17,31 @@ const cardBase = "rounded-xl border border-white/10 bg-card/80 backdrop-blur-sm 
 const cardHover = "hover:scale-[1.02] hover:-translate-y-1 hover:shadow-lg hover:border-white/20";
 
 function RelatedCard({ item }: { item: RelatedItem }) {
+	const router = useRouter();
+	const isDragging = useRef(false);
+
+	const handleMouseDown = () => { isDragging.current = false; };
+	const handleMouseMove = () => { isDragging.current = true; };
+
+	const handleClick = (e: React.MouseEvent) => {
+		if ((e.target as HTMLElement).closest("a")) return;
+		if (isDragging.current) {
+			const selection = window.getSelection();
+			if (selection && selection.toString().length > 0) return;
+		}
+		router.push(item.path);
+	};
+
 	return (
-		<Link href={item.path} className={cn("group block", cardBase, cardHover)}>
+		<article
+			onMouseDown={handleMouseDown}
+			onMouseMove={handleMouseMove}
+			onClick={handleClick}
+			className={cn("group cursor-pointer", cardBase, cardHover)}
+		>
 			{item.cover && (
 				<div className="w-full overflow-hidden">
-					<img src={item.cover} alt={item.title ?? ""} className="w-full h-auto" />
+					<img src={item.cover} alt={item.title ?? ""} draggable={false} className="w-full h-auto" />
 				</div>
 			)}
 			<div className="p-4">
@@ -51,7 +71,7 @@ function RelatedCard({ item }: { item: RelatedItem }) {
 					</time>
 				)}
 			</div>
-		</Link>
+		</article>
 	);
 }
 

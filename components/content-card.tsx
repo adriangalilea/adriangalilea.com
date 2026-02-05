@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Content, Post, Folder } from "@/lib/content";
 import { isPost, isFolder, getFeaturedChildren, wasRecentlyUpdated } from "@/lib/content";
 import { StatusBadge, STATUS_CONFIG } from "@/components/status-badge";
+import { ClickableCard } from "@/components/clickable-card";
 import { cn } from "@/lib/utils";
 
 type ContentCardProps = {
@@ -27,10 +28,10 @@ function MiniPostCard({ post }: { post: Post }) {
 	const isUpdated = wasRecentlyUpdated(post);
 
 	return (
-		<Link href={post.path} className={cn("group/post block", cardBase, cardHover)}>
+		<ClickableCard href={post.path} className={cn("group/post cursor-pointer", cardBase, cardHover)}>
 			{post.cover && (
 				<div className="w-full overflow-hidden">
-					<img src={post.cover} alt={post.title ?? ""} className="w-full h-auto" />
+					<img src={post.cover} alt={post.title ?? ""} draggable={false} className="w-full h-auto" />
 				</div>
 			)}
 			<div className="p-3">
@@ -52,7 +53,7 @@ function MiniPostCard({ post }: { post: Post }) {
 					<p className="text-xs text-foreground-low mt-0.5 line-clamp-2">{post.description}</p>
 				)}
 			</div>
-		</Link>
+		</ClickableCard>
 	);
 }
 
@@ -73,7 +74,7 @@ function XrayFolderCard({ folder }: { folder: Folder }) {
 			)}
 		>
 			{folder.status && <StatusBadge status={folder.status} absolute />}
-			<Link href={folder.path} className="block p-4">
+			<Link href={folder.path} draggable={false} className="block p-4">
 				<div className="flex items-start justify-between gap-2">
 					<div className="flex-1 min-w-0">
 						<span className="font-semibold">{folder.title}</span>
@@ -97,7 +98,7 @@ function XrayFolderCard({ folder }: { folder: Folder }) {
 						<MiniPostCard key={post.path} post={post} />
 					))}
 					{remaining > 0 && (
-						<Link href={folder.path} className="mt-2 block text-xs text-foreground-lowest hover:text-foreground-low">
+						<Link href={folder.path} draggable={false} className="mt-2 block text-xs text-foreground-lowest hover:text-foreground-low">
 							+ {remaining} more
 						</Link>
 					)}
@@ -112,10 +113,10 @@ function FolderCard({ folder }: { folder: Folder }) {
 	const colorKey = folder.status ? STATUS_CONFIG[folder.status].colorKey : null;
 
 	return (
-		<Link
+		<ClickableCard
 			href={folder.path}
 			className={cn(
-				"group block relative",
+				"group relative cursor-pointer",
 				cardBase,
 				cardHover,
 				colorKey && statusHoverClasses[colorKey],
@@ -124,7 +125,7 @@ function FolderCard({ folder }: { folder: Folder }) {
 			{folder.status && <StatusBadge status={folder.status} absolute />}
 			{folder.cover && (
 				<div className="w-full overflow-hidden">
-					<img src={folder.cover} alt={folder.title} className="w-full h-auto" />
+					<img src={folder.cover} alt={folder.title} draggable={false} className="w-full h-auto" />
 				</div>
 			)}
 			<div className="p-4">
@@ -140,7 +141,7 @@ function FolderCard({ folder }: { folder: Folder }) {
 					</div>
 				)}
 			</div>
-		</Link>
+		</ClickableCard>
 	);
 }
 
@@ -149,7 +150,7 @@ function PostCard({ post }: { post: Post }) {
 	// Notes show content inline
 	if (post.isNote) {
 		return (
-			<Link href={post.path} className={cn("group block", cardBase, cardHover, "p-4", post.isDraft && cardDraft)}>
+			<ClickableCard href={post.path} className={cn("group cursor-pointer", cardBase, cardHover, "p-4", post.isDraft && cardDraft)}>
 				<p className="text-sm leading-relaxed">{post.content.trim()}</p>
 				{post.publishedAt && (
 					<time className="mt-3 block text-xs text-foreground-lowest">
@@ -160,15 +161,15 @@ function PostCard({ post }: { post: Post }) {
 						})}
 					</time>
 				)}
-			</Link>
+			</ClickableCard>
 		);
 	}
 
 	return (
-		<Link href={post.path} className={cn("group block", cardBase, cardHover, post.isDraft && cardDraft)}>
+		<ClickableCard href={post.path} className={cn("group cursor-pointer", cardBase, cardHover, post.isDraft && cardDraft)}>
 			{post.cover && (
 				<div className="w-full overflow-hidden">
-					<img src={post.cover} alt={post.title ?? ""} className="w-full h-auto" />
+					<img src={post.cover} alt={post.title ?? ""} draggable={false} className="w-full h-auto" />
 				</div>
 			)}
 			<div className="p-4">
@@ -196,7 +197,7 @@ function PostCard({ post }: { post: Post }) {
 					</time>
 				)}
 			</div>
-		</Link>
+		</ClickableCard>
 	);
 }
 

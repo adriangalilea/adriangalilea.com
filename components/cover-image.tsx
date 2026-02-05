@@ -49,11 +49,12 @@ export function CoverImage({ cover, slug, title, size = "large", sizes, priority
 
 		return (
 			<div className={`relative h-full w-full overflow-hidden ${size === "large" ? "bg-black" : ""}`}>
-				<img src={cover} alt="" aria-hidden className={bgBlur} />
+				<img src={cover} alt="" aria-hidden draggable={false} className={bgBlur} />
 				<Image
 					src={cover}
 					alt={title}
 					fill
+					draggable={false}
 					className={`relative object-contain transition-opacity duration-1000 ease-in-out ${loaded ? "opacity-100" : "opacity-0"}`}
 					sizes={sizes ?? "100vw"}
 					priority={priority}
