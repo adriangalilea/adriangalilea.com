@@ -1,6 +1,5 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import type { SearchParams } from "nuqs/server";
 import {
 	getContentByPath,
 	getAllContent,
@@ -13,7 +12,6 @@ import {
 	type Page,
 	type Folder,
 } from "@/lib/content";
-import { searchParamsCache } from "@/lib/search-params";
 import { renderMDX } from "@/lib/mdx";
 import { getMDXComponents } from "@/mdx-components";
 import { TOC } from "@/components/toc";
@@ -24,16 +22,14 @@ import { CollectionView } from "@/components/collection-view";
 
 type Props = {
 	params: Promise<{ slug?: string[] }>;
-	searchParams: Promise<SearchParams>;
 };
 
-export default async function ContentPage({ params, searchParams }: Props) {
+export default async function ContentPage({ params }: Props) {
 	const { slug = [] } = await params;
-	const { tag } = await searchParamsCache.parse(searchParams);
 
 	// Empty slug = root collection
 	if (slug.length === 0) {
-		return <CollectionView slug={[]} tag={tag} />;
+		return <CollectionView slug={[]} />;
 	}
 
 	const content = getContentByPath(slug);
@@ -48,7 +44,7 @@ export default async function ContentPage({ params, searchParams }: Props) {
 	}
 
 	if (isFolder(content)) {
-		return <CollectionView folder={content} slug={slug} tag={tag} />;
+		return <CollectionView folder={content} slug={slug} />;
 	}
 
 	notFound();
@@ -201,7 +197,7 @@ export async function generateStaticParams() {
 	return [{ slug: undefined }, ...all.map((c) => ({ slug: c.slug }))];
 }
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Promise<{ slug?: string[] }> }): Promise<Metadata> {
 	const { slug = [] } = await params;
 
 	// Root has default metadata from layout

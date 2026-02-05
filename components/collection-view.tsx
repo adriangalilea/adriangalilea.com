@@ -1,25 +1,72 @@
 import Link from "next/link";
+import { Suspense, type ReactNode } from "react";
 import type { Content, Folder } from "@/lib/content";
-import { isPost, getTagsFromContent, getChildrenForSlug } from "@/lib/content";
-import { renderMDX } from "@/lib/mdx";
+import { isPost, isNote, isFolder, getTagsFromContent, getChildrenForSlug, getChildren } from "@/lib/content";
+import { renderMDX, renderMDXString } from "@/lib/mdx";
 import { getMDXComponents } from "@/mdx-components";
 import { StatusBadge } from "@/components/status-badge";
-import { MasonryGrid } from "@/components/masonry";
-import { TagFilter } from "@/components/tag-filter";
+import { Card } from "@/components/card";
+import { TagFilter, TagFilterFallback } from "@/components/tag-filter";
+import { FilterableGrid, GridFallback } from "@/components/filterable-grid";
 
 type Props = {
 	folder?: Folder;
 	slug: string[];
-	tag: string | null;
 };
 
-export async function CollectionView({ folder, slug, tag }: Props) {
-	const children = getChildrenForSlug(slug);
-	const allTags = getTagsFromContent(children);
+// Sorting logic - drafts to bottom, newest first
+function getBestDate(content: Content): Date | null {
+	if (content.publishedAt) {
+		return new Date(content.publishedAt);
+	}
+	if (isFolder(content) && !content.cover) {
+		const children = getChildren(content.slug).filter(isPost);
+		const dates = children
+			.map((c) => c.publishedAt)
+			.filter((d): d is Date => d != null)
+			.map((d) => new Date(d));
+		if (dates.length > 0) {
+			return new Date(Math.max(...dates.map((d) => d.getTime())));
+		}
+	}
+	return null;
+}
 
-	const filteredChildren = tag
-		? children.filter((c) => isPost(c) && c.tags.includes(tag))
-		: children;
+function sortByRelevancy(items: Content[]): Content[] {
+	return [...items].sort((a, b) => {
+		if (a.isDraft && !b.isDraft) return 1;
+		if (!a.isDraft && b.isDraft) return -1;
+		const aDate = getBestDate(a);
+		const bDate = getBestDate(b);
+		if (!aDate && !bDate) return 0;
+		if (!aDate) return 1;
+		if (!bDate) return -1;
+		return bDate.getTime() - aDate.getTime();
+	});
+}
+
+
+export async function CollectionView({ folder, slug }: Props) {
+	const children = getChildrenForSlug(slug);
+	const sortedChildren = sortByRelevancy(children);
+	const allTags = getTagsFromContent(children);
+	const basePath = slug.length === 0 ? "/" : `/${slug.join("/")}`;
+
+	// Pre-render all cards server-side (in sorted order)
+	const items = await Promise.all(
+		sortedChildren.map(async (content) => {
+			// Pre-render MDX for notes
+			const renderedNoteContent = isNote(content)
+				? (await renderMDXString(content.content, getMDXComponents())).mdxContent
+				: undefined;
+
+			return {
+				path: content.path,
+				tags: isPost(content) ? content.tags : [],
+				content: <Card content={content} renderedNoteContent={renderedNoteContent} />,
+			};
+		})
+	);
 
 	const mdxContent = folder?.content.trim()
 		? (await renderMDX(folder, getMDXComponents())).mdxContent
@@ -98,13 +145,19 @@ export async function CollectionView({ folder, slug, tag }: Props) {
 			{/* MDX Content */}
 			{mdxContent && <div className="prose prose-p:leading-[1.8] mb-12">{mdxContent}</div>}
 
-			{/* Tag Filter */}
-			{allTags.length > 0 && <TagFilter tags={allTags} />}
+			{/* Tag Filter - SSG with client enhancement */}
+			{allTags.length > 0 && (
+				<Suspense fallback={<TagFilterFallback tags={allTags} basePath={basePath} />}>
+					<TagFilter tags={allTags} basePath={basePath} />
+				</Suspense>
+			)}
 
-			{/* Children Grid */}
-			{filteredChildren.length > 0 && (
+			{/* Grid - SSG with client-side filtering */}
+			{items.length > 0 && (
 				<section>
-					<MasonryGrid items={filteredChildren} />
+					<Suspense fallback={<GridFallback items={items} />}>
+						<FilterableGrid items={items} />
+					</Suspense>
 				</section>
 			)}
 		</div>
