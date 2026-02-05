@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
-import type { Content, Note, Post, Folder } from "@/lib/content";
-import { isNote, isPost, isFolder, getFeaturedChildren, wasRecentlyUpdated } from "@/lib/content";
+import type { Content, Note, Page, Folder } from "@/lib/content";
+import { isNote, isPage, isFolder, getFeaturedChildren, wasRecentlyUpdated } from "@/lib/content";
 import { StatusBadge, STATUS_CONFIG } from "@/components/status-badge";
 import { ClickableWrapper } from "@/components/clickable-wrapper";
 import { cn } from "@/lib/utils";
@@ -30,6 +30,16 @@ function NoteCard({ note, renderedContent }: { note: Note; renderedContent?: Rea
 			href={note.path}
 			className={cn("group cursor-pointer", cardBase, cardHover, "p-4", note.isDraft && cardDraft)}
 		>
+			{note.tags.length > 0 && (
+				<p className="flex flex-wrap items-center gap-x-1.5 text-xs uppercase tracking-wide mb-2">
+					{note.tags.map((t, i) => (
+						<span key={t}>
+							<span className="text-accent-pop">{t}</span>
+							{i < note.tags.length - 1 && <span className="text-muted-foreground">,</span>}
+						</span>
+					))}
+				</p>
+			)}
 			{renderedContent ? (
 				<div className="prose prose-sm max-w-none prose-p:my-0 prose-p:leading-relaxed">
 					{renderedContent}
@@ -51,38 +61,38 @@ function NoteCard({ note, renderedContent }: { note: Note; renderedContent?: Rea
 }
 
 // ============================================================================
-// POST CARD
+// PAGE CARD
 // ============================================================================
 
-function PostCard({ post }: { post: Post }) {
+function PageCard({ page }: { page: Page }) {
 	return (
 		<ClickableWrapper
-			href={post.path}
-			className={cn("group cursor-pointer", cardBase, cardHover, post.isDraft && cardDraft)}
+			href={page.path}
+			className={cn("group cursor-pointer", cardBase, cardHover, page.isDraft && cardDraft)}
 		>
-			{post.cover && (
+			{page.cover && (
 				<div className="w-full overflow-hidden">
-					<img src={post.cover} alt={post.title} draggable={false} className="w-full h-auto" />
+					<img src={page.cover} alt={page.title} draggable={false} className="w-full h-auto" />
 				</div>
 			)}
 			<div className="p-4">
-				{post.tags.length > 0 && (
+				{page.tags.length > 0 && (
 					<p className="flex flex-wrap items-center gap-x-1.5 text-xs uppercase tracking-wide mb-1">
-						{post.tags.map((t, i) => (
+						{page.tags.map((t, i) => (
 							<span key={t}>
 								<span className="text-accent-pop">{t}</span>
-								{i < post.tags.length - 1 && <span className="text-muted-foreground">,</span>}
+								{i < page.tags.length - 1 && <span className="text-muted-foreground">,</span>}
 							</span>
 						))}
 					</p>
 				)}
-				<h3 className="font-semibold leading-tight tracking-tight">{post.title}</h3>
-				{post.description && (
-					<p className="text-sm text-foreground-low mt-1">{post.description}</p>
+				<h3 className="font-semibold leading-tight tracking-tight">{page.title}</h3>
+				{page.description && (
+					<p className="text-sm text-foreground-low mt-1">{page.description}</p>
 				)}
-				{post.publishedAt && (
+				{page.publishedAt && (
 					<time className="mt-2 block text-muted-foreground text-xs tabular-nums">
-						{new Date(post.publishedAt).toLocaleDateString("en-US", {
+						{new Date(page.publishedAt).toLocaleDateString("en-US", {
 							year: "numeric",
 							month: "short",
 							day: "numeric",
@@ -138,33 +148,33 @@ function FolderCard({ folder }: { folder: Folder }) {
 // X-RAY FOLDER CARD - shows preview of internal posts
 // ============================================================================
 
-function MiniPostCard({ post }: { post: Post }) {
-	const isUpdated = wasRecentlyUpdated(post);
+function MiniPageCard({ page }: { page: Page }) {
+	const isUpdated = wasRecentlyUpdated(page);
 
 	return (
-		<ClickableWrapper href={post.path} className={cn("group/post cursor-pointer", cardBase, cardHover)}>
-			{post.cover && (
+		<ClickableWrapper href={page.path} className={cn("group/page cursor-pointer", cardBase, cardHover)}>
+			{page.cover && (
 				<div className="w-full overflow-hidden">
-					<img src={post.cover} alt={post.title} draggable={false} className="w-full h-auto" />
+					<img src={page.cover} alt={page.title} draggable={false} className="w-full h-auto" />
 				</div>
 			)}
 			<div className="p-3">
-				{post.tags.length > 0 && (
+				{page.tags.length > 0 && (
 					<p className="flex flex-wrap items-center gap-x-1 text-[10px] uppercase tracking-wide mb-0.5">
-						{post.tags.slice(0, 2).map((t, i) => (
+						{page.tags.slice(0, 2).map((t, i) => (
 							<span key={t}>
 								<span className="text-accent-pop">{t}</span>
-								{i < Math.min(post.tags.length, 2) - 1 && <span className="text-muted-foreground">,</span>}
+								{i < Math.min(page.tags.length, 2) - 1 && <span className="text-muted-foreground">,</span>}
 							</span>
 						))}
 					</p>
 				)}
 				<h4 className="font-medium text-sm leading-tight">
-					{post.title}
+					{page.title}
 					{isUpdated && <span className="ml-1.5 text-[10px] text-accent-pop">updated</span>}
 				</h4>
-				{post.description && (
-					<p className="text-xs text-foreground-low mt-0.5 line-clamp-2">{post.description}</p>
+				{page.description && (
+					<p className="text-xs text-foreground-low mt-0.5 line-clamp-2">{page.description}</p>
 				)}
 			</div>
 		</ClickableWrapper>
@@ -173,9 +183,9 @@ function MiniPostCard({ post }: { post: Post }) {
 
 function XrayFolderCard({ folder }: { folder: Folder }) {
 	const colorKey = folder.status ? STATUS_CONFIG[folder.status].colorKey : null;
-	const featuredPosts = getFeaturedChildren(folder.slug).filter(isPost);
-	const postsToShow = featuredPosts.slice(0, 1);
-	const remaining = featuredPosts.length - 1;
+	const featuredPages = getFeaturedChildren(folder.slug).filter(isPage);
+	const pagesToShow = featuredPages.slice(0, 1);
+	const remaining = featuredPages.length - 1;
 
 	return (
 		<div
@@ -205,10 +215,10 @@ function XrayFolderCard({ folder }: { folder: Folder }) {
 				</div>
 			</ClickableWrapper>
 
-			{postsToShow.length > 0 && (
+			{pagesToShow.length > 0 && (
 				<div className="px-4 pb-4">
-					{postsToShow.map((post) => (
-						<MiniPostCard key={post.path} post={post} />
+					{pagesToShow.map((page) => (
+						<MiniPageCard key={page.path} page={page} />
 					))}
 					{remaining > 0 && (
 						<ClickableWrapper href={folder.path} className="mt-2 block text-xs text-foreground-lowest hover:text-foreground-low">
@@ -229,7 +239,7 @@ function shouldShowXray(content: Content): boolean {
 	if (!isFolder(content)) return false;
 	if (content.cover) return false;
 	const children = getFeaturedChildren(content.slug);
-	return children.some(isPost);
+	return children.some(isPage);
 }
 
 // ============================================================================
@@ -246,8 +256,8 @@ export function Card({ content, renderedNoteContent }: CardProps) {
 		return <NoteCard note={content} renderedContent={renderedNoteContent} />;
 	}
 
-	if (isPost(content)) {
-		return <PostCard post={content} />;
+	if (isPage(content)) {
+		return <PageCard page={content} />;
 	}
 
 	if (isFolder(content)) {

@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import type { Content } from "@/lib/content";
-import { isPost, isFolder, isNote, getChildren } from "@/lib/content";
+import { isPage, isFolder, isNote, isPost, getChildren } from "@/lib/content";
 import { renderMDXString } from "@/lib/mdx";
 import { getMDXComponents } from "@/mdx-components";
 import { Card } from "./card";
@@ -16,9 +16,10 @@ function estimateHeight(content: Content): number {
 	if (content.cover) height += 350;
 
 	if (isNote(content)) {
-		// Notes: content text + date
+		// Notes: tags + content text + date
+		if (content.tags.length > 0) height += 20;
 		height += Math.min(content.content.length / 2, 120) + 20;
-	} else if (isPost(content)) {
+	} else if (isPage(content)) {
 		height += 28; // title
 		if (content.description) height += 20 + Math.min(content.description.length / 4, 40);
 		if (content.tags.length > 0) height += 20;
@@ -44,7 +45,7 @@ function getBestDate(content: Content): Date | null {
 	if (isFolder(content) && !content.cover) {
 		const children = getChildren(content.slug).filter(isPost);
 		const dates = children
-			.map((p) => p.publishedAt)
+			.map((c) => c.publishedAt)
 			.filter((d): d is Date => d != null)
 			.map((d) => new Date(d));
 		if (dates.length > 0) {

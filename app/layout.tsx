@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Link from "next/link";
 import { Github, Send, Mail, Rss } from "lucide-react";
+import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { LiquidGlass, LiquidGlassFilter } from "@/components/liquid-glass";
 import "./globals.css";
 
@@ -44,35 +45,37 @@ export default function RootLayout({
 			<body
 				className={`${geistSans.variable} ${geistMono.variable} flex min-h-screen flex-col antialiased`}
 			>
-				<LiquidGlassFilter />
-				<LiquidGlass as="nav" tint="var(--glass-l0)" className="sticky top-0 z-50 border-b border-glass-l0-border">
-					<div className="mx-auto flex h-14 w-full max-w-[90rem] items-baseline px-6 gap-4 pt-3.5">
-						<Link
-							href="/"
-							className="font-bold text-2xl tracking-tight transition-colors hover:text-accent-pop"
-						>
-							Adrian Galilea
-						</Link>
-					</div>
-				</LiquidGlass>
-				<div className="flex-1">
-					{children}
-				</div>
-				<LiquidGlass as="footer" tint="var(--glass-l0)" className="border-t border-glass-l0-border">
-					<div className="mx-auto flex h-12 max-w-7xl items-center justify-center gap-3 px-6">
-						{socialLinks.map((l) => (
+				<NuqsAdapter>
+					<LiquidGlassFilter />
+					<LiquidGlass as="nav" tint="var(--glass-l0)" className="sticky top-0 z-50 border-b border-glass-l0-border">
+						<div className="mx-auto flex h-14 w-full max-w-[90rem] items-baseline px-6 gap-4 pt-3.5">
 							<Link
-								key={l.label}
-								href={l.href}
-								{...(l.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
-								className="group/social flex h-8 w-8 items-center justify-center rounded-full text-foreground-lowest transition-colors hover:text-accent-pop hover:bg-accent-pop/10"
-								aria-label={l.label}
+								href="/"
+								className="font-bold text-2xl tracking-tight transition-colors hover:text-accent-pop"
 							>
-								<l.icon size={16} strokeWidth={1.5} />
+								Adrian Galilea
 							</Link>
-						))}
+						</div>
+					</LiquidGlass>
+					<div className="flex-1">
+						{children}
 					</div>
-				</LiquidGlass>
+					<LiquidGlass as="footer" tint="var(--glass-l0)" className="border-t border-glass-l0-border">
+						<div className="mx-auto flex h-12 max-w-7xl items-center justify-center gap-3 px-6">
+							{socialLinks.map((l) => (
+								<Link
+									key={l.label}
+									href={l.href}
+									{...(l.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+									className="group/social flex h-8 w-8 items-center justify-center rounded-full text-foreground-lowest transition-colors hover:text-accent-pop hover:bg-accent-pop/10"
+									aria-label={l.label}
+								>
+									<l.icon size={16} strokeWidth={1.5} />
+								</Link>
+							))}
+						</div>
+					</LiquidGlass>
+				</NuqsAdapter>
 			</body>
 		</html>
 	);

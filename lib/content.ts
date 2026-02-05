@@ -14,7 +14,7 @@ const OG_WIDTH = 1200;
 const OG_HEIGHT = 630;
 
 // ============================================================================
-// TYPES - Clean discriminated union, each type has exactly what it needs
+// TYPES
 // ============================================================================
 
 export type Status = "soon" | "shipped" | "lab" | "sunset";
@@ -41,23 +41,29 @@ type ContentBase = {
 	_dir: string;
 };
 
-// Note: Short-form content, no title, max 280 chars
-export type Note = ContentBase & {
+// Post: all non-folder content
+type PostBase = ContentBase & {
+	tags: string[];
+};
+
+// Note: short-form, no title, no description
+export type Note = PostBase & {
 	type: "note";
 };
 
-// Post: Long-form content with title
-export type Post = ContentBase & {
-	type: "post";
+// Page: long-form with title
+export type Page = PostBase & {
+	type: "page";
 	title: string;
 	description: string | null;
 	toc: TOCItem[];
-	tags: string[];
 	updatedAt: Date | null;
 	pinned: boolean;
 };
 
-// Folder: Project or collection container
+export type Post = Note | Page;
+
+// Folder: container
 export type Folder = ContentBase & {
 	type: "folder";
 	title: string;
@@ -68,18 +74,22 @@ export type Folder = ContentBase & {
 	techs: string[];
 };
 
-export type Content = Note | Post | Folder;
+export type Content = Post | Folder;
 
 // ============================================================================
 // TYPE GUARDS
 // ============================================================================
 
+export function isPost(c: Content): c is Post {
+	return c.type === "note" || c.type === "page";
+}
+
 export function isNote(c: Content): c is Note {
 	return c.type === "note";
 }
 
-export function isPost(c: Content): c is Post {
-	return c.type === "post";
+export function isPage(c: Content): c is Page {
+	return c.type === "page";
 }
 
 export function isFolder(c: Content): c is Folder {
@@ -239,27 +249,30 @@ function parseContent(filePath: string, slug: string[]): Content | null {
 			};
 		}
 
+		const tags = data.tags ?? [];
+
 		// Note: no title, max 280 chars
 		if (!data.title) {
 			if (content.trim().length > NOTE_MAX_CHARS) {
 				throw new Error(
-					`Note exceeds ${NOTE_MAX_CHARS} chars: ${filePath} (${content.trim().length} chars). Add a title to make it a post.`
+					`Note exceeds ${NOTE_MAX_CHARS} chars: ${filePath} (${content.trim().length} chars). Add a title to make it a page.`
 				);
 			}
 			return {
 				...base,
 				type: "note",
+				tags,
 			};
 		}
 
-		// Post: has title
+		// Page: has title
 		return {
 			...base,
-			type: "post",
+			type: "page",
 			title: data.title,
 			description: data.description ?? null,
 			toc: extractTOC(content),
-			tags: data.tags ?? [],
+			tags,
 			updatedAt: data.updatedAt ?? null,
 			pinned: data.pinned ?? false,
 		};
@@ -374,6 +387,27 @@ export function getAllNotes(): Note[] {
 	return getAllContent().filter(isNote);
 }
 
+export function getAllPages(): Page[] {
+	return getAllContent().filter(isPage);
+}
+
+export function getChildrenForSlug(slug: string[]): Content[] {
+	if (slug.length === 0) {
+		return getRootContent();
+	}
+	return getChildren(slug);
+}
+
+export function getTagsFromContent(items: Content[]): string[] {
+	const tags = new Set<string>();
+	for (const c of items) {
+		if (isPost(c)) {
+			for (const tag of c.tags) tags.add(tag);
+		}
+	}
+	return [...tags].sort();
+}
+
 // ============================================================================
 // SCORING & RECOMMENDATIONS
 // ============================================================================
@@ -381,7 +415,7 @@ export function getAllNotes(): Note[] {
 function scoreForFeatured(c: Content): number {
 	let score = 0;
 
-	if (isPost(c)) {
+	if (isPage(c)) {
 		if (c.pinned) score += 10000;
 		if (c.updatedAt) {
 			const days = (Date.now() - new Date(c.updatedAt).getTime()) / (1000 * 60 * 60 * 24);
@@ -406,7 +440,7 @@ export function getFeaturedChildren(folderSlug: string[]): Content[] {
 }
 
 export function wasRecentlyUpdated(c: Content): boolean {
-	if (!isPost(c) || !c.updatedAt) return false;
+	if (!isPage(c) || !c.updatedAt) return false;
 	const days = (Date.now() - new Date(c.updatedAt).getTime()) / (1000 * 60 * 60 * 24);
 	return days < 30;
 }
