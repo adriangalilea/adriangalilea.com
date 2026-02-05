@@ -209,6 +209,9 @@ function parseContent(filePath: string, slug: string[]): Content | null {
 		const cover = resolveCover(dir, slug);
 		const rewritten = rewriteMediaPaths(content, slug);
 
+		// isPublished: false = completely hidden, not even parsed
+		if (data.isPublished === false) return null;
+
 		const base: ContentBase = {
 			slug,
 			path: `/${slug.join("/")}`,
