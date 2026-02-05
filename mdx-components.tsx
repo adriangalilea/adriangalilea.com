@@ -12,6 +12,7 @@ export function getMDXComponents(): MDXComponents {
 		},
 		img: ({ src, alt, ...props }) => {
 			if (!src) return null;
+			const isAnimated = typeof src === "string" && src.endsWith(".gif");
 			return (
 				<Image
 					src={src}
@@ -19,6 +20,7 @@ export function getMDXComponents(): MDXComponents {
 					width={800}
 					height={450}
 					className="rounded-lg"
+					unoptimized={isAnimated}
 					{...props}
 				/>
 			);
