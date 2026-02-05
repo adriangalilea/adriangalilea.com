@@ -1,0 +1,126 @@
+---
+title: "$10 Matter over Thread Relay"
+publishedAt: 2026-02-02
+description: "No commercial product exists, so I built one."
+tags:
+  - electronics
+  - smarthome
+  - matter
+  - thread
+---
+I have Matter over Thread presence sensors. They were completely useless because there's nothing to control. The market has:
+
+- **WiFi relays** (Shelly, Sonoff) — no Thread
+- **Zigbee relays** (Aqara) — need proprietary hub
+- **AC-only Matter switches** — mains voltage, not dry contacts
+- **Industrial Thread relays** (Sunricher) — $20/unit, MOQ 30
+
+Nobody makes a simple, cheap, Thread-based dry-contact relay. So I built one.
+
+## Bill of Materials
+
+| Component | Price |
+|-----------|-------|
+| [M5Stack NanoC6](https://shop.m5stack.com/products/m5stack-nanoc6-dev-kit) | ~$6 |
+| [M5Stack Unit Relay (U023)](https://shop.m5stack.com/products/mini-relay-unit) | ~$4 |
+| [Mini560 PRO 5V](https://www.aliexpress.com/w/wholesale-mini560-pro-5v.html) *(optional)* | ~$1 |
+
+The NanoC6 is an ESP32-C6 with a built-in 802.15.4 radio (Thread). The relay handles 30V DC or 220V AC at 3A with dry contacts. The Mini560 buck converter is optional — it lets you power everything from an existing 12-32V rail instead of needing a 5V USB source.
+
+## Wiring
+
+```
+[12-32V] ──→ [Mini560 IN+]
+             [Mini560 IN-] ──→ GND
+             [Mini560 OUT+] ──→ [NanoC6 Grove 5V (red)]
+             [Mini560 OUT-] ──→ [NanoC6 Grove GND (black)]
+
+[NanoC6 Grove Yellow] ──→ [Relay IN]
+[NanoC6 Grove White]  ──→ NC (not used)
+
+[Relay COM] ──→ [Load terminal A]
+[Relay NO]  ──→ [Load terminal B]
+```
+
+The Mini560 output feeds directly into the Grove cable that connects the NanoC6 to the relay. One cable carries both power and signal.
+
+## Firmware
+
+The device uses [Espressif's esp-matter SDK](https://github.com/espressif/esp-matter) on ESP-IDF, registering as an `On/Off Light` device type. You need [ESP-IDF](https://github.com/espressif/esp-idf) and [esp-matter](https://github.com/espressif/esp-matter) installed — follow Espressif's [setup guide](https://docs.espressif.com/projects/esp-matter/en/latest/esp32c6/developing.html).
+
+The key config: enable Thread + BLE commissioning, disable WiFi. In `sdkconfig.defaults`:
+
+```ini
+CONFIG_OPENTHREAD_ENABLED=y
+CONFIG_OPENTHREAD_SRP_CLIENT=y
+CONFIG_OPENTHREAD_DNS_CLIENT=y
+CONFIG_BT_ENABLED=y
+CONFIG_BT_NIMBLE_ENABLED=y
+CONFIG_ENABLE_WIFI_STATION=n
+CONFIG_ENABLE_WIFI_AP=n
+```
+
+The entire firmware is ~100 lines. The core is trivial — create a Matter node, add an on/off light endpoint, wire the attribute callback to a GPIO:
+
+```cpp
+#define RELAY_GPIO GPIO_NUM_2  // Grove Yellow wire on NanoC6
+
+static void set_relay(bool on)
+{
+    gpio_set_level(RELAY_GPIO, on ? 1 : 0);
+}
+
+static esp_err_t app_attribute_update_cb(
+    attribute::callback_type_t type, uint16_t endpoint_id,
+    uint32_t cluster_id, uint32_t attribute_id,
+    esp_matter_attr_val_t *val, void *priv_data)
+{
+    if (type == PRE_UPDATE && endpoint_id == light_endpoint_id) {
+        if (cluster_id == OnOff::Id && attribute_id == OnOff::Attributes::OnOff::Id) {
+            set_relay(val->val.b);
+        }
+    }
+    return ESP_OK;
+}
+
+extern "C" void app_main()
+{
+    nvs_flash_init();
+    init_relay();
+
+    node::config_t node_config;
+    node_t *node = node::create(&node_config, app_attribute_update_cb, app_identification_cb);
+
+    on_off_light::config_t light_config;
+    light_config.on_off.on_off = false;
+    endpoint_t *endpoint = on_off_light::create(node, &light_config, ENDPOINT_FLAG_NONE, NULL);
+    light_endpoint_id = endpoint::get_id(endpoint);
+
+    // Thread platform config (ESP32-C6 native 802.15.4 radio)
+    esp_openthread_platform_config_t ot_config = {
+        .radio_config = ESP_OPENTHREAD_DEFAULT_RADIO_CONFIG(),
+        .host_config = ESP_OPENTHREAD_DEFAULT_HOST_CONFIG(),
+        .port_config = ESP_OPENTHREAD_DEFAULT_PORT_CONFIG(),
+    };
+    set_openthread_platform_config(&ot_config);
+
+    esp_matter::start(app_event_cb);
+    PrintOnboardingCodes(chip::RendezvousInformationFlags(chip::RendezvousInformationFlag::kBLE));
+}
+```
+
+Build and flash with `idf.py set-target esp32c6 && idf.py build flash monitor`. On first boot it prints a QR code — scan it with Apple Home (or any Matter controller) to commission over BLE. It joins your Thread network automatically.
+
+## How it works
+
+```
+[12/24V rail] → [Mini560 5V] → [NanoC6] → [Relay] → [Dry contacts]
+                                  ↑
+                            Matter over Thread
+```
+
+The NanoC6 registers as an `On/Off Light` on your Matter fabric. When any controller turns the "light" on, the attribute callback fires, GPIO 2 goes high, and the relay clicks.
+
+The dry contacts can trigger anything: a Shelly SW input, a garage door opener, an HVAC system, a motorized valve — anything that accepts a dry contact closure.
+
+I'm using mine to bridge a Lafaer LWR01 presence sensor to a Shelly Pro RGBWW PM via the Shelly's SW input, giving me presence-activated hallway lights through Apple Home automations.

@@ -1,11 +1,11 @@
-import { createMDX } from "fumadocs-mdx/next";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
 	reactCompiler: true,
 	reactStrictMode: true,
+	experimental: {
+		viewTransition: true,
+	},
 };
 
-const withMDX = createMDX();
-
-export default withMDX(nextConfig);
+export default nextConfig;

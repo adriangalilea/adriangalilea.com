@@ -1,73 +1,100 @@
 import { Rocket, Sunset, FlaskConical, Trophy, type LucideIcon } from "lucide-react";
-import type { Project } from "@/data/projects";
+import { cn } from "@/lib/utils";
+import type { Status } from "@/lib/content";
 
-const STATUS_CONFIG: Record<
-	NonNullable<Project["status"]>,
-	{ icon: LucideIcon; label: string; color: string }
+export const STATUS_CONFIG: Record<
+	Status,
+	{ icon: LucideIcon; label: string; colorKey: string }
 > = {
-	soon: { icon: Rocket, label: "soon", color: "violet" },
-	sunset: { icon: Sunset, label: "sunset", color: "rose" },
-	lab: { icon: FlaskConical, label: "lab", color: "cyan" },
-	shipped: { icon: Trophy, label: "shipped", color: "yellow" },
+	soon: { icon: Rocket, label: "soon", colorKey: "violet" },
+	sunset: { icon: Sunset, label: "sunset", colorKey: "rose" },
+	lab: { icon: FlaskConical, label: "lab", colorKey: "cyan" },
+	shipped: { icon: Trophy, label: "shipped", colorKey: "yellow" },
 };
 
-const COLORS: Record<string, { tint: string; color: string; border: string; shadow: string }> = {
+// Centralized status styling
+export const STATUS_COLORS: Record<string, {
+	text: string;
+	bg: string;
+	border: string;
+	// CSS values for dynamic use
+	colorVar: string;
+	bgVar: string;
+	borderVar: string;
+}> = {
 	violet: {
-		tint: "rgba(139,92,246,0.15)",
-		color: "rgb(167,139,250)",
-		border: "border-white/[0.08]",
-		shadow: "inset 0 1px 0 0 rgba(255,255,255,0.12), 0 1px 3px rgba(0,0,0,0.4)",
+		text: "text-violet-400",
+		bg: "bg-violet-500/5",
+		border: "border-violet-400/20",
+		colorVar: "rgb(167,139,250)",
+		bgVar: "rgba(139,92,246,0.05)",
+		borderVar: "rgba(167,139,250,0.2)",
 	},
 	rose: {
-		tint: "rgba(251,113,133,0.15)",
-		color: "rgb(251,113,133)",
-		border: "border-white/[0.08]",
-		shadow: "inset 0 1px 0 0 rgba(255,255,255,0.12), 0 1px 3px rgba(0,0,0,0.4)",
+		text: "text-rose-400",
+		bg: "bg-rose-500/5",
+		border: "border-rose-400/20",
+		colorVar: "rgb(251,113,133)",
+		bgVar: "rgba(251,113,133,0.05)",
+		borderVar: "rgba(251,113,133,0.2)",
 	},
 	cyan: {
-		tint: "rgba(34,211,238,0.15)",
-		color: "rgb(34,211,238)",
-		border: "border-white/[0.08]",
-		shadow: "inset 0 1px 0 0 rgba(255,255,255,0.12), 0 1px 3px rgba(0,0,0,0.4)",
+		text: "text-cyan-400",
+		bg: "bg-cyan-500/5",
+		border: "border-cyan-400/20",
+		colorVar: "rgb(34,211,238)",
+		bgVar: "rgba(34,211,238,0.05)",
+		borderVar: "rgba(34,211,238,0.2)",
 	},
 	yellow: {
-		tint: "rgba(250,204,21,0.15)",
-		color: "rgb(250,204,21)",
-		border: "border-white/[0.08]",
-		shadow: "inset 0 1px 0 0 rgba(255,255,255,0.12), 0 1px 3px rgba(0,0,0,0.4)",
+		text: "text-yellow-400",
+		bg: "bg-yellow-500/5",
+		border: "border-yellow-400/20",
+		colorVar: "rgb(250,204,21)",
+		bgVar: "rgba(250,204,21,0.05)",
+		borderVar: "rgba(250,204,21,0.2)",
 	},
 };
 
-function Glass({ className, color, children }: { className?: string; color: string; children: React.ReactNode }) {
-	const c = COLORS[color];
+function Glass({ className, colorKey, children }: { className?: string; colorKey: string; children: React.ReactNode }) {
+	const c = STATUS_COLORS[colorKey];
 	return (
 		<span
-			className={`isolate relative border text-foreground-lowest group-hover:text-[var(--badge-color)] ${c.border} transition-colors duration-200 ${className}`}
-			style={{ boxShadow: c.shadow, "--badge-color": c.color } as React.CSSProperties}
+			className={cn(
+				"isolate relative border border-white/10 backdrop-blur-xl shadow-sm",
+				c.text,
+				c.bg,
+				className
+			)}
 		>
-			<span className="absolute inset-0 rounded-[inherit] -z-2 backdrop-blur-[12px]" />
-			<span
-				className="absolute inset-0 rounded-[inherit] -z-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-				style={{ background: c.tint }}
-			/>
+			<span className="absolute inset-0 rounded-[inherit] shadow-[inset_0_0.5px_0_0_rgba(255,255,255,0.08)]" />
 			{children}
 		</span>
 	);
 }
 
-export function StatusBadge({ status }: { status: NonNullable<Project["status"]> }) {
+export function StatusBadge({ status, absolute = false }: { status: Status; absolute?: boolean }) {
 	const config = STATUS_CONFIG[status];
 	const Icon = config.icon;
 
 	return (
-		<span className="group/status relative inline-flex h-6 w-6 shrink-0">
+		<span className={cn(
+			"group/status inline-flex size-7",
+			absolute && "absolute top-3 right-3 z-10"
+		)}>
 			<Glass
-				color={config.color}
-				className="absolute left-0 top-0 flex h-6 items-center gap-0 rounded-full px-[6px] transition-all duration-250 ease-[cubic-bezier(0.25,1,0.5,1)] group-hover/status:gap-1.5 group-hover/status:pr-2.5"
+				colorKey={config.colorKey}
+				className={cn(
+					"absolute right-0 top-0 flex size-7 items-center justify-center rounded-full",
+					"gap-0 transition-all duration-200 ease-out",
+					"group-hover/status:w-auto group-hover/status:gap-1.5 group-hover/status:px-3"
+				)}
 			>
-				<Icon className="relative z-10 size-2.5 shrink-0" />
-				<span className="relative z-10 max-w-0 overflow-hidden text-[10px] font-medium leading-none whitespace-nowrap opacity-0 transition-all duration-250 ease-[cubic-bezier(0.25,1,0.5,1)] group-hover/status:max-w-20 group-hover/status:opacity-100">
+				<span className="relative z-10 max-w-0 overflow-hidden text-xs font-medium leading-none whitespace-nowrap opacity-0 transition-all duration-200 ease-out group-hover/status:max-w-24 group-hover/status:opacity-100">
 					{config.label}
+				</span>
+				<span className="relative z-10 flex size-3.5 items-center justify-center shrink-0">
+					<Icon className="size-3 shrink-0" />
 				</span>
 			</Glass>
 		</span>
