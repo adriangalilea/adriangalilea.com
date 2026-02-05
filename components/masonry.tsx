@@ -12,8 +12,8 @@ import { Card } from "./card";
 function estimateHeight(content: Content): number {
 	let height = 48; // base padding (p-4 = 32px + gaps)
 
-	// Covers are 16:9 aspect ratio, column ~300px wide = ~170px height + some variance
-	if (content.cover) height += 200;
+	// Covers take significant space - estimate high to balance columns
+	if (content.cover) height += 350;
 
 	if (isNote(content)) {
 		// Notes: content text + date
