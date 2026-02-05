@@ -9,8 +9,8 @@ import { cn } from "@/lib/utils";
 // STYLES
 // ============================================================================
 
-const cardBase = "rounded-xl border border-white/10 bg-card/80 backdrop-blur-sm overflow-hidden transition-all duration-200 ease-out";
-const cardHover = "hover:scale-[1.02] hover:-translate-y-1 hover:shadow-lg hover:border-white/20";
+const cardBase = "rounded-xl border border-glass-l1-border bg-glass-l1 backdrop-blur-sm overflow-hidden transition-all duration-200 ease-out";
+const cardHover = "hover:scale-[1.02] hover:-translate-y-1 hover:shadow-lg hover:border-glass-l1-border";
 const cardDraft = "opacity-50 grayscale-[30%]";
 
 const statusHoverClasses: Record<string, string> = {
