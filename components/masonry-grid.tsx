@@ -1,6 +1,7 @@
 import type { Content, Post } from "@/lib/content";
 import { isPost, isFolder, getChildren } from "@/lib/content";
 import { ContentCard } from "./content-card";
+import { NoteCard } from "./note-card";
 
 // Determine if a folder should show x-ray view (no cover + has children)
 function shouldShowXray(content: Content): boolean {
@@ -97,6 +98,13 @@ function distributeToColumns(items: Content[], numColumns: number): Content[][] 
 	return columns;
 }
 
+function Card({ content }: { content: Content }) {
+	if (isPost(content) && content.isNote) {
+		return <NoteCard post={content} />;
+	}
+	return <ContentCard content={content} xray={shouldShowXray(content)} />;
+}
+
 export function MasonryGrid({ items }: { items: Content[] }) {
 	const cols1 = distributeToColumns(items, 1);
 	const cols2 = distributeToColumns(items, 2);
@@ -110,7 +118,7 @@ export function MasonryGrid({ items }: { items: Content[] }) {
 				{cols1.map((column, colIdx) => (
 					<div key={colIdx} className="flex flex-col gap-4">
 						{column.map((content) => (
-							<ContentCard key={content.path} content={content} xray={shouldShowXray(content)} />
+							<Card key={content.path} content={content} />
 						))}
 					</div>
 				))}
@@ -121,7 +129,7 @@ export function MasonryGrid({ items }: { items: Content[] }) {
 				{cols2.map((column, colIdx) => (
 					<div key={colIdx} className="flex flex-col gap-4">
 						{column.map((content) => (
-							<ContentCard key={content.path} content={content} xray={shouldShowXray(content)} />
+							<Card key={content.path} content={content} />
 						))}
 					</div>
 				))}
@@ -132,7 +140,7 @@ export function MasonryGrid({ items }: { items: Content[] }) {
 				{cols3.map((column, colIdx) => (
 					<div key={colIdx} className="flex flex-col gap-4">
 						{column.map((content) => (
-							<ContentCard key={content.path} content={content} xray={shouldShowXray(content)} />
+							<Card key={content.path} content={content} />
 						))}
 					</div>
 				))}
@@ -143,7 +151,7 @@ export function MasonryGrid({ items }: { items: Content[] }) {
 				{cols4.map((column, colIdx) => (
 					<div key={colIdx} className="flex flex-col gap-4">
 						{column.map((content) => (
-							<ContentCard key={content.path} content={content} xray={shouldShowXray(content)} />
+							<Card key={content.path} content={content} />
 						))}
 					</div>
 				))}

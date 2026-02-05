@@ -24,6 +24,7 @@
     "react-masonry-css": "^1.0.16",
     "reading-time": "^1.5.0",
     "remark-breaks": "^4.0.0",
+    "remark-gfm": "^4.0.1",
     "sharp": "^0.34.5",
     "tailwind-merge": "^3.4.0",
     "zod": "^4.3.6"

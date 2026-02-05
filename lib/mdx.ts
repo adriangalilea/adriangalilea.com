@@ -1,6 +1,7 @@
 import { compileMDX } from "next-mdx-remote/rsc";
 import type { MDXComponents } from "mdx/types";
 import type { Content } from "./content";
+import remarkGfm from "remark-gfm";
 
 export async function renderMDX(content: Content, components?: MDXComponents) {
 	const { content: mdxContent, frontmatter } = await compileMDX({
@@ -8,6 +9,9 @@ export async function renderMDX(content: Content, components?: MDXComponents) {
 		components,
 		options: {
 			parseFrontmatter: true,
+			mdxOptions: {
+				remarkPlugins: [remarkGfm],
+			},
 		},
 	});
 
@@ -20,6 +24,9 @@ export async function renderMDXString(source: string, components?: MDXComponents
 		components,
 		options: {
 			parseFrontmatter: true,
+			mdxOptions: {
+				remarkPlugins: [remarkGfm],
+			},
 		},
 	});
 
