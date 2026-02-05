@@ -10,25 +10,23 @@ import { Card } from "./card";
 // ============================================================================
 
 function estimateHeight(content: Content): number {
-	let height = 80; // base padding
+	let height = 48; // base padding (p-4 = 32px + gaps)
 
-	if (content.cover) height += 250;
+	// Covers are 16:9 aspect ratio, column ~300px wide = ~170px height + some variance
+	if (content.cover) height += 200;
 
 	if (isNote(content)) {
-		height = 80 + Math.min(content.content.length / 3, 60);
+		// Notes: content text + date
+		height += Math.min(content.content.length / 2, 120) + 20;
 	} else if (isPost(content)) {
-		height += 30; // title
-		if (content.description) height += 30;
-		if (content.tags.length > 0) height += 24;
-		if (content.publishedAt) height += 20;
+		height += 28; // title
+		if (content.description) height += 20 + Math.min(content.description.length / 4, 40);
+		if (content.tags.length > 0) height += 20;
+		if (content.publishedAt) height += 18;
 	} else if (isFolder(content)) {
-		height += 30; // title
-		if (content.description) height += 30;
-		if (content.techs.length > 0) height += 24;
-		if (!content.cover) {
-			const children = getChildren(content.slug);
-			if (children.some(isPost)) height += 180;
-		}
+		height += 28; // title
+		if (content.description) height += 20 + Math.min(content.description.length / 4, 40);
+		if (content.techs.length > 0) height += 20;
 	}
 
 	return height;
