@@ -261,7 +261,7 @@
   border-bottom: none;
 }
 
-/* Links — exclude heading anchors (fumadocs auto-links headings) */
+/* Links — exclude heading anchors */
 
 .prose :where(a):not(:where(h1 *, h2 *, h3 *, h4 *, h5 *, h6 *, [class~="not-prose"] *)) {
   color: var(--foreground);

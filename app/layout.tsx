@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import Link from "next/link";
 import { Github, Send, Mail, Rss } from "lucide-react";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
+import { ThemeProvider } from "@/components/theme-provider";
 import { LiquidGlass, LiquidGlassFilter } from "@/components/liquid-glass";
 import "./globals.css";
 
@@ -45,6 +46,7 @@ export default function RootLayout({
 			<body
 				className={`${geistSans.variable} ${geistMono.variable} flex min-h-screen flex-col antialiased`}
 			>
+				<ThemeProvider>
 				<NuqsAdapter>
 					<LiquidGlassFilter />
 					<LiquidGlass as="nav" tint="var(--glass-l0)" className="sticky top-0 z-50 border-b border-glass-l0-border">
@@ -76,6 +78,7 @@ export default function RootLayout({
 						</div>
 					</LiquidGlass>
 				</NuqsAdapter>
+				</ThemeProvider>
 			</body>
 		</html>
 	);
