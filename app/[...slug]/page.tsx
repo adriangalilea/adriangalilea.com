@@ -105,21 +105,19 @@ async function PostView({ post }: { post: Post }) {
 			</div>
 
 			{/* Recommendations - full width, dimmed until scroll/hover */}
-			{(() => {
-				const recs = getRecommendations(post, 6);
-				if (recs.length === 0) return null;
-				// Serialize for client component
-				const items = recs.map((r) => ({
-					path: r.path,
-					title: r.type === "folder" ? r.title : r.title,
-					description: r.description,
-					cover: r.cover,
-					tags: r.type === "post" ? r.tags : undefined,
-					publishedAt: r.type === "post" && r.publishedAt ? r.publishedAt.toString() : undefined,
-				}));
-				return <RelatedSection items={items} />;
-			})()}
+			<RecommendationsSection post={post} />
 		</article>
+	);
+}
+
+function RecommendationsSection({ post }: { post: Post }) {
+	const recs = getRecommendations(post, 6);
+	if (recs.length === 0) return null;
+
+	return (
+		<RelatedSection>
+			<MasonryGrid items={recs} />
+		</RelatedSection>
 	);
 }
 

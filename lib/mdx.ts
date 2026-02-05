@@ -32,3 +32,4 @@ export async function renderMDXString(source: string, components?: MDXComponents
 
 	return { mdxContent, frontmatter };
 }
+
