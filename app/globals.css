@@ -52,6 +52,7 @@
   --color-glass-l0: var(--glass-l0);
   --color-glass-l0-border: var(--glass-l0-border);
   --color-glass-l1: var(--glass-l1);
+  --color-glass-l1-hover: var(--glass-l1-hover);
   --color-glass-l1-border: var(--glass-l1-border);
 }
 
@@ -143,6 +144,7 @@
   --glass-l0: transparent;
   --glass-l0-border: oklch(1 0 0 / 4%);
   --glass-l1: oklch(0.28 0.02 280 / 40%);
+  --glass-l1-hover: oklch(0.32 0.022 280 / 45%);
   --glass-l1-border: oklch(0.4 0.02 280 / 30%);
 }
 
