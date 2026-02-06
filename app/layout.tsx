@@ -56,7 +56,7 @@ export default function RootLayout({
 					<LiquidGlassFilter />
 					{/* Desktop: full-width bar */}
 					<HideOnScroll className="hidden sm:block sticky top-0 z-50 mb-6">
-						<LiquidGlass as="nav" layer="l0">
+						<LiquidGlass as="nav" layer="l1" shadow="sm">
 							<div className="mx-auto flex h-14 w-full max-w-[90rem] items-baseline px-6 gap-4 pt-3.5">
 								<NavbarBreadcrumb folderPaths={folderPaths} />
 							</div>
