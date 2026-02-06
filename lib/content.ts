@@ -438,6 +438,17 @@ export function getTagsFromContent(items: Content[]): string[] {
 	return [...tags].sort();
 }
 
+export function getFolderTags(folder: Folder): string[] {
+	const children = getChildren(folder.slug);
+	const tags = new Set<string>();
+	for (const c of children) {
+		if (isPost(c)) {
+			for (const tag of c.tags) tags.add(tag);
+		}
+	}
+	return [...tags];
+}
+
 // ============================================================================
 // SCORING & RECOMMENDATIONS
 // ============================================================================

@@ -145,13 +145,6 @@ function FolderCard({ folder }: { folder: Folder }) {
 				{folder.description && (
 					<p className="text-sm text-foreground-low mt-1">{folder.description}</p>
 				)}
-				{folder.techs.length > 0 && (
-					<div className="mt-2 flex flex-wrap gap-1">
-						{folder.techs.map((t) => (
-							<span key={t} className="text-xs text-foreground-lowest">{t}</span>
-						))}
-					</div>
-				)}
 			</div>
 		</ClickableWrapper>
 	);
@@ -223,13 +216,6 @@ function XrayFolderCard({ folder }: { folder: Folder }) {
 						<span className="font-semibold">{folder.title}</span>
 						{folder.description && (
 							<p className="text-sm text-foreground-low mt-1">{folder.description}</p>
-						)}
-						{folder.techs.length > 0 && (
-							<div className="mt-2 flex flex-wrap gap-1">
-								{folder.techs.map((t) => (
-									<span key={t} className="text-xs text-foreground-lowest">{t}</span>
-								))}
-							</div>
 						)}
 					</div>
 				</div>

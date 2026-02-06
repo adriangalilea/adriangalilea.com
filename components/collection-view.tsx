@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Suspense, type ReactNode } from "react";
 import type { Content, Folder } from "@/lib/content";
-import { isPost, isNote, isFolder, getTagsFromContent, getChildrenForSlug, getChildren } from "@/lib/content";
+import { isPost, isNote, isFolder, getTagsFromContent, getChildrenForSlug, getChildren, getFolderTags } from "@/lib/content";
 import { renderMDX, renderMDXString } from "@/lib/mdx";
 import { getMDXComponents } from "@/mdx-components";
 import { StatusBadge } from "@/components/status-badge";
@@ -62,7 +62,7 @@ export async function CollectionView({ folder, slug }: Props) {
 
 			return {
 				path: content.path,
-				tags: isPost(content) ? content.tags : [],
+				tags: isPost(content) ? content.tags : (isFolder(content) ? getFolderTags(content) : []),
 				content: <Card content={content} renderedNoteContent={renderedNoteContent} />,
 			};
 		})
