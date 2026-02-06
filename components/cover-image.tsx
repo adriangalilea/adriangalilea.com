@@ -84,6 +84,7 @@ function AnimatedCover({
 			if (ctx) {
 				ctx.drawImage(video, 0, 0);
 				img.src = canvas.toDataURL("image/jpeg", 0.8);
+				img.style.visibility = "visible";
 			}
 			video.style.opacity = "0";
 		};
@@ -183,7 +184,8 @@ function AnimatedCover({
 					ref={frame0Ref}
 					alt=""
 					draggable={false}
-					className={`absolute inset-0 w-full h-full object-cover`}
+					className="absolute inset-0 w-full h-full object-cover"
+					style={{ visibility: "hidden" }}
 				/>
 			)}
 			<video
