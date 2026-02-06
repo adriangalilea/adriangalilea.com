@@ -418,6 +418,18 @@
     0 2px 6px rgba(0,0,0,0.08);
 }
 
+.glass-card-elevated {
+  background: var(--glass-l1);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  box-shadow:
+    inset 0 0.5px 0 0 rgba(255,255,255,0.1),
+    inset 0 0 0 0.5px rgba(255,255,255,0.05),
+    0 0 0 0 rgba(0,0,0,0),
+    0 0 0 0 rgba(0,0,0,0),
+    0 0 0 0 rgba(0,0,0,0);
+}
+
 @media (max-width: 639px) {
   .glass-card-feed-flat {
     background: transparent;

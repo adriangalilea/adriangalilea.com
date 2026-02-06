@@ -56,11 +56,11 @@ export function TagFilter({ tags, basePath }: Props) {
 		<div className="relative mb-6 group/tags">
 			{canScrollLeft && (
 				<>
-					<div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-background to-transparent z-10 pointer-events-none" />
+					<div className="absolute left-0 top-0 bottom-0 w-24 bg-gradient-to-r from-background via-background/80 to-transparent z-10 pointer-events-none" />
 					<button
 						type="button"
 						onClick={() => scroll(scrollRef, -1)}
-						className="absolute left-0 top-1/2 -translate-y-1/2 z-20 size-6 rounded-full glass-card flex items-center justify-center text-foreground-lowest hover:text-foreground transition-colors hidden sm:flex"
+						className="absolute left-0 top-1/2 -translate-y-1/2 z-20 size-7 rounded-full glass-card-elevated flex items-center justify-center text-foreground-lowest hover:text-foreground transition-colors hidden sm:flex"
 					>
 						<ChevronLeft className="size-3.5" />
 					</button>
@@ -69,7 +69,7 @@ export function TagFilter({ tags, basePath }: Props) {
 
 			<div
 				ref={scrollRef}
-				className="flex gap-2 overflow-x-auto scrollbar-none px-0.5 py-2"
+				className="flex gap-2 overflow-x-auto scrollbar-none px-0.5 py-2 pr-8"
 			>
 				<Link
 					href={basePath}
@@ -98,11 +98,11 @@ export function TagFilter({ tags, basePath }: Props) {
 
 			{canScrollRight && (
 				<>
-					<div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-background to-transparent z-10 pointer-events-none" />
+					<div className="absolute right-0 top-0 bottom-0 w-24 bg-gradient-to-l from-background via-background/80 to-transparent z-10 pointer-events-none" />
 					<button
 						type="button"
 						onClick={() => scroll(scrollRef, 1)}
-						className="absolute right-0 top-1/2 -translate-y-1/2 z-20 size-6 rounded-full glass-card flex items-center justify-center text-foreground-lowest hover:text-foreground transition-colors hidden sm:flex"
+						className="absolute right-0 top-1/2 -translate-y-1/2 z-20 size-7 rounded-full glass-card-elevated flex items-center justify-center text-foreground-lowest hover:text-foreground transition-colors hidden sm:flex"
 					>
 						<ChevronRight className="size-3.5" />
 					</button>
@@ -118,7 +118,7 @@ export function TagFilterFallback({ tags, basePath }: Props) {
 
 	return (
 		<div className="relative mb-6">
-			<div className="flex gap-2 overflow-x-auto scrollbar-none px-0.5 py-2">
+			<div className="flex gap-2 overflow-x-auto scrollbar-none px-0.5 py-2 pr-8">
 				<Link
 					href={basePath}
 					className={`${pill} ${pillActive}`}
