@@ -11,6 +11,8 @@ const NOTE_MAX_CHARS = 280;
 const MEDIA_EXTENSIONS = [".png", ".jpg", ".jpeg", ".webp", ".gif", ".mp4", ".webm", ".mov"];
 const COVER_EXTENSIONS = [".png", ".webp", ".jpg", ".jpeg", ".gif", ".mp4", ".webm", ".mov"];
 const IMAGE_EXTENSIONS = [".png", ".webp", ".jpg", ".jpeg", ".gif"];
+const POSTER_EXTENSIONS = [".webp", ".jpg", ".jpeg", ".png"];
+const ANIMATED_EXTENSIONS = [".gif", ".mp4", ".webm", ".mov"];
 const OG_WIDTH = 1200;
 const OG_HEIGHT = 630;
 
@@ -38,6 +40,7 @@ type ContentBase = {
 	cover: string | null;
 	coverWidth: number | null;
 	coverHeight: number | null;
+	poster: string | null;
 	og: string | null;
 	publishedAt: Date | null;
 	isDraft: boolean;
@@ -162,6 +165,7 @@ type CoverInfo = {
 	url: string;
 	width: number | null;
 	height: number | null;
+	poster: string | null;
 } | null;
 
 function resolveCover(dir: string, slug: string[]): CoverInfo {
@@ -188,10 +192,37 @@ function resolveCover(dir: string, slug: string[]): CoverInfo {
 				}
 			}
 
+			// For animated covers, look for a poster image
+			let poster: string | null = null;
+			if (ANIMATED_EXTENSIONS.includes(ext)) {
+				for (const posterExt of POSTER_EXTENSIONS) {
+					const posterSrc = join(dir, `poster${posterExt}`);
+					if (existsSync(posterSrc)) {
+						const posterDest = join(destDir, `poster${posterExt}`);
+						if (!existsSync(posterDest)) cpSync(posterSrc, posterDest);
+						poster = `/${slugPath}/poster${posterExt}`;
+
+						// Use poster dimensions for aspect ratio if cover is video
+						if (!width || !height) {
+							try {
+								const buffer = readFileSync(posterSrc);
+								const dims = imageSize(buffer);
+								width = dims.width ?? null;
+								height = dims.height ?? null;
+							} catch {
+								// Ignore dimension errors
+							}
+						}
+						break;
+					}
+				}
+			}
+
 			return {
 				url: `/${slugPath}/cover${ext}`,
 				width,
 				height,
+				poster,
 			};
 		}
 	}
@@ -259,6 +290,7 @@ function parseContent(filePath: string, slug: string[]): Content | null {
 			cover: coverInfo?.url ?? null,
 			coverWidth: coverInfo?.width ?? null,
 			coverHeight: coverInfo?.height ?? null,
+			poster: coverInfo?.poster ?? null,
 			og: null,
 			publishedAt: data.publishedAt ?? null,
 			isDraft: data.isDraft ?? false,
