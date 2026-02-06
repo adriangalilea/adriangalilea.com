@@ -18,10 +18,10 @@ const feedFlat = "max-sm:rounded-none max-sm:border-0 max-sm:border-b max-sm:bor
 const cardDraft = "opacity-50 grayscale-[30%]";
 
 const statusHoverClasses: Record<string, string> = {
-	violet: "hover:border-violet-400/20 hover:bg-violet-500/5",
-	rose: "hover:border-rose-400/20 hover:bg-rose-500/5",
-	cyan: "hover:border-cyan-400/20 hover:bg-cyan-500/5",
-	yellow: "hover:border-yellow-400/20 hover:bg-yellow-500/5",
+	violet: "hover:border-violet-400/20 hover:bg-violet-500/5 max-sm:bg-violet-500/5",
+	rose: "hover:border-rose-400/20 hover:bg-rose-500/5 max-sm:bg-rose-500/5",
+	cyan: "hover:border-cyan-400/20 hover:bg-cyan-500/5 max-sm:bg-cyan-500/5",
+	yellow: "hover:border-yellow-400/20 hover:bg-yellow-500/5 max-sm:bg-yellow-500/5",
 };
 
 // ============================================================================

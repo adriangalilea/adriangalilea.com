@@ -87,10 +87,11 @@ export function StatusBadge({ status, absolute = false }: { status: Status; abso
 				className={cn(
 					"absolute right-0 top-0 flex size-7 items-center justify-center rounded-full",
 					"gap-0 transition-all duration-200 ease-out",
-					"group-hover/status:w-auto group-hover/status:gap-1.5 group-hover/status:px-3"
+					"group-hover/status:w-auto group-hover/status:gap-1.5 group-hover/status:px-3",
+					"max-sm:w-auto max-sm:gap-1.5 max-sm:px-3"
 				)}
 			>
-				<span className="relative z-10 max-w-0 overflow-hidden text-xs font-medium leading-none whitespace-nowrap opacity-0 transition-all duration-200 ease-out group-hover/status:max-w-24 group-hover/status:opacity-100">
+				<span className="relative z-10 max-w-0 overflow-hidden text-xs font-medium leading-none whitespace-nowrap opacity-0 transition-all duration-200 ease-out group-hover/status:max-w-24 group-hover/status:opacity-100 max-sm:max-w-24 max-sm:opacity-100">
 					{config.label}
 				</span>
 				<span className="relative z-10 flex size-3.5 items-center justify-center shrink-0">
