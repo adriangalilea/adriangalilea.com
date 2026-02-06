@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { slugToGradient } from "@/lib/gradient";
 
 const VIDEO_EXTENSIONS = [".mp4", ".webm", ".mov"];
@@ -39,41 +39,64 @@ type CoverImageProps = {
 
 function AnimatedCover({
 	src,
-	poster,
-	title,
 	intrinsic,
 	aspectRatio,
 	hoverPlay,
 	size,
 }: {
 	src: string;
-	poster?: string | null;
-	title: string;
 	intrinsic: boolean;
 	aspectRatio: number;
 	hoverPlay: boolean;
 	size: "large" | "small";
 }) {
+	const containerRef = useRef<HTMLDivElement>(null);
+	const videoRef = useRef<HTMLVideoElement>(null);
+
+	useEffect(() => {
+		if (!hoverPlay) return;
+
+		const container = containerRef.current;
+		const video = videoRef.current;
+		if (!container || !video) return;
+
+		const group = container.closest(".group");
+		if (!group) return;
+
+		const handleEnter = () => {
+			video.currentTime = 0;
+			video.play();
+		};
+
+		const handleLeave = () => {
+			video.pause();
+			video.currentTime = 0;
+		};
+
+		group.addEventListener("mouseenter", handleEnter);
+		group.addEventListener("mouseleave", handleLeave);
+
+		return () => {
+			group.removeEventListener("mouseenter", handleEnter);
+			group.removeEventListener("mouseleave", handleLeave);
+		};
+	}, [hoverPlay]);
+
 	return (
 		<div
+			ref={containerRef}
 			className={`relative ${intrinsic ? "" : "h-full w-full"} overflow-hidden ${size === "large" ? "bg-black" : ""}`}
 			style={intrinsic ? { aspectRatio } : undefined}
 		>
-			{poster && hoverPlay && (
-				<img
-					src={poster}
-					alt={title}
-					draggable={false}
-					className={`${intrinsic ? "w-full h-full object-cover" : "absolute inset-0 h-full w-full object-cover"} transition-opacity duration-300 group-hover:opacity-0`}
-				/>
-			)}
 			<video
+				ref={videoRef}
 				src={src}
-				autoPlay
+				autoPlay={!hoverPlay}
 				loop
 				muted
 				playsInline
-				className={`${intrinsic ? "w-full h-full object-cover" : "absolute inset-0 h-full w-full object-cover"} ${poster && hoverPlay ? "absolute inset-0" : ""} transition-opacity duration-300 ${hoverPlay && poster ? "opacity-0 group-hover:opacity-100" : ""}`}
+				preload="auto"
+				className={`${intrinsic ? "w-full h-full object-cover" : "absolute inset-0 h-full w-full object-cover"}`}
 			/>
 			<GrainOverlay />
 		</div>
@@ -94,8 +117,6 @@ export function CoverImage({ cover, slug, title, size = "large", sizes, priority
 			return (
 				<AnimatedCover
 					src={cover}
-					poster={poster}
-					title={title}
 					intrinsic={intrinsic ?? false}
 					aspectRatio={aspectRatio}
 					hoverPlay={hoverPlay ?? false}
