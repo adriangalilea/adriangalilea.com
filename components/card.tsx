@@ -12,6 +12,10 @@ import { PenLine } from "lucide-react";
 // STYLES
 // ============================================================================
 
+function CardShine() {
+	return <div className="glass-card-shine" />;
+}
+
 const cardBase = "rounded-xl glass-card overflow-hidden";
 const cardHover = "hover:scale-[1.02] hover:-translate-y-1";
 const feedFlat = "glass-card-feed-flat";
@@ -77,6 +81,7 @@ function NoteCard({ note, renderedContent }: { note: Note; renderedContent?: Rea
 					</time>
 				)}
 			</div>
+			<CardShine />
 		</ClickableWrapper>
 	);
 }
@@ -146,6 +151,7 @@ function PageCard({ page }: { page: Page }) {
 					</div>
 				)}
 			</div>
+			<CardShine />
 		</ClickableWrapper>
 	);
 }
@@ -190,6 +196,7 @@ function FolderCard({ folder }: { folder: Folder }) {
 					<p className="text-sm text-foreground-low mt-1">{folder.description}</p>
 				)}
 			</div>
+			<CardShine />
 		</ClickableWrapper>
 	);
 }
@@ -238,6 +245,7 @@ function MiniPageCard({ page }: { page: Page }) {
 					<p className="text-xs text-foreground-low mt-0.5 line-clamp-2">{page.description}</p>
 				)}
 			</div>
+			<CardShine />
 		</ClickableWrapper>
 	);
 }
@@ -282,6 +290,7 @@ function XrayFolderCard({ folder }: { folder: Folder }) {
 					)}
 				</div>
 			)}
+			<CardShine />
 		</div>
 	);
 }
