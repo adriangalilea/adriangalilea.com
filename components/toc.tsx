@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import type { TOCItem } from "@/lib/content";
 
 export function TOC({ items }: { items: TOCItem[] }) {
 	const containerRef = useRef<HTMLDivElement>(null);
 	const [activeId, setActiveId] = useState<string | null>(null);
 
-	useEffect(() => {
+	const updateActiveHeading = useCallback(() => {
 		if (items.length === 0) return;
 
 		const headingElements = items
@@ -16,28 +16,36 @@ export function TOC({ items }: { items: TOCItem[] }) {
 
 		if (headingElements.length === 0) return;
 
-		const observer = new IntersectionObserver(
-			(entries) => {
-				const visibleEntries = entries.filter((entry) => entry.isIntersecting);
-				if (visibleEntries.length > 0) {
-					const topmost = visibleEntries.reduce((prev, curr) =>
-						prev.boundingClientRect.top < curr.boundingClientRect.top ? prev : curr
-					);
-					setActiveId(topmost.target.id);
-				}
-			},
-			{
-				rootMargin: "-80px 0px -80% 0px",
-				threshold: 0,
-			}
-		);
+		// Find the heading that's closest to the top of the viewport (but below the navbar)
+		const navbarOffset = 80;
+		let activeHeading: string | null = null;
 
-		for (const el of headingElements) {
-			observer.observe(el);
+		for (const heading of headingElements) {
+			const rect = heading.getBoundingClientRect();
+			// If heading is above viewport top + offset, it's passed - this becomes the active one
+			// until we find one that hasn't passed yet
+			if (rect.top <= navbarOffset + 20) {
+				activeHeading = heading.id;
+			} else {
+				// First heading below the threshold - stop here
+				break;
+			}
 		}
 
-		return () => observer.disconnect();
+		setActiveId(activeHeading);
 	}, [items]);
+
+	useEffect(() => {
+		if (items.length === 0) return;
+
+		// Initial update
+		updateActiveHeading();
+
+		// Update on scroll
+		window.addEventListener("scroll", updateActiveHeading, { passive: true });
+
+		return () => window.removeEventListener("scroll", updateActiveHeading);
+	}, [items, updateActiveHeading]);
 
 	if (items.length === 0) return null;
 
