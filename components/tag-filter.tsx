@@ -12,7 +12,7 @@ type Props = {
 
 const pill = "shrink-0 rounded-full px-3 py-1 text-sm whitespace-nowrap border backdrop-blur-sm transition-all duration-200";
 const pillActive = "bg-accent-pop-bg border-accent-pop-border text-accent-pop shadow-sm";
-const pillInactive = "bg-transparent border-transparent text-foreground-lowest hover:text-foreground hover:bg-glass-l1/50";
+const pillInactive = "bg-glass-l1 border-glass-l1-border text-foreground-low hover:text-foreground-low hover:bg-glass-l1-hover hover:shadow-lg hover:scale-[1.05] hover:-translate-y-0.5";
 
 function useScrollState(ref: React.RefObject<HTMLDivElement | null>) {
 	const [canScrollLeft, setCanScrollLeft] = useState(false);
@@ -69,7 +69,7 @@ export function TagFilter({ tags, basePath }: Props) {
 
 			<div
 				ref={scrollRef}
-				className="flex gap-2 overflow-x-auto scrollbar-none px-0.5"
+				className="flex gap-2 overflow-x-auto scrollbar-none px-0.5 py-2"
 			>
 				<Link
 					href={basePath}
@@ -118,7 +118,7 @@ export function TagFilterFallback({ tags, basePath }: Props) {
 
 	return (
 		<div className="relative mb-6">
-			<div className="flex gap-2 overflow-x-auto scrollbar-none px-0.5">
+			<div className="flex gap-2 overflow-x-auto scrollbar-none px-0.5 py-2">
 				<Link
 					href={basePath}
 					className={`${pill} ${pillActive}`}
