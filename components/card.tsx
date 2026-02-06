@@ -241,7 +241,7 @@ function XrayFolderCard({ folder }: { folder: Folder }) {
 	return (
 		<div
 			className={cn(
-				"group/folder relative",
+				"group/folder relative cursor-pointer",
 				cardBase,
 				cardHover,
 				colorKey && statusHoverClasses[colorKey]
