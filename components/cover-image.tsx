@@ -52,15 +52,26 @@ function AnimatedCover({
 }) {
 	const containerRef = useRef<HTMLDivElement>(null);
 	const videoRef = useRef<HTMLVideoElement>(null);
+	const [userPaused, setUserPaused] = useState(false);
+	const [isTouchDevice, setIsTouchDevice] = useState(false);
 
 	useEffect(() => {
-		if (!hoverPlay) return;
+		const mq = window.matchMedia("(hover: none)");
+		setIsTouchDevice(mq.matches);
+		const handler = (e: MediaQueryListEvent) => setIsTouchDevice(e.matches);
+		mq.addEventListener("change", handler);
+		return () => mq.removeEventListener("change", handler);
+	}, []);
+
+	// Desktop hover-play: mouseenter/mouseleave on .group ancestor
+	useEffect(() => {
+		if (!hoverPlay || isTouchDevice) return;
 
 		const container = containerRef.current;
 		const video = videoRef.current;
 		if (!container || !video) return;
 
-		const group = container.closest(".group");
+		const group = container.closest(".group") || container.closest("[class*='group/']");
 		if (!group) return;
 
 		const handleEnter = () => {
@@ -80,13 +91,53 @@ function AnimatedCover({
 			group.removeEventListener("mouseenter", handleEnter);
 			group.removeEventListener("mouseleave", handleLeave);
 		};
-	}, [hoverPlay]);
+	}, [hoverPlay, isTouchDevice]);
+
+	// Mobile viewport-play: IntersectionObserver autoplay when visible
+	useEffect(() => {
+		if (!hoverPlay || !isTouchDevice) return;
+
+		const video = videoRef.current;
+		const container = containerRef.current;
+		if (!video || !container) return;
+
+		const observer = new IntersectionObserver(
+			([entry]) => {
+				if (entry.isIntersecting && !userPaused) {
+					video.play();
+				} else {
+					video.pause();
+				}
+			},
+			{ threshold: 0.5 },
+		);
+
+		observer.observe(container);
+		return () => observer.disconnect();
+	}, [hoverPlay, isTouchDevice, userPaused]);
+
+	// Click/tap toggle for all interactive cases
+	const handleClick = () => {
+		const video = videoRef.current;
+		if (!video) return;
+
+		if (video.paused) {
+			setUserPaused(false);
+			video.play();
+		} else {
+			setUserPaused(true);
+			video.pause();
+		}
+	};
+
+	const isClickable = !hoverPlay || isTouchDevice;
 
 	return (
 		<div
 			ref={containerRef}
-			className={`relative ${intrinsic ? "" : "h-full w-full"} overflow-hidden ${size === "large" ? "bg-black" : ""}`}
+			className={`relative ${intrinsic ? "" : "h-full w-full"} overflow-hidden ${size === "large" ? "bg-black" : ""} ${isClickable ? "cursor-pointer" : ""}`}
 			style={intrinsic ? { aspectRatio } : undefined}
+			onClick={isClickable ? handleClick : undefined}
 		>
 			<video
 				ref={videoRef}

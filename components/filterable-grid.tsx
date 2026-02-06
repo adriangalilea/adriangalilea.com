@@ -41,7 +41,7 @@ export function Grid({ items }: { items: Item[] }) {
 
 	return (
 		<>
-			<div className="grid grid-cols-1 gap-4 sm:hidden">
+			<div className="grid grid-cols-1 gap-0 sm:hidden">
 				{items.map((item) => <div key={item.path}>{item.content}</div>)}
 			</div>
 			<div className="hidden sm:grid lg:hidden grid-cols-2 gap-4 items-start">

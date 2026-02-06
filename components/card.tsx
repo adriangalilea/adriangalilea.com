@@ -14,6 +14,7 @@ import { PenLine } from "lucide-react";
 
 const cardBase = "rounded-xl border border-glass-l1-border bg-glass-l1 backdrop-blur-sm overflow-hidden transition-all duration-200 ease-out";
 const cardHover = "hover:scale-[1.02] hover:-translate-y-1 hover:shadow-lg hover:border-glass-l1-border hover:bg-glass-l1-hover";
+const feedFlat = "max-sm:rounded-none max-sm:border-0 max-sm:border-b max-sm:border-glass-l1-border max-sm:bg-transparent max-sm:backdrop-blur-none max-sm:hover:scale-100 max-sm:hover:translate-y-0 max-sm:hover:shadow-none";
 const cardDraft = "opacity-50 grayscale-[30%]";
 
 const statusHoverClasses: Record<string, string> = {
@@ -31,7 +32,7 @@ function NoteCard({ note, renderedContent }: { note: Note; renderedContent?: Rea
 	return (
 		<ClickableWrapper
 			href={note.path}
-			className={cn("group cursor-pointer", cardBase, cardHover, note.isDraft && cardDraft)}
+			className={cn("group cursor-pointer", cardBase, cardHover, feedFlat, note.isDraft && cardDraft)}
 		>
 			{note.cover && (
 				<CoverImage
@@ -86,7 +87,7 @@ function PageCard({ page }: { page: Page }) {
 	return (
 		<ClickableWrapper
 			href={page.path}
-			className={cn("group cursor-pointer", cardBase, cardHover, page.isDraft && cardDraft)}
+			className={cn("group cursor-pointer", cardBase, cardHover, feedFlat, page.isDraft && cardDraft)}
 		>
 			{page.cover && (
 				<CoverImage
@@ -159,6 +160,7 @@ function FolderCard({ folder }: { folder: Folder }) {
 				"group relative cursor-pointer",
 				cardBase,
 				cardHover,
+				feedFlat,
 				colorKey && statusHoverClasses[colorKey],
 			)}
 		>
@@ -244,6 +246,7 @@ function XrayFolderCard({ folder }: { folder: Folder }) {
 				"group/folder relative cursor-pointer",
 				cardBase,
 				cardHover,
+				feedFlat,
 				colorKey && statusHoverClasses[colorKey]
 			)}
 		>
