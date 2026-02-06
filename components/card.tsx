@@ -194,7 +194,7 @@ function MiniPageCard({ page }: { page: Page }) {
 	const isUpdated = wasRecentlyUpdated(page);
 
 	return (
-		<ClickableWrapper href={page.path} className={cn("group/page cursor-pointer", cardBase, cardHover)}>
+		<ClickableWrapper href={page.path} className={cn("group cursor-pointer", cardBase, cardHover)}>
 			{page.cover && (
 				<CoverImage
 					cover={page.cover}
