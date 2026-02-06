@@ -85,10 +85,10 @@ export function StatusBadge({ status, absolute = false }: { status: Status; abso
 			<Glass
 				colorKey={config.colorKey}
 				className={cn(
-					"absolute right-0 top-0 flex size-7 items-center justify-center rounded-full",
-					"gap-0 transition-all duration-200 ease-out",
-					"group-hover/status:w-auto group-hover/status:gap-1.5 group-hover/status:px-3",
-					"max-sm:w-auto max-sm:gap-1.5 max-sm:px-3"
+					"absolute right-0 top-0 flex h-7 min-w-7 items-center justify-end rounded-full",
+					"gap-0 px-[7px]",
+					"group-hover/status:gap-1.5 group-hover/status:pl-3 group-hover/status:pr-2",
+					"max-sm:gap-1.5 max-sm:pl-3 max-sm:pr-2"
 				)}
 			>
 				<span className="relative z-10 max-w-0 overflow-hidden text-xs font-medium leading-none whitespace-nowrap opacity-0 transition-all duration-200 ease-out group-hover/status:max-w-24 group-hover/status:opacity-100 max-sm:max-w-24 max-sm:opacity-100">
