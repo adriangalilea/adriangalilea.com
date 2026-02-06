@@ -135,9 +135,15 @@ function AnimatedCover({
 		const observer = new IntersectionObserver(
 			([entry]) => {
 				if (entry.isIntersecting && !userPaused) {
+					video.currentTime = 0;
+					video.style.opacity = "1";
 					video.play();
 				} else {
-					video.pause();
+					video.style.opacity = "0";
+					setTimeout(() => {
+						video.pause();
+						video.currentTime = 0;
+					}, 300);
 				}
 			},
 			{ threshold: 0.5 },
