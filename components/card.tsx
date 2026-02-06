@@ -42,6 +42,7 @@ function NoteCard({ note, renderedContent }: { note: Note; renderedContent?: Rea
 					width={note.coverWidth}
 					height={note.coverHeight}
 					poster={note.poster}
+					blurDataURL={note.blurDataURL}
 					loop={note.coverLoop}
 					intrinsic
 					hoverPlay
@@ -98,6 +99,7 @@ function PageCard({ page }: { page: Page }) {
 					width={page.coverWidth}
 					height={page.coverHeight}
 					poster={page.poster}
+					blurDataURL={page.blurDataURL}
 					loop={page.coverLoop}
 					intrinsic
 					hoverPlay
@@ -175,6 +177,7 @@ function FolderCard({ folder }: { folder: Folder }) {
 					width={folder.coverWidth}
 					height={folder.coverHeight}
 					poster={folder.poster}
+					blurDataURL={folder.blurDataURL}
 					loop={folder.coverLoop}
 					intrinsic
 					hoverPlay
@@ -208,6 +211,7 @@ function MiniPageCard({ page }: { page: Page }) {
 					width={page.coverWidth}
 					height={page.coverHeight}
 					poster={page.poster}
+					blurDataURL={page.blurDataURL}
 					loop={page.coverLoop}
 					intrinsic
 					hoverPlay

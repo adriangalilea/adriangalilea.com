@@ -1,5 +1,5 @@
 import { readdirSync, readFileSync, statSync, existsSync, cpSync, mkdirSync, unlinkSync } from "node:fs";
-import { join, parse } from "node:path";
+import { join, parse, relative } from "node:path";
 import matter from "gray-matter";
 import readingTime from "reading-time";
 import sharp from "sharp";
@@ -7,6 +7,14 @@ import imageSize from "image-size";
 
 const CONTENT_DIR = join(process.cwd(), "content");
 const PUBLIC_DIR = join(process.cwd(), "public");
+
+const blurManifest: Record<string, string> = (() => {
+	try {
+		return JSON.parse(readFileSync(join(process.cwd(), ".next", "blur-manifest.json"), "utf-8"));
+	} catch {
+		return {};
+	}
+})();
 const NOTE_MAX_CHARS = 280;
 const MEDIA_EXTENSIONS = [".png", ".jpg", ".jpeg", ".webp", ".gif", ".mp4", ".webm", ".mov"];
 const COVER_EXTENSIONS = [".png", ".webp", ".jpg", ".jpeg", ".gif", ".mp4", ".webm", ".mov"];
@@ -44,6 +52,7 @@ type ContentBase = {
 	coverWidth: number | null;
 	coverHeight: number | null;
 	poster: string | null;
+	blurDataURL: string | null;
 	coverLoop: boolean;
 	og: string | null;
 	publishedAt: Date | null;
@@ -179,6 +188,7 @@ type CoverInfo = {
 	width: number | null;
 	height: number | null;
 	poster: string | null;
+	blurDataURL: string | null;
 } | null;
 
 function resolveCover(dir: string, slug: string[]): CoverInfo {
@@ -220,8 +230,8 @@ function resolveCover(dir: string, slug: string[]): CoverInfo {
 				}
 			}
 
-			// For animated covers, look for a poster image
 			let poster: string | null = null;
+			let blurDataURL: string | null = null;
 			if (ANIMATED_EXTENSIONS.includes(ext)) {
 				for (const posterExt of POSTER_EXTENSIONS) {
 					const posterSrc = join(dir, `poster${posterExt}`);
@@ -229,8 +239,8 @@ function resolveCover(dir: string, slug: string[]): CoverInfo {
 						const posterDest = join(destDir, `poster${posterExt}`);
 						syncFile(posterSrc, posterDest);
 						poster = `/${slugPath}/poster${posterExt}`;
+						blurDataURL = blurManifest[relative(CONTENT_DIR, posterSrc)] ?? null;
 
-						// Use poster dimensions for aspect ratio if cover is video
 						if (!width || !height) {
 							try {
 								const buffer = readFileSync(posterSrc);
@@ -244,6 +254,15 @@ function resolveCover(dir: string, slug: string[]): CoverInfo {
 						break;
 					}
 				}
+				if (!poster) {
+					const warnKey = `poster:${slugPath}`;
+					if (!warnedCovers.has(warnKey)) {
+						warnedCovers.add(warnKey);
+						console.warn(`⚠ ${slugPath} has animated cover but no poster — add poster.webp for crossfade`);
+					}
+				}
+			} else {
+				blurDataURL = blurManifest[relative(CONTENT_DIR, src)] ?? null;
 			}
 
 			return {
@@ -251,6 +270,7 @@ function resolveCover(dir: string, slug: string[]): CoverInfo {
 				width,
 				height,
 				poster,
+				blurDataURL,
 			};
 		}
 	}
@@ -319,6 +339,7 @@ function parseContent(filePath: string, slug: string[]): Content | null {
 			coverWidth: coverInfo?.width ?? data.coverWidth ?? null,
 			coverHeight: coverInfo?.height ?? data.coverHeight ?? null,
 			poster: coverInfo?.poster ?? null,
+			blurDataURL: coverInfo?.blurDataURL ?? null,
 			coverLoop: data.coverLoop ?? true,
 			og: null,
 			publishedAt: data.publishedAt ?? null,

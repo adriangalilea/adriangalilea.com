@@ -47,6 +47,10 @@ For animated covers (gif/video), place a `poster.*` image alongside for the stat
 
 Images/media referenced in `.mdx` with `./filename` get rewritten to `/${slugPath}/filename`. The files must exist in `public/${slugPath}/`.
 
+### Blur placeholders
+
+`scripts/generate-blur.mjs` pre-generates blur data URLs for all cover/poster images into `.next/blur-manifest.json`. This runs before both `dev` and `build` via package.json scripts. Tradeoff: adding a new cover image while `next dev` is running requires a restart to pick up blur. If content changes become frequent, consider making content parsing async so blur generation can live inline without a separate build step.
+
 ### X-ray cards
 
 Folders without a cover render as "x-ray" cards in the grid — they show a preview of their top child page (via `MiniPageCard`). If a folder has a cover, it renders as a regular `FolderCard` instead.

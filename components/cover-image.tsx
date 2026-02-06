@@ -33,6 +33,8 @@ type CoverImageProps = {
 	height?: number | null;
 	/** Static poster image for animated covers (shown until hover) */
 	poster?: string | null;
+	/** Blurred base64 placeholder for instant display before load */
+	blurDataURL?: string | null;
 	/** Play animation on hover only (for cards) vs autoplay (for page headers) */
 	hoverPlay?: boolean;
 	/** Whether video covers loop (default true) */
@@ -42,6 +44,7 @@ type CoverImageProps = {
 function AnimatedCover({
 	src,
 	poster,
+	blurDataURL,
 	intrinsic,
 	aspectRatio,
 	hoverPlay,
@@ -50,6 +53,7 @@ function AnimatedCover({
 }: {
 	src: string;
 	poster?: string | null;
+	blurDataURL?: string | null;
 	intrinsic: boolean;
 	aspectRatio: number;
 	hoverPlay: boolean;
@@ -58,7 +62,6 @@ function AnimatedCover({
 }) {
 	const containerRef = useRef<HTMLDivElement>(null);
 	const videoRef = useRef<HTMLVideoElement>(null);
-	const frame0Ref = useRef<HTMLImageElement>(null);
 	const [userPaused, setUserPaused] = useState(false);
 	const [isTouchDevice, setIsTouchDevice] = useState(false);
 
@@ -69,29 +72,6 @@ function AnimatedCover({
 		mq.addEventListener("change", handler);
 		return () => mq.removeEventListener("change", handler);
 	}, []);
-
-	// Capture frame 0 as a static image for crossfade (no re-render)
-	useEffect(() => {
-		const video = videoRef.current;
-		const img = frame0Ref.current;
-		if (!video || !img || !hoverPlay) return;
-
-		const capture = () => {
-			const canvas = document.createElement("canvas");
-			canvas.width = video.videoWidth;
-			canvas.height = video.videoHeight;
-			const ctx = canvas.getContext("2d");
-			if (ctx) {
-				ctx.drawImage(video, 0, 0);
-				img.src = canvas.toDataURL("image/jpeg", 0.8);
-				img.style.visibility = "visible";
-			}
-			video.style.opacity = "0";
-		};
-
-		if (video.readyState >= 2) capture();
-		else video.addEventListener("loadeddata", capture, { once: true });
-	}, [hoverPlay]);
 
 	// Desktop hover-play: mouseenter/mouseleave on .group ancestor
 	useEffect(() => {
@@ -172,20 +152,24 @@ function AnimatedCover({
 
 	const isClickable = !hoverPlay || isTouchDevice;
 
+	const containerStyle: React.CSSProperties = {
+		...(intrinsic ? { aspectRatio } : undefined),
+		...(blurDataURL ? { backgroundImage: `url(${blurDataURL})`, backgroundSize: "cover" } : undefined),
+	};
+
 	return (
 		<div
 			ref={containerRef}
 			className={`relative ${intrinsic ? "" : "h-full w-full"} overflow-hidden ${size === "large" ? "bg-black" : ""} ${isClickable ? "cursor-pointer" : ""}`}
-			style={intrinsic ? { aspectRatio } : undefined}
+			style={containerStyle}
 			onClick={isClickable ? handleClick : undefined}
 		>
-			{hoverPlay && (
+			{hoverPlay && poster && (
 				<img
-					ref={frame0Ref}
+					src={poster}
 					alt=""
 					draggable={false}
 					className="absolute inset-0 w-full h-full object-cover"
-					style={{ visibility: "hidden" }}
 				/>
 			)}
 			<video
@@ -195,16 +179,16 @@ function AnimatedCover({
 				loop={loop}
 				muted
 				playsInline
-				preload="auto"
+				preload={hoverPlay ? "none" : "auto"}
 				className={`${hoverPlay ? "absolute inset-0 w-full h-full object-cover" : intrinsic ? "w-full h-full object-cover" : "absolute inset-0 h-full w-full object-cover"}`}
-				style={hoverPlay ? { transition: "opacity 0.3s ease-out" } : undefined}
+				style={hoverPlay ? { opacity: 0, transition: "opacity 0.3s ease-out" } : undefined}
 			/>
 			<GrainOverlay />
 		</div>
 	);
 }
 
-export function CoverImage({ cover, slug, title, size = "large", sizes, priority, intrinsic, width, height, poster, hoverPlay, loop = true }: CoverImageProps) {
+export function CoverImage({ cover, slug, title, size = "large", sizes, priority, intrinsic, width, height, poster, blurDataURL, hoverPlay, loop = true }: CoverImageProps) {
 	const [loaded, setLoaded] = useState(false);
 
 	// Default dimensions if not provided
@@ -219,6 +203,7 @@ export function CoverImage({ cover, slug, title, size = "large", sizes, priority
 				<AnimatedCover
 					src={cover}
 					poster={poster}
+					blurDataURL={blurDataURL}
 					intrinsic={intrinsic ?? false}
 					aspectRatio={aspectRatio}
 					hoverPlay={hoverPlay ?? false}
@@ -234,7 +219,10 @@ export function CoverImage({ cover, slug, title, size = "large", sizes, priority
 				return (
 					<div
 						className={`group relative ${intrinsic ? "" : "h-full w-full"} overflow-hidden`}
-						style={intrinsic ? { aspectRatio } : undefined}
+						style={{
+							...(intrinsic ? { aspectRatio } : undefined),
+							...(blurDataURL ? { backgroundImage: `url(${blurDataURL})`, backgroundSize: "cover" } : undefined),
+						}}
 					>
 						<img
 							src={poster}
@@ -255,7 +243,10 @@ export function CoverImage({ cover, slug, title, size = "large", sizes, priority
 			return (
 				<div
 					className={`relative ${intrinsic ? "" : "h-full w-full"} overflow-hidden`}
-					style={intrinsic ? { aspectRatio } : undefined}
+					style={{
+						...(intrinsic ? { aspectRatio } : undefined),
+						...(blurDataURL ? { backgroundImage: `url(${blurDataURL})`, backgroundSize: "cover" } : undefined),
+					}}
 				>
 					<img
 						src={cover}
@@ -282,6 +273,7 @@ export function CoverImage({ cover, slug, title, size = "large", sizes, priority
 						sizes={sizes ?? "(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 400px"}
 						priority={priority}
 						onLoad={() => setLoaded(true)}
+						{...(blurDataURL ? { placeholder: "blur" as const, blurDataURL } : {})}
 					/>
 					<GrainOverlay />
 				</div>
@@ -305,6 +297,7 @@ export function CoverImage({ cover, slug, title, size = "large", sizes, priority
 					sizes={sizes ?? "100vw"}
 					priority={priority}
 					onLoad={() => setLoaded(true)}
+					{...(blurDataURL ? { placeholder: "blur" as const, blurDataURL } : {})}
 				/>
 				<GrainOverlay />
 			</div>
