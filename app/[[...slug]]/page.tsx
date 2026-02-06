@@ -18,6 +18,7 @@ import { TOC } from "@/components/toc";
 import { CoverImage } from "@/components/cover-image";
 import { MasonryGrid } from "@/components/masonry";
 import { RelatedSection } from "@/components/related-section";
+import { TagLink } from "@/components/tag-link";
 import { PenLine } from "lucide-react";
 import { CollectionView } from "@/components/collection-view";
 
@@ -91,7 +92,7 @@ async function NoteView({ note }: { note: Note }) {
 							<div className="mb-4 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs uppercase tracking-wide">
 								{note.tags.map((tag, i) => (
 									<span key={tag}>
-										<span className="text-accent-pop">{tag}</span>
+										<TagLink tag={tag} />
 										{i < note.tags.length - 1 && <span className="text-muted-foreground">,</span>}
 									</span>
 								))}
@@ -163,7 +164,7 @@ async function PageView({ page }: { page: Page }) {
 								<div className="mb-4 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs uppercase tracking-wide">
 									{page.tags.map((tag, i) => (
 										<span key={tag}>
-											<span className="text-accent-pop">{tag}</span>
+											<TagLink tag={tag} />
 											{i < page.tags.length - 1 && <span className="text-muted-foreground">,</span>}
 										</span>
 									))}

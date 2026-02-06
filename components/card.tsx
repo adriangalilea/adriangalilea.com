@@ -4,6 +4,7 @@ import { isNote, isPage, isFolder, getFeaturedChildren, wasRecentlyUpdated } fro
 import { StatusBadge, STATUS_CONFIG } from "@/components/status-badge";
 import { ClickableWrapper } from "@/components/clickable-wrapper";
 import { CoverImage } from "@/components/cover-image";
+import { TagLink } from "@/components/tag-link";
 import { cn } from "@/lib/utils";
 import { PenLine } from "lucide-react";
 
@@ -50,7 +51,7 @@ function NoteCard({ note, renderedContent }: { note: Note; renderedContent?: Rea
 					<p className="flex flex-wrap items-center gap-x-1.5 text-xs uppercase tracking-wide mb-2">
 						{note.tags.map((t, i) => (
 							<span key={t}>
-								<span className="text-accent-pop">{t}</span>
+								<TagLink tag={t} />
 								{i < note.tags.length - 1 && <span className="text-muted-foreground">,</span>}
 							</span>
 						))}
@@ -105,7 +106,7 @@ function PageCard({ page }: { page: Page }) {
 					<p className="flex flex-wrap items-center gap-x-1.5 text-xs uppercase tracking-wide mb-1">
 						{page.tags.map((t, i) => (
 							<span key={t}>
-								<span className="text-accent-pop">{t}</span>
+								<TagLink tag={t} />
 								{i < page.tags.length - 1 && <span className="text-muted-foreground">,</span>}
 							</span>
 						))}
@@ -213,7 +214,7 @@ function MiniPageCard({ page }: { page: Page }) {
 					<p className="flex flex-wrap items-center gap-x-1 text-[10px] uppercase tracking-wide mb-0.5">
 						{page.tags.slice(0, 2).map((t, i) => (
 							<span key={t}>
-								<span className="text-accent-pop">{t}</span>
+								<TagLink tag={t} />
 								{i < Math.min(page.tags.length, 2) - 1 && <span className="text-muted-foreground">,</span>}
 							</span>
 						))}
