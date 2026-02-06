@@ -42,6 +42,7 @@ function NoteCard({ note, renderedContent }: { note: Note; renderedContent?: Rea
 					width={note.coverWidth}
 					height={note.coverHeight}
 					poster={note.poster}
+					loop={note.coverLoop}
 					intrinsic
 					hoverPlay
 					sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 400px"
@@ -97,6 +98,7 @@ function PageCard({ page }: { page: Page }) {
 					width={page.coverWidth}
 					height={page.coverHeight}
 					poster={page.poster}
+					loop={page.coverLoop}
 					intrinsic
 					hoverPlay
 					sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 400px"
@@ -173,6 +175,7 @@ function FolderCard({ folder }: { folder: Folder }) {
 					width={folder.coverWidth}
 					height={folder.coverHeight}
 					poster={folder.poster}
+					loop={folder.coverLoop}
 					intrinsic
 					hoverPlay
 					sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 400px"
@@ -205,6 +208,7 @@ function MiniPageCard({ page }: { page: Page }) {
 					width={page.coverWidth}
 					height={page.coverHeight}
 					poster={page.poster}
+					loop={page.coverLoop}
 					intrinsic
 					hoverPlay
 					size="small"

@@ -50,3 +50,10 @@ Images/media referenced in `.mdx` with `./filename` get rewritten to `/${slugPat
 ### X-ray cards
 
 Folders without a cover render as "x-ray" cards in the grid — they show a preview of their top child page (via `MiniPageCard`). If a folder has a cover, it renders as a regular `FolderCard` instead.
+
+## TODO
+
+- Add Vercel Analytics for traffic analysis
+- Add comment section with GitHub and Telegram auth using Better Auth
+- Add email via Resend (ramih@baiteh.com)
+- Add backstory page

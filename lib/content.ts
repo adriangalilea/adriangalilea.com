@@ -1,4 +1,4 @@
-import { readdirSync, readFileSync, statSync, existsSync, cpSync, mkdirSync } from "node:fs";
+import { readdirSync, readFileSync, statSync, existsSync, cpSync, mkdirSync, unlinkSync } from "node:fs";
 import { join, parse } from "node:path";
 import matter from "gray-matter";
 import readingTime from "reading-time";
@@ -13,8 +13,11 @@ const COVER_EXTENSIONS = [".png", ".webp", ".jpg", ".jpeg", ".gif", ".mp4", ".we
 const IMAGE_EXTENSIONS = [".png", ".webp", ".jpg", ".jpeg", ".gif"];
 const POSTER_EXTENSIONS = [".webp", ".jpg", ".jpeg", ".png"];
 const ANIMATED_EXTENSIONS = [".gif", ".mp4", ".webm", ".mov"];
+const NON_WEBM_ANIMATED = [".gif", ".mp4", ".mov"];
 const OG_WIDTH = 1200;
 const OG_HEIGHT = 630;
+
+const warnedCovers = new Set<string>();
 
 // ============================================================================
 // TYPES
@@ -41,6 +44,7 @@ type ContentBase = {
 	coverWidth: number | null;
 	coverHeight: number | null;
 	poster: string | null;
+	coverLoop: boolean;
 	og: string | null;
 	publishedAt: Date | null;
 	isDraft: boolean;
@@ -111,6 +115,15 @@ function isMediaFile(filename: string): boolean {
 	return MEDIA_EXTENSIONS.includes(ext);
 }
 
+function needsCopy(src: string, dest: string): boolean {
+	if (!existsSync(dest)) return true;
+	return statSync(src).size !== statSync(dest).size;
+}
+
+function syncFile(src: string, dest: string): void {
+	if (needsCopy(src, dest)) cpSync(src, dest);
+}
+
 function slugify(text: string): string {
 	return text
 		.toLowerCase()
@@ -146,7 +159,7 @@ function copyMedia(dir: string, slug: string[]): string[] {
 		for (const file of files) {
 			const src = join(dir, file);
 			const dest = join(destDir, file);
-			if (!existsSync(dest)) cpSync(src, dest);
+			syncFile(src, dest);
 		}
 		return files;
 	} catch {
@@ -176,7 +189,22 @@ function resolveCover(dir: string, slug: string[]): CoverInfo {
 			const destDir = join(PUBLIC_DIR, slugPath);
 			const dest = join(destDir, `cover${ext}`);
 			mkdirSync(destDir, { recursive: true });
-			if (!existsSync(dest)) cpSync(src, dest);
+			syncFile(src, dest);
+
+			// Remove stale covers with different extensions
+			for (const oldExt of COVER_EXTENSIONS) {
+				if (oldExt === ext) continue;
+				const stale = join(destDir, `cover${oldExt}`);
+				if (existsSync(stale)) {
+					console.warn(`Removing stale cover: ${stale} (replaced by cover${ext})`);
+					unlinkSync(stale);
+				}
+			}
+
+			if (NON_WEBM_ANIMATED.includes(ext) && !warnedCovers.has(slugPath)) {
+				warnedCovers.add(slugPath);
+				console.warn(`⚠ ${slugPath}/cover${ext} is not webm — convert with: ffmpeg -i content/${slugPath}/cover${ext} -c:v libvpx-vp9 -crf 30 -b:v 0 -an content/${slugPath}/cover.webm`);
+			}
 
 			// Get dimensions for images (not videos)
 			let width: number | null = null;
@@ -199,7 +227,7 @@ function resolveCover(dir: string, slug: string[]): CoverInfo {
 					const posterSrc = join(dir, `poster${posterExt}`);
 					if (existsSync(posterSrc)) {
 						const posterDest = join(destDir, `poster${posterExt}`);
-						if (!existsSync(posterDest)) cpSync(posterSrc, posterDest);
+						syncFile(posterSrc, posterDest);
 						poster = `/${slugPath}/poster${posterExt}`;
 
 						// Use poster dimensions for aspect ratio if cover is video
@@ -291,11 +319,20 @@ function parseContent(filePath: string, slug: string[]): Content | null {
 			coverWidth: coverInfo?.width ?? data.coverWidth ?? null,
 			coverHeight: coverInfo?.height ?? data.coverHeight ?? null,
 			poster: coverInfo?.poster ?? null,
+			coverLoop: data.coverLoop ?? true,
 			og: null,
 			publishedAt: data.publishedAt ?? null,
 			isDraft: data.isDraft ?? false,
 			_dir: dir,
 		};
+
+		if (coverInfo && ANIMATED_EXTENSIONS.includes(parse(coverInfo.url).ext) && !base.coverWidth && !base.coverHeight) {
+			const key = `dims:${slug.join("/")}`;
+			if (!warnedCovers.has(key)) {
+				warnedCovers.add(key);
+				console.warn(`⚠ ${slug.join("/")} has animated cover but no dimensions — set coverWidth/coverHeight in frontmatter`);
+			}
+		}
 
 		// Folder: explicit type in frontmatter
 		if (data.type === "folder") {

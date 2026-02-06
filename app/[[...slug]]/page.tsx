@@ -106,6 +106,7 @@ async function NoteView({ note }: { note: Note }) {
 								cover={note.cover}
 								slug={note.slug.join("/")}
 								title=""
+								loop={note.coverLoop}
 								sizes="(max-width: 1024px) 100vw, 672px"
 								priority
 							/>
@@ -177,6 +178,7 @@ async function PageView({ page }: { page: Page }) {
 								cover={page.cover}
 								slug={page.slug.join("/")}
 								title={page.title}
+								loop={page.coverLoop}
 								sizes="(max-width: 1024px) 100vw, 672px"
 								priority
 							/>
