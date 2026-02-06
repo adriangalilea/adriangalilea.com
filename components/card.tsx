@@ -5,6 +5,7 @@ import { StatusBadge, STATUS_CONFIG } from "@/components/status-badge";
 import { ClickableWrapper } from "@/components/clickable-wrapper";
 import { CoverImage } from "@/components/cover-image";
 import { cn } from "@/lib/utils";
+import { PenLine } from "lucide-react";
 
 // ============================================================================
 // STYLES
@@ -98,13 +99,28 @@ function PageCard({ page }: { page: Page }) {
 					<p className="text-sm text-foreground-low mt-1">{page.description}</p>
 				)}
 				{page.publishedAt && (
-					<time className="mt-2 block text-muted-foreground text-xs tabular-nums">
-						{new Date(page.publishedAt).toLocaleDateString("en-US", {
-							year: "numeric",
-							month: "short",
-							day: "numeric",
-						})}
-					</time>
+					<div className="mt-2 flex items-center gap-1.5 text-muted-foreground text-xs tabular-nums">
+						<time>
+							{new Date(page.publishedAt).toLocaleDateString("en-US", {
+								year: "numeric",
+								month: "short",
+								day: "numeric",
+							})}
+						</time>
+						{page.updatedAt && new Date(page.updatedAt) > new Date(page.publishedAt) && (
+							<>
+								<span className="text-foreground-lowest">·</span>
+								<PenLine className="size-3" />
+								<time>
+									{new Date(page.updatedAt).toLocaleDateString("en-US", {
+										year: "numeric",
+										month: "short",
+										day: "numeric",
+									})}
+								</time>
+							</>
+						)}
+					</div>
 				)}
 			</div>
 		</ClickableWrapper>

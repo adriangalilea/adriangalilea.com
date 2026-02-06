@@ -18,6 +18,7 @@ import { TOC } from "@/components/toc";
 import { CoverImage } from "@/components/cover-image";
 import { MasonryGrid } from "@/components/masonry";
 import { RelatedSection } from "@/components/related-section";
+import { PenLine } from "lucide-react";
 import { CollectionView } from "@/components/collection-view";
 
 type Props = {
@@ -172,14 +173,14 @@ async function PageView({ page }: { page: Page }) {
 									{page.updatedAt && (
 										<>
 											<span className="mx-2">·</span>
-											<span>
-												Edited{" "}
+											<PenLine className="size-3.5 inline-block mr-1" strokeWidth={1.5} />
+											<time>
 												{new Date(page.updatedAt).toLocaleDateString("en-US", {
 													year: "numeric",
 													month: "long",
 													day: "numeric",
 												})}
-											</span>
+											</time>
 										</>
 									)}
 								</div>

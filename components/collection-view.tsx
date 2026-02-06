@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Suspense, type ReactNode } from "react";
 import type { Content, Folder } from "@/lib/content";
-import { isPost, isNote, isFolder, getTagsFromContent, getChildrenForSlug, getChildren, getFolderTags } from "@/lib/content";
+import { isPost, isNote, isPage, isFolder, getTagsFromContent, getChildrenForSlug, getChildren, getFolderTags } from "@/lib/content";
 import { renderMDX, renderMDXString } from "@/lib/mdx";
 import { getMDXComponents } from "@/mdx-components";
 import { StatusBadge } from "@/components/status-badge";
@@ -14,11 +14,22 @@ type Props = {
 	slug: string[];
 };
 
-// Sorting logic - drafts to bottom, newest first
+// Sorting logic - drafts to bottom, newest first (considers updatedAt for Pages)
 function getBestDate(content: Content): Date | null {
+	// For pages, use the most recent of publishedAt or updatedAt
+	if (isPage(content)) {
+		const published = content.publishedAt ? new Date(content.publishedAt) : null;
+		const updated = content.updatedAt ? new Date(content.updatedAt) : null;
+		if (published && updated) {
+			return updated > published ? updated : published;
+		}
+		return published ?? updated;
+	}
+
 	if (content.publishedAt) {
 		return new Date(content.publishedAt);
 	}
+
 	if (isFolder(content) && !content.cover) {
 		const children = getChildren(content.slug).filter(isPost);
 		const dates = children
