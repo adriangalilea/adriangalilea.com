@@ -169,11 +169,24 @@ async function PageView({ page }: { page: Page }) {
 											day: "numeric",
 										})}
 									</time>
+									{page.updatedAt && (
+										<>
+											<span className="mx-2">·</span>
+											<span>
+												Edited{" "}
+												{new Date(page.updatedAt).toLocaleDateString("en-US", {
+													year: "numeric",
+													month: "long",
+													day: "numeric",
+												})}
+											</span>
+										</>
+									)}
 								</div>
 							)}
 						</header>
 
-						<div className="pt-8 prose prose-p:leading-[1.8]">{mdxContent}</div>
+						<div className="mt-8 prose prose-p:leading-[1.8]">{mdxContent}</div>
 					</div>
 				</div>
 			</div>

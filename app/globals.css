@@ -210,6 +210,10 @@
   letter-spacing: -0.025em;
 }
 
+.prose > :where(h2, h3, h4):first-child {
+  margin-top: 0;
+}
+
 .prose :where(h3):not(:where([class~="not-prose"] *)) {
   margin-top: 2.25rem;
   margin-bottom: 0.75rem;
