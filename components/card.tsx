@@ -3,6 +3,7 @@ import type { Content, Note, Page, Folder } from "@/lib/content";
 import { isNote, isPage, isFolder, getFeaturedChildren, wasRecentlyUpdated } from "@/lib/content";
 import { StatusBadge, STATUS_CONFIG } from "@/components/status-badge";
 import { ClickableWrapper } from "@/components/clickable-wrapper";
+import { CoverImage } from "@/components/cover-image";
 import { cn } from "@/lib/utils";
 
 // ============================================================================
@@ -71,9 +72,15 @@ function PageCard({ page }: { page: Page }) {
 			className={cn("group cursor-pointer", cardBase, cardHover, page.isDraft && cardDraft)}
 		>
 			{page.cover && (
-				<div className="w-full overflow-hidden">
-					<img src={page.cover} alt={page.title} draggable={false} className="w-full h-auto" />
-				</div>
+				<CoverImage
+					cover={page.cover}
+					slug={page.slug.join("/")}
+					title={page.title}
+					width={page.coverWidth}
+					height={page.coverHeight}
+					intrinsic
+					sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 400px"
+				/>
 			)}
 			<div className="p-4">
 				{page.tags.length > 0 && (
@@ -123,9 +130,15 @@ function FolderCard({ folder }: { folder: Folder }) {
 		>
 			{folder.status && <StatusBadge status={folder.status} absolute />}
 			{folder.cover && (
-				<div className="w-full overflow-hidden">
-					<img src={folder.cover} alt={folder.title} draggable={false} className="w-full h-auto" />
-				</div>
+				<CoverImage
+					cover={folder.cover}
+					slug={folder.slug.join("/")}
+					title={folder.title}
+					width={folder.coverWidth}
+					height={folder.coverHeight}
+					intrinsic
+					sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 400px"
+				/>
 			)}
 			<div className="p-4">
 				<span className="font-semibold">{folder.title}</span>
@@ -154,9 +167,16 @@ function MiniPageCard({ page }: { page: Page }) {
 	return (
 		<ClickableWrapper href={page.path} className={cn("group/page cursor-pointer", cardBase, cardHover)}>
 			{page.cover && (
-				<div className="w-full overflow-hidden">
-					<img src={page.cover} alt={page.title} draggable={false} className="w-full h-auto" />
-				</div>
+				<CoverImage
+					cover={page.cover}
+					slug={page.slug.join("/")}
+					title={page.title}
+					width={page.coverWidth}
+					height={page.coverHeight}
+					intrinsic
+					size="small"
+					sizes="300px"
+				/>
 			)}
 			<div className="p-3">
 				{page.tags.length > 0 && (

@@ -3,6 +3,7 @@ import { join, parse } from "node:path";
 import matter from "gray-matter";
 import readingTime from "reading-time";
 import sharp from "sharp";
+import imageSize from "image-size";
 
 const CONTENT_DIR = join(process.cwd(), "content");
 const PUBLIC_DIR = join(process.cwd(), "public");
@@ -35,6 +36,8 @@ type ContentBase = {
 	readingTime: ReadingTime;
 	media: string[];
 	cover: string | null;
+	coverWidth: number | null;
+	coverHeight: number | null;
 	og: string | null;
 	publishedAt: Date | null;
 	isDraft: boolean;
@@ -155,7 +158,13 @@ function rewriteMediaPaths(content: string, slug: string[]): string {
 		.replace(/src=[\"']\.\//g, `src="/${slugPath}/`);
 }
 
-function resolveCover(dir: string, slug: string[]): string | null {
+type CoverInfo = {
+	url: string;
+	width: number | null;
+	height: number | null;
+} | null;
+
+function resolveCover(dir: string, slug: string[]): CoverInfo {
 	for (const ext of COVER_EXTENSIONS) {
 		const src = join(dir, `cover${ext}`);
 		if (existsSync(src)) {
@@ -164,7 +173,26 @@ function resolveCover(dir: string, slug: string[]): string | null {
 			const dest = join(destDir, `cover${ext}`);
 			mkdirSync(destDir, { recursive: true });
 			if (!existsSync(dest)) cpSync(src, dest);
-			return `/${slugPath}/cover${ext}`;
+
+			// Get dimensions for images (not videos)
+			let width: number | null = null;
+			let height: number | null = null;
+			if (IMAGE_EXTENSIONS.includes(ext)) {
+				try {
+					const buffer = readFileSync(src);
+					const dims = imageSize(buffer);
+					width = dims.width ?? null;
+					height = dims.height ?? null;
+				} catch {
+					// Ignore dimension errors
+				}
+			}
+
+			return {
+				url: `/${slugPath}/cover${ext}`,
+				width,
+				height,
+			};
 		}
 	}
 	return null;
@@ -216,7 +244,7 @@ function parseContent(filePath: string, slug: string[]): Content | null {
 		const stats = readingTime(content);
 		const dir = parse(filePath).dir;
 		const media = copyMedia(dir, slug);
-		const cover = resolveCover(dir, slug);
+		const coverInfo = resolveCover(dir, slug);
 		const rewritten = rewriteMediaPaths(content, slug);
 
 		// isPublished: false = completely hidden, not even parsed
@@ -228,7 +256,9 @@ function parseContent(filePath: string, slug: string[]): Content | null {
 			content: rewritten,
 			readingTime: stats,
 			media,
-			cover,
+			cover: coverInfo?.url ?? null,
+			coverWidth: coverInfo?.width ?? null,
+			coverHeight: coverInfo?.height ?? null,
 			og: null,
 			publishedAt: data.publishedAt ?? null,
 			isDraft: data.isDraft ?? false,
