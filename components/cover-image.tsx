@@ -35,25 +35,32 @@ type CoverImageProps = {
 	poster?: string | null;
 	/** Play animation on hover only (for cards) vs autoplay (for page headers) */
 	hoverPlay?: boolean;
+	/** Whether video covers loop (default true) */
+	loop?: boolean;
 };
 
 function AnimatedCover({
 	src,
+	poster,
 	intrinsic,
 	aspectRatio,
 	hoverPlay,
 	size,
+	loop,
 }: {
 	src: string;
+	poster?: string | null;
 	intrinsic: boolean;
 	aspectRatio: number;
 	hoverPlay: boolean;
 	size: "large" | "small";
+	loop: boolean;
 }) {
 	const containerRef = useRef<HTMLDivElement>(null);
 	const videoRef = useRef<HTMLVideoElement>(null);
 	const [userPaused, setUserPaused] = useState(false);
 	const [isTouchDevice, setIsTouchDevice] = useState(false);
+	const [frame0, setFrame0] = useState<string | null>(null);
 
 	useEffect(() => {
 		const mq = window.matchMedia("(hover: none)");
@@ -62,6 +69,26 @@ function AnimatedCover({
 		mq.addEventListener("change", handler);
 		return () => mq.removeEventListener("change", handler);
 	}, []);
+
+	// Capture frame 0 as a static image for crossfade
+	useEffect(() => {
+		const video = videoRef.current;
+		if (!video || !hoverPlay) return;
+
+		const capture = () => {
+			const canvas = document.createElement("canvas");
+			canvas.width = video.videoWidth;
+			canvas.height = video.videoHeight;
+			const ctx = canvas.getContext("2d");
+			if (ctx) {
+				ctx.drawImage(video, 0, 0);
+				setFrame0(canvas.toDataURL("image/webp", 0.8));
+			}
+		};
+
+		if (video.readyState >= 2) capture();
+		else video.addEventListener("loadeddata", capture, { once: true });
+	}, [hoverPlay]);
 
 	// Desktop hover-play: mouseenter/mouseleave on .group ancestor
 	useEffect(() => {
@@ -76,12 +103,16 @@ function AnimatedCover({
 
 		const handleEnter = () => {
 			video.currentTime = 0;
+			video.style.opacity = "1";
 			video.play();
 		};
 
 		const handleLeave = () => {
-			video.pause();
-			video.currentTime = 0;
+			video.style.opacity = "0";
+			setTimeout(() => {
+				video.pause();
+				video.currentTime = 0;
+			}, 300);
 		};
 
 		group.addEventListener("mouseenter", handleEnter);
@@ -139,22 +170,31 @@ function AnimatedCover({
 			style={intrinsic ? { aspectRatio } : undefined}
 			onClick={isClickable ? handleClick : undefined}
 		>
+			{frame0 && (
+				<img
+					src={frame0}
+					alt=""
+					draggable={false}
+					className="absolute inset-0 w-full h-full object-cover"
+				/>
+			)}
 			<video
 				ref={videoRef}
 				src={src}
 				autoPlay={!hoverPlay}
-				loop
+				loop={loop}
 				muted
 				playsInline
 				preload="auto"
-				className={`${intrinsic ? "w-full h-full object-cover" : "absolute inset-0 h-full w-full object-cover"}`}
+				className={`${frame0 ? "absolute inset-0 w-full h-full object-cover" : intrinsic ? "w-full h-full object-cover" : "absolute inset-0 h-full w-full object-cover"}`}
+				style={frame0 ? { opacity: 0, transition: "opacity 0.3s ease-out" } : undefined}
 			/>
 			<GrainOverlay />
 		</div>
 	);
 }
 
-export function CoverImage({ cover, slug, title, size = "large", sizes, priority, intrinsic, width, height, poster, hoverPlay }: CoverImageProps) {
+export function CoverImage({ cover, slug, title, size = "large", sizes, priority, intrinsic, width, height, poster, hoverPlay, loop = true }: CoverImageProps) {
 	const [loaded, setLoaded] = useState(false);
 
 	// Default dimensions if not provided
@@ -168,10 +208,12 @@ export function CoverImage({ cover, slug, title, size = "large", sizes, priority
 			return (
 				<AnimatedCover
 					src={cover}
+					poster={poster}
 					intrinsic={intrinsic ?? false}
 					aspectRatio={aspectRatio}
 					hoverPlay={hoverPlay ?? false}
 					size={size}
+					loop={loop}
 				/>
 			);
 		}
