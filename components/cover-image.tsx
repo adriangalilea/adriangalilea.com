@@ -58,9 +58,9 @@ function AnimatedCover({
 }) {
 	const containerRef = useRef<HTMLDivElement>(null);
 	const videoRef = useRef<HTMLVideoElement>(null);
+	const frame0Ref = useRef<HTMLImageElement>(null);
 	const [userPaused, setUserPaused] = useState(false);
 	const [isTouchDevice, setIsTouchDevice] = useState(false);
-	const [frame0, setFrame0] = useState<string | null>(null);
 
 	useEffect(() => {
 		const mq = window.matchMedia("(hover: none)");
@@ -70,10 +70,11 @@ function AnimatedCover({
 		return () => mq.removeEventListener("change", handler);
 	}, []);
 
-	// Capture frame 0 as a static image for crossfade
+	// Capture frame 0 as a static image for crossfade (no re-render)
 	useEffect(() => {
 		const video = videoRef.current;
-		if (!video || !hoverPlay) return;
+		const img = frame0Ref.current;
+		if (!video || !img || !hoverPlay) return;
 
 		const capture = () => {
 			const canvas = document.createElement("canvas");
@@ -82,8 +83,9 @@ function AnimatedCover({
 			const ctx = canvas.getContext("2d");
 			if (ctx) {
 				ctx.drawImage(video, 0, 0);
-				setFrame0(canvas.toDataURL("image/webp", 0.8));
+				img.src = canvas.toDataURL("image/jpeg", 0.8);
 			}
+			video.style.opacity = "0";
 		};
 
 		if (video.readyState >= 2) capture();
@@ -176,12 +178,12 @@ function AnimatedCover({
 			style={intrinsic ? { aspectRatio } : undefined}
 			onClick={isClickable ? handleClick : undefined}
 		>
-			{frame0 && (
+			{hoverPlay && (
 				<img
-					src={frame0}
+					ref={frame0Ref}
 					alt=""
 					draggable={false}
-					className="absolute inset-0 w-full h-full object-cover"
+					className={`absolute inset-0 w-full h-full object-cover`}
 				/>
 			)}
 			<video
@@ -192,8 +194,8 @@ function AnimatedCover({
 				muted
 				playsInline
 				preload="auto"
-				className={`${frame0 ? "absolute inset-0 w-full h-full object-cover" : intrinsic ? "w-full h-full object-cover" : "absolute inset-0 h-full w-full object-cover"}`}
-				style={frame0 ? { opacity: 0, transition: "opacity 0.3s ease-out" } : undefined}
+				className={`${hoverPlay ? "absolute inset-0 w-full h-full object-cover" : intrinsic ? "w-full h-full object-cover" : "absolute inset-0 h-full w-full object-cover"}`}
+				style={hoverPlay ? { transition: "opacity 0.3s ease-out" } : undefined}
 			/>
 			<GrainOverlay />
 		</div>
