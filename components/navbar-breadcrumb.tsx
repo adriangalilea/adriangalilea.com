@@ -48,7 +48,7 @@ export function NavbarBreadcrumb({ folderPaths }: Props) {
 			<BreadcrumbList className="gap-1 flex-nowrap">
 				<BreadcrumbItem className="shrink-0">
 					<BreadcrumbLink asChild className="font-bold text-base sm:text-2xl tracking-tight text-foreground hover:text-accent-pop">
-						<Link href="/">AG</Link>
+						<Link href="/"><span className="sm:hidden">AG</span><span className="hidden sm:inline">Adrian Galilea</span></Link>
 					</BreadcrumbLink>
 				</BreadcrumbItem>
 				{folderSegments.map((item) => (
