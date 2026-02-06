@@ -53,11 +53,18 @@ export default function RootLayout({
 				<ThemeProvider>
 				<NuqsAdapter>
 					<LiquidGlassFilter />
-					<LiquidGlass as="nav" tint="var(--glass-l0)" className="sticky top-0 z-50 border-b border-glass-l0-border mb-6">
+					{/* Desktop: full-width bar */}
+					<LiquidGlass as="nav" tint="var(--glass-l0)" className="hidden sm:block sticky top-0 z-50 border-b border-glass-l0-border mb-6">
 						<div className="mx-auto flex h-14 w-full max-w-[90rem] items-baseline px-6 gap-4 pt-3.5">
 							<NavbarBreadcrumb folderPaths={folderPaths} />
 						</div>
 					</LiquidGlass>
+					{/* Mobile: floating pill */}
+					<nav className="sm:hidden sticky top-0 z-50 py-3 px-6 mb-4">
+						<LiquidGlass tint="var(--glass-l1)" blur={24} shadow="0 8px 32px rgba(0,0,0,0.4), 0 2px 8px rgba(0,0,0,0.2)" shine="inset 0 0.5px 0 0 rgba(255,255,255,0.1), inset 0 0 0 0.5px rgba(255,255,255,0.06)" className="w-full rounded-full px-5 py-2">
+							<NavbarBreadcrumb folderPaths={folderPaths} />
+						</LiquidGlass>
+					</nav>
 					<div className="flex-1">
 						{children}
 					</div>

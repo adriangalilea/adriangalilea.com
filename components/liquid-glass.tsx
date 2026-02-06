@@ -37,7 +37,7 @@ export function LiquidGlass<T extends ElementType = "div">({
 			/>
 			<div className="absolute inset-0 z-[1]" style={{ background: tint }} />
 			<div
-				className="absolute inset-0 z-[2] overflow-hidden"
+				className="absolute inset-0 z-[2] overflow-hidden rounded-[inherit]"
 				style={{ boxShadow: shine }}
 			/>
 			<div className="relative z-[3]">{children}</div>
