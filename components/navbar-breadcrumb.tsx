@@ -12,12 +12,27 @@ import {
 	BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 
-export function NavbarBreadcrumb() {
-	const pathname = usePathname();
-	const segments = pathname.split("/").filter(Boolean);
+type Props = {
+	folderPaths: string[];
+};
 
-	// At root - show just the name as a plain link
-	if (segments.length === 0) {
+export function NavbarBreadcrumb({ folderPaths }: Props) {
+	const pathname = usePathname();
+	const folderSet = new Set(folderPaths);
+
+	// Build breadcrumb from folder segments only
+	const segments = pathname.split("/").filter(Boolean);
+	const folderSegments: { seg: string; href: string }[] = [];
+
+	for (let i = 0; i < segments.length; i++) {
+		const href = "/" + segments.slice(0, i + 1).join("/");
+		if (folderSet.has(href)) {
+			folderSegments.push({ seg: segments[i], href });
+		}
+	}
+
+	// At root or no folders in path - show just the name
+	if (folderSegments.length === 0) {
 		return (
 			<Link
 				href="/"
@@ -28,7 +43,7 @@ export function NavbarBreadcrumb() {
 		);
 	}
 
-	// Nested - show breadcrumb
+	// Show folders only
 	return (
 		<Breadcrumb>
 			<BreadcrumbList className="gap-1">
@@ -37,24 +52,16 @@ export function NavbarBreadcrumb() {
 						<Link href="/">Adrian Galilea</Link>
 					</BreadcrumbLink>
 				</BreadcrumbItem>
-				{segments.map((seg, i) => {
-					const isLast = i === segments.length - 1;
-					const href = "/" + segments.slice(0, i + 1).join("/");
-					return (
-						<Fragment key={href}>
-							<BreadcrumbSeparator className="text-foreground-lowest/50 text-lg font-light">/</BreadcrumbSeparator>
-							<BreadcrumbItem>
-								{isLast ? (
-									<BreadcrumbPage className="text-lg text-foreground-low">{seg}</BreadcrumbPage>
-								) : (
-									<BreadcrumbLink asChild className="text-lg hover:text-accent-pop">
-										<Link href={href}>{seg}</Link>
-									</BreadcrumbLink>
-								)}
-							</BreadcrumbItem>
-						</Fragment>
-					);
-				})}
+				{folderSegments.map((item) => (
+					<Fragment key={item.href}>
+						<BreadcrumbSeparator className="text-foreground-lowest/50 text-lg font-light">/</BreadcrumbSeparator>
+						<BreadcrumbItem>
+							<BreadcrumbLink asChild className="text-lg hover:text-accent-pop">
+								<Link href={item.href}>{item.seg}</Link>
+							</BreadcrumbLink>
+						</BreadcrumbItem>
+					</Fragment>
+				))}
 			</BreadcrumbList>
 		</Breadcrumb>
 	);

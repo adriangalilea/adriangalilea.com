@@ -169,9 +169,9 @@ async function PageView({ page }: { page: Page }) {
 									))}
 								</div>
 							)}
-							<h1 className="sr-only">{page.title}</h1>
+							<h1 className="text-3xl font-bold tracking-tight sm:text-4xl">{page.title}</h1>
 							{page.description && (
-								<p className="mt-4 text-xl leading-relaxed text-foreground/85 sm:text-2xl sm:leading-relaxed">
+								<p className="mt-3 text-lg leading-relaxed text-foreground-low sm:text-xl sm:leading-relaxed">
 									{page.description}
 								</p>
 							)}

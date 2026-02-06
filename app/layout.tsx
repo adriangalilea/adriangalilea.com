@@ -6,6 +6,7 @@ import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { ThemeProvider } from "@/components/theme-provider";
 import { LiquidGlass, LiquidGlassFilter } from "@/components/liquid-glass";
 import { NavbarBreadcrumb } from "@/components/navbar-breadcrumb";
+import { getAllFolders } from "@/lib/content";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -42,6 +43,8 @@ export default function RootLayout({
 }: Readonly<{
 	children: React.ReactNode;
 }>) {
+	const folderPaths = getAllFolders().map((f) => f.path);
+
 	return (
 		<html lang="en" suppressHydrationWarning>
 			<body
@@ -52,7 +55,7 @@ export default function RootLayout({
 					<LiquidGlassFilter />
 					<LiquidGlass as="nav" tint="var(--glass-l0)" className="sticky top-0 z-50 border-b border-glass-l0-border mb-6">
 						<div className="mx-auto flex h-14 w-full max-w-[90rem] items-baseline px-6 gap-4 pt-3.5">
-							<NavbarBreadcrumb />
+							<NavbarBreadcrumb folderPaths={folderPaths} />
 						</div>
 					</LiquidGlass>
 					<div className="flex-1">
