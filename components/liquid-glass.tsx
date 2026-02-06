@@ -1,41 +1,63 @@
 import type { ElementType, ComponentPropsWithoutRef } from "react";
 
+type Layer = "l0" | "l1";
+type Shadow = "none" | "sm" | "md" | "lg";
+
+const LAYER_CONFIG: Record<Layer, { tint: string; blur: number; shine: string }> = {
+	l0: {
+		tint: "var(--glass-l0)",
+		blur: 16,
+		shine: "inset 0 0.5px 0 0 rgba(255,255,255,0.06), inset 0 0 0 0.5px rgba(255,255,255,0.04)",
+	},
+	l1: {
+		tint: "var(--glass-l1)",
+		blur: 24,
+		shine: "inset 0 0.5px 0 0 rgba(255,255,255,0.1), inset 0 0 0 0.5px rgba(255,255,255,0.06)",
+	},
+};
+
+const SHADOW_CONFIG: Record<Shadow, string> = {
+	none: "none",
+	sm: "0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06)",
+	md: "0 4px 16px rgba(0,0,0,0.2), 0 2px 4px rgba(0,0,0,0.1)",
+	lg: "0 8px 32px rgba(0,0,0,0.4), 0 2px 8px rgba(0,0,0,0.2)",
+};
+
 type LiquidGlassProps<T extends ElementType = "div"> = {
 	as?: T;
-	tint?: string;
-	blur?: number;
-	shadow?: string;
-	shine?: string;
+	layer?: Layer;
+	shadow?: Shadow;
 	children: React.ReactNode;
 } & Omit<ComponentPropsWithoutRef<T>, "children">;
 
 export function LiquidGlass<T extends ElementType = "div">({
 	as,
-	tint = "rgba(0,0,0,0.35)",
-	blur = 16,
+	layer = "l1",
 	shadow = "none",
-	shine = "inset 0 0.5px 0 0 rgba(255,255,255,0.04)",
 	children,
 	className,
 	style,
 	...rest
 }: LiquidGlassProps<T>) {
 	const Tag = as ?? "div";
+	const { tint, blur, shine } = LAYER_CONFIG[layer];
+	const boxShadow = SHADOW_CONFIG[shadow];
+
 	return (
 		<Tag
 			className={`relative overflow-hidden ${className ?? ""}`}
-			style={{ boxShadow: shadow, ...style }}
+			style={{ boxShadow, ...style }}
 			{...rest}
 		>
 			<div
-				className="absolute inset-0 z-0 overflow-hidden"
+				className="absolute inset-0 z-0 overflow-hidden rounded-[inherit]"
 				style={{
 					backdropFilter: `blur(${blur}px)`,
 					WebkitBackdropFilter: `blur(${blur}px)`,
 					filter: "url(#glass-distortion)",
 				}}
 			/>
-			<div className="absolute inset-0 z-[1]" style={{ background: tint }} />
+			<div className="absolute inset-0 z-[1] rounded-[inherit]" style={{ background: tint }} />
 			<div
 				className="absolute inset-0 z-[2] overflow-hidden rounded-[inherit]"
 				style={{ boxShadow: shine }}

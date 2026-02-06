@@ -10,9 +10,9 @@ type Props = {
 	basePath: string;
 };
 
-const pill = "shrink-0 rounded-full px-3 py-1 text-sm whitespace-nowrap border backdrop-blur-sm transition-all duration-200";
-const pillActive = "bg-accent-pop-bg border-accent-pop-border text-accent-pop shadow-sm";
-const pillInactive = "bg-glass-l1 border-glass-l1-border text-foreground-low hover:text-foreground-low hover:bg-glass-l1-hover hover:shadow-lg hover:scale-[1.05] hover:-translate-y-0.5";
+const pill = "shrink-0 rounded-full px-3 py-1 text-sm whitespace-nowrap glass-card";
+const pillActive = "!bg-accent-pop-bg text-accent-pop";
+const pillInactive = "text-foreground-low hover:text-foreground-low hover:scale-[1.05] hover:-translate-y-0.5";
 
 function useScrollState(ref: React.RefObject<HTMLDivElement | null>) {
 	const [canScrollLeft, setCanScrollLeft] = useState(false);
@@ -60,7 +60,7 @@ export function TagFilter({ tags, basePath }: Props) {
 					<button
 						type="button"
 						onClick={() => scroll(scrollRef, -1)}
-						className="absolute left-0 top-1/2 -translate-y-1/2 z-20 size-6 rounded-full bg-glass-l1 border border-glass-l1-border backdrop-blur-sm flex items-center justify-center text-foreground-lowest hover:text-foreground transition-colors hidden sm:flex"
+						className="absolute left-0 top-1/2 -translate-y-1/2 z-20 size-6 rounded-full glass-card flex items-center justify-center text-foreground-lowest hover:text-foreground transition-colors hidden sm:flex"
 					>
 						<ChevronLeft className="size-3.5" />
 					</button>
@@ -102,7 +102,7 @@ export function TagFilter({ tags, basePath }: Props) {
 					<button
 						type="button"
 						onClick={() => scroll(scrollRef, 1)}
-						className="absolute right-0 top-1/2 -translate-y-1/2 z-20 size-6 rounded-full bg-glass-l1 border border-glass-l1-border backdrop-blur-sm flex items-center justify-center text-foreground-lowest hover:text-foreground transition-colors hidden sm:flex"
+						className="absolute right-0 top-1/2 -translate-y-1/2 z-20 size-6 rounded-full glass-card flex items-center justify-center text-foreground-lowest hover:text-foreground transition-colors hidden sm:flex"
 					>
 						<ChevronRight className="size-3.5" />
 					</button>

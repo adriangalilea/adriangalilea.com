@@ -12,16 +12,16 @@ import { PenLine } from "lucide-react";
 // STYLES
 // ============================================================================
 
-const cardBase = "rounded-xl border border-glass-l1-border bg-glass-l1 backdrop-blur-sm overflow-hidden transition-all duration-200 ease-out";
-const cardHover = "hover:scale-[1.02] hover:-translate-y-1 hover:shadow-lg hover:border-glass-l1-border hover:bg-glass-l1-hover";
-const feedFlat = "max-sm:rounded-none max-sm:border-0 max-sm:border-b max-sm:border-glass-l1-border max-sm:bg-transparent max-sm:backdrop-blur-none max-sm:hover:scale-100 max-sm:hover:translate-y-0 max-sm:hover:shadow-none";
+const cardBase = "rounded-xl glass-card overflow-hidden";
+const cardHover = "hover:scale-[1.02] hover:-translate-y-1";
+const feedFlat = "glass-card-feed-flat";
 const cardDraft = "opacity-50 grayscale-[30%]";
 
 const statusHoverClasses: Record<string, string> = {
-	violet: "hover:border-violet-400/20 hover:bg-violet-500/5 max-sm:bg-violet-500/5",
-	rose: "hover:border-rose-400/20 hover:bg-rose-500/5 max-sm:bg-rose-500/5",
-	cyan: "hover:border-cyan-400/20 hover:bg-cyan-500/5 max-sm:bg-cyan-500/5",
-	yellow: "hover:border-yellow-400/20 hover:bg-yellow-500/5 max-sm:bg-yellow-500/5",
+	violet: "hover:bg-violet-500/5 max-sm:bg-violet-500/5",
+	rose: "hover:bg-rose-500/5 max-sm:bg-rose-500/5",
+	cyan: "hover:bg-cyan-500/5 max-sm:bg-cyan-500/5",
+	yellow: "hover:bg-yellow-500/5 max-sm:bg-yellow-500/5",
 };
 
 // ============================================================================

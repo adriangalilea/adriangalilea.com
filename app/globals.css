@@ -393,6 +393,47 @@
 
 /* ── Animated grain ── */
 
+/* ── Glass card surfaces ── */
+
+.glass-card {
+  background: var(--glass-l1);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow:
+    inset 0 0.5px 0 0 rgba(255,255,255,0.12),
+    inset 0 -0.5px 0 0 rgba(255,255,255,0.04),
+    inset 0 0 0 0.5px rgba(255,255,255,0.05),
+    0 0 0 0 rgba(0,0,0,0),
+    0 0 0 0 rgba(0,0,0,0);
+  transition: all 0.3s ease-out;
+}
+
+.glass-card:hover {
+  background: var(--glass-l1-hover);
+  box-shadow:
+    inset 0.5px 0 0 0 rgba(255,255,255,0.14),
+    inset 0 0.5px 0 0 rgba(255,255,255,0.06),
+    inset 0 0 0 0.5px rgba(255,255,255,0.05),
+    0 8px 24px rgba(0,0,0,0.12),
+    0 2px 6px rgba(0,0,0,0.08);
+}
+
+@media (max-width: 639px) {
+  .glass-card-feed-flat {
+    background: transparent;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    box-shadow: none;
+    border-radius: 0;
+    border-bottom: 1px solid var(--glass-l1-border);
+  }
+  .glass-card-feed-flat:hover {
+    background: transparent;
+    box-shadow: none;
+    transform: none !important;
+  }
+}
+
 /* ── Hide scrollbar ── */
 
 .scrollbar-none {

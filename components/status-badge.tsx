@@ -61,13 +61,13 @@ function Glass({ className, colorKey, children }: { className?: string; colorKey
 	return (
 		<span
 			className={cn(
-				"isolate relative border border-white/10 backdrop-blur-xl shadow-sm",
+				"isolate relative overflow-hidden backdrop-blur-xl shadow-md",
 				c.text,
 				c.bg,
 				className
 			)}
 		>
-			<span className="absolute inset-0 rounded-[inherit] shadow-[inset_0_0.5px_0_0_rgba(255,255,255,0.08)]" />
+			<span className="absolute inset-0 rounded-[inherit] shadow-[inset_0_0.5px_0_0_rgba(255,255,255,0.1),inset_0_0_0_0.5px_rgba(255,255,255,0.06)]" />
 			{children}
 		</span>
 	);
