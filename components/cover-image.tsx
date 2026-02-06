@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { slugToGradient } from "@/lib/gradient";
 
 const VIDEO_EXTENSIONS = [".mp4", ".webm", ".mov"];
@@ -54,49 +54,26 @@ function AnimatedCover({
 	hoverPlay: boolean;
 	size: "large" | "small";
 }) {
-	const videoRef = useRef<HTMLVideoElement>(null);
-	const [isPlaying, setIsPlaying] = useState(!hoverPlay);
-
-	const handleMouseEnter = () => {
-		if (!hoverPlay) return;
-		videoRef.current?.play();
-		setIsPlaying(true);
-	};
-
-	const handleMouseLeave = () => {
-		if (!hoverPlay) return;
-		const video = videoRef.current;
-		if (video) {
-			video.pause();
-			video.currentTime = 0;
-		}
-		setIsPlaying(false);
-	};
-
 	return (
 		<div
 			className={`relative ${intrinsic ? "" : "h-full w-full"} overflow-hidden ${size === "large" ? "bg-black" : ""}`}
 			style={intrinsic ? { aspectRatio } : undefined}
-			onMouseEnter={handleMouseEnter}
-			onMouseLeave={handleMouseLeave}
 		>
 			{poster && hoverPlay && (
 				<img
 					src={poster}
 					alt={title}
 					draggable={false}
-					className={`${intrinsic ? "w-full h-full object-cover" : "absolute inset-0 h-full w-full object-cover"} transition-opacity duration-300 ${isPlaying ? "opacity-0" : "opacity-100"}`}
+					className={`${intrinsic ? "w-full h-full object-cover" : "absolute inset-0 h-full w-full object-cover"} transition-opacity duration-300 group-hover:opacity-0`}
 				/>
 			)}
 			<video
-				ref={videoRef}
 				src={src}
-				autoPlay={!hoverPlay}
+				autoPlay
 				loop
 				muted
 				playsInline
-				preload={hoverPlay ? "metadata" : "auto"}
-				className={`${intrinsic ? "w-full h-full object-cover" : "absolute inset-0 h-full w-full object-cover"} ${poster && hoverPlay ? "absolute inset-0" : ""} transition-opacity duration-300 ${hoverPlay && !isPlaying ? "opacity-0" : "opacity-100"}`}
+				className={`${intrinsic ? "w-full h-full object-cover" : "absolute inset-0 h-full w-full object-cover"} ${poster && hoverPlay ? "absolute inset-0" : ""} transition-opacity duration-300 ${hoverPlay && poster ? "opacity-0 group-hover:opacity-100" : ""}`}
 			/>
 			<GrainOverlay />
 		</div>

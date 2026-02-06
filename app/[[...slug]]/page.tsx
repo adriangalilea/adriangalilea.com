@@ -62,7 +62,21 @@ async function NoteView({ note }: { note: Note }) {
 	return (
 		<article className="pb-16">
 			<div className="mx-auto max-w-[90rem] px-6">
-				<div className="pt-4 sm:pt-6 lg:flex lg:gap-12">
+				{note.cover && (
+					<figure className="pt-4 sm:pt-6 mb-8 max-w-2xl lg:ml-[248px]">
+						<div className="w-full overflow-hidden rounded-2xl aspect-[16/9]">
+							<CoverImage
+								cover={note.cover}
+								slug={note.slug.join("/")}
+								title=""
+								sizes="(max-width: 1024px) 100vw, 672px"
+								priority
+							/>
+						</div>
+					</figure>
+				)}
+
+				<div className={`${!note.cover ? "pt-4 sm:pt-6" : ""} lg:flex lg:gap-12`}>
 					{/* Empty aside for alignment with PageView */}
 					<aside className="hidden lg:block lg:w-[200px] lg:shrink-0" />
 
