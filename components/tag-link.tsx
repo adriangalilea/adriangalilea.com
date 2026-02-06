@@ -11,6 +11,7 @@ export function TagLink({ tag, className = "text-accent-pop" }: Props) {
 	return (
 		<Link
 			href={`/?tag=${encodeURIComponent(tag)}`}
+			prefetch={true}
 			className={`${className} hover:underline`}
 			onClick={(e) => e.stopPropagation()}
 		>
