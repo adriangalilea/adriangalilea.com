@@ -189,8 +189,6 @@ function AnimatedCover({
 }
 
 export function CoverImage({ cover, slug, title, size = "large", sizes, priority, intrinsic, width, height, poster, blurDataURL, hoverPlay, loop = true }: CoverImageProps) {
-	const [loaded, setLoaded] = useState(false);
-
 	// Default dimensions if not provided
 	const imgWidth = width ?? 1200;
 	const imgHeight = height ?? 630;
@@ -259,21 +257,21 @@ export function CoverImage({ cover, slug, title, size = "large", sizes, priority
 			);
 		}
 
-		// Intrinsic mode for feed cards - use actual dimensions
+		// Intrinsic mode for feed cards
 		if (intrinsic) {
 			return (
-				<div className="relative overflow-hidden">
-					<Image
+				<div
+					className="relative overflow-hidden"
+					style={{
+						aspectRatio,
+						...(blurDataURL ? { backgroundImage: `url(${blurDataURL})`, backgroundSize: "cover" } : undefined),
+					}}
+				>
+					<img
 						src={cover}
 						alt={title}
-						width={imgWidth}
-						height={imgHeight}
 						draggable={false}
-						className={`w-full h-auto transition-opacity duration-500 ${loaded ? "opacity-100" : "opacity-0"}`}
-						sizes={sizes ?? "(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 400px"}
-						priority={priority}
-						onLoad={() => setLoaded(true)}
-						{...(blurDataURL ? { placeholder: "blur" as const, blurDataURL } : {})}
+						className="w-full h-full object-cover"
 					/>
 					<GrainOverlay />
 				</div>
@@ -286,18 +284,19 @@ export function CoverImage({ cover, slug, title, size = "large", sizes, priority
 			: "absolute inset-0 h-full w-full scale-150 object-cover blur-3xl opacity-60";
 
 		return (
-			<div className={`relative h-full w-full overflow-hidden ${size === "large" ? "bg-black" : ""}`}>
+			<div
+				className={`relative h-full w-full overflow-hidden ${size === "large" ? "bg-black" : ""}`}
+				style={blurDataURL ? { backgroundImage: `url(${blurDataURL})`, backgroundSize: "cover" } : undefined}
+			>
 				<img src={cover} alt="" aria-hidden draggable={false} className={bgBlur} />
 				<Image
 					src={cover}
 					alt={title}
 					fill
 					draggable={false}
-					className={`relative object-contain transition-opacity duration-1000 ease-in-out ${loaded ? "opacity-100" : "opacity-0"}`}
+					className="relative object-contain"
 					sizes={sizes ?? "100vw"}
 					priority={priority}
-					onLoad={() => setLoaded(true)}
-					{...(blurDataURL ? { placeholder: "blur" as const, blurDataURL } : {})}
 				/>
 				<GrainOverlay />
 			</div>
