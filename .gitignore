@@ -36,8 +36,8 @@ yarn-error.log*
 # generated source
 .source/
 
-# generated cover images
-/public/blog/
+# generated content assets (covers, og images copied from content/ at build time)
+/public/*/
 
 # vercel
 .vercel
