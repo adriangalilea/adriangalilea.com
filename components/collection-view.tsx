@@ -1,10 +1,8 @@
-import Link from "next/link";
 import { Suspense, type ReactNode } from "react";
 import type { Content, Folder } from "@/lib/content";
 import { isPost, isNote, isPage, isFolder, getTagsFromContent, getChildrenForSlug, getChildren, getFolderTags } from "@/lib/content";
 import { renderMDX, renderMDXString } from "@/lib/mdx";
 import { getMDXComponents } from "@/mdx-components";
-import { StatusBadge } from "@/components/status-badge";
 import { Card } from "@/components/card";
 import { TagFilter, TagFilterFallback } from "@/components/tag-filter";
 import { FilterableGrid, GridFallback } from "@/components/filterable-grid";
@@ -84,34 +82,13 @@ export async function CollectionView({ folder, slug }: Props) {
 		: null;
 
 	return (
-		<div className="mx-auto w-full max-w-[90rem] px-4 py-6">
-			{/* Breadcrumb - only for nested folders */}
-			{slug.length > 1 && (
-				<nav className="mb-6 text-sm text-foreground-lowest">
-					<Link href="/" className="hover:text-foreground">
-						Home
-					</Link>
-					{slug.slice(0, -1).map((seg, i) => (
-						<span key={seg}>
-							<span className="mx-2">/</span>
-							<Link href={`/${slug.slice(0, i + 1).join("/")}`} className="hover:text-foreground">
-								{seg}
-							</Link>
-						</span>
-					))}
-				</nav>
-			)}
+		<div className="mx-auto w-full max-w-[90rem] px-6 pb-6">
+			{folder && <h1 className="sr-only">{folder.title}</h1>}
 
-			{/* Folder Header - only if folder metadata exists */}
-			{folder && (
-				<header className="mb-12">
-					<div className="flex items-center gap-3 mb-4">
-						<h1 className="font-bold text-4xl tracking-tight">{folder.title}</h1>
-						{folder.status && <StatusBadge status={folder.status} />}
-					</div>
+			{/* Folder Header */}
+			{folder && (folder.description || Object.keys(folder.links).length > 0 || folder.kpis.length > 0) && (
+				<header className="mb-6">
 					{folder.description && <p className="text-xl text-foreground-low">{folder.description}</p>}
-
-					{/* Links */}
 					{Object.keys(folder.links).length > 0 && (
 						<div className="mt-4 flex flex-wrap gap-3">
 							{Object.entries(folder.links).map(([key, url]) => (
@@ -127,8 +104,6 @@ export async function CollectionView({ folder, slug }: Props) {
 							))}
 						</div>
 					)}
-
-					{/* KPIs */}
 					{folder.kpis.length > 0 && (
 						<div className="mt-6 flex flex-wrap gap-6">
 							{folder.kpis.map((kpi) => (
@@ -136,17 +111,6 @@ export async function CollectionView({ folder, slug }: Props) {
 									<div className="text-2xl font-bold">{kpi.value}</div>
 									<div className="text-sm text-foreground-lowest">{kpi.label}</div>
 								</div>
-							))}
-						</div>
-					)}
-
-					{/* Techs */}
-					{folder.techs.length > 0 && (
-						<div className="mt-4 flex flex-wrap gap-2">
-							{folder.techs.map((tech) => (
-								<span key={tech} className="text-xs text-foreground-lowest bg-muted px-2 py-1 rounded">
-									{tech}
-								</span>
 							))}
 						</div>
 					)}

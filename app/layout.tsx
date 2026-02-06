@@ -5,6 +5,7 @@ import { Github, Send, Mail, Rss } from "lucide-react";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { ThemeProvider } from "@/components/theme-provider";
 import { LiquidGlass, LiquidGlassFilter } from "@/components/liquid-glass";
+import { NavbarBreadcrumb } from "@/components/navbar-breadcrumb";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -49,14 +50,9 @@ export default function RootLayout({
 				<ThemeProvider>
 				<NuqsAdapter>
 					<LiquidGlassFilter />
-					<LiquidGlass as="nav" tint="var(--glass-l0)" className="sticky top-0 z-50 border-b border-glass-l0-border">
+					<LiquidGlass as="nav" tint="var(--glass-l0)" className="sticky top-0 z-50 border-b border-glass-l0-border mb-6">
 						<div className="mx-auto flex h-14 w-full max-w-[90rem] items-baseline px-6 gap-4 pt-3.5">
-							<Link
-								href="/"
-								className="font-bold text-2xl tracking-tight transition-colors hover:text-accent-pop"
-							>
-								Adrian Galilea
-							</Link>
+							<NavbarBreadcrumb />
 						</div>
 					</LiquidGlass>
 					<div className="flex-1">
