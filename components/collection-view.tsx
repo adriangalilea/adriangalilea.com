@@ -1,43 +1,64 @@
 import { Suspense, type ReactNode } from "react";
-import type { Content, Folder } from "@/lib/content";
-import { isPost, isNote, isPage, isFolder, getTagsFromContent, getChildrenForSlug, getChildren, getFolderTags } from "@/lib/content";
+import type { Content, Folder, Page } from "@/lib/content";
+import { isPost, isNote, isPage, isFolder, getTagsFromContent, getChildrenForSlug, getChildren, getFolderTags, getFeaturedChildren } from "@/lib/content";
 import { renderMDX, renderMDXString } from "@/lib/mdx";
 import { getMDXComponents } from "@/mdx-components";
 import { Card } from "@/components/card";
 import { TagFilter, TagFilterFallback } from "@/components/tag-filter";
 import { FilterableGrid, GridFallback } from "@/components/filterable-grid";
 
+// Height calculation for masonry distribution
+function getCoverHeight(w: number | null, h: number | null): number {
+	if (w && h) return 300 / (w / h);
+	return 170; // default 16:9
+}
+
+function getItemHeight(content: Content): number {
+	let h = 80;
+	if (content.cover) h += getCoverHeight(content.coverWidth, content.coverHeight);
+	if (isNote(content)) h += Math.min(content.content.length / 3, 100);
+	else if (isPage(content) && content.description) h += 40;
+	else if (isFolder(content) && !content.cover) {
+		const pages = getFeaturedChildren(content.slug).filter(isPage) as Page[];
+		if (pages.length > 0) {
+			h += 80;
+			if (pages[0].cover) h += getCoverHeight(pages[0].coverWidth, pages[0].coverHeight) * 0.7;
+		}
+	}
+	return h;
+}
+
 type Props = {
 	folder?: Folder;
 	slug: string[];
 };
 
-// Sorting logic - drafts to bottom, newest first (considers updatedAt for Pages)
+// Get best date for a single page (considers updatedAt)
+function getPageBestDate(page: Page): Date | null {
+	const published = page.publishedAt ? new Date(page.publishedAt) : null;
+	const updated = page.updatedAt ? new Date(page.updatedAt) : null;
+	if (published && updated) return updated > published ? updated : published;
+	return published ?? updated;
+}
+
+// Sorting logic - drafts to bottom, newest first
 function getBestDate(content: Content): Date | null {
-	// For pages, use the most recent of publishedAt or updatedAt
 	if (isPage(content)) {
-		const published = content.publishedAt ? new Date(content.publishedAt) : null;
-		const updated = content.updatedAt ? new Date(content.updatedAt) : null;
-		if (published && updated) {
-			return updated > published ? updated : published;
+		return getPageBestDate(content);
+	}
+
+	// Xray folders: use best date from featured child (the one shown)
+	if (isFolder(content) && !content.cover) {
+		const featured = getFeaturedChildren(content.slug).filter(isPage) as Page[];
+		if (featured.length > 0) {
+			return getPageBestDate(featured[0]);
 		}
-		return published ?? updated;
 	}
 
 	if (content.publishedAt) {
 		return new Date(content.publishedAt);
 	}
 
-	if (isFolder(content) && !content.cover) {
-		const children = getChildren(content.slug).filter(isPost);
-		const dates = children
-			.map((c) => c.publishedAt)
-			.filter((d): d is Date => d != null)
-			.map((d) => new Date(d));
-		if (dates.length > 0) {
-			return new Date(Math.max(...dates.map((d) => d.getTime())));
-		}
-	}
 	return null;
 }
 
@@ -72,6 +93,7 @@ export async function CollectionView({ folder, slug }: Props) {
 			return {
 				path: content.path,
 				tags: isPost(content) ? content.tags : (isFolder(content) ? getFolderTags(content) : []),
+				height: getItemHeight(content),
 				content: <Card content={content} renderedNoteContent={renderedNoteContent} />,
 			};
 		})

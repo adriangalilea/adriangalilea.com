@@ -1,7 +1,7 @@
 ---
 title: "The Shapes of Knowledge"
 publishedAt: 2024-05-12
-updatedAt: 2025-02-06
+updatedAt: 2026-02-06
 description: "From spoken word to the web"
 tags:
   - essay

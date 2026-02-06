@@ -7,20 +7,56 @@ import {
 	isNote,
 	isPage,
 	isFolder,
+	isPost,
 	getRecommendations,
+	getFeaturedChildren,
+	type Content,
 	type Note,
 	type Page,
 	type Folder,
 } from "@/lib/content";
-import { renderMDX } from "@/lib/mdx";
+import { renderMDX, renderMDXString } from "@/lib/mdx";
 import { getMDXComponents } from "@/mdx-components";
 import { TOC } from "@/components/toc";
 import { CoverImage } from "@/components/cover-image";
-import { MasonryGrid } from "@/components/masonry";
+import { Card } from "@/components/card";
+import { Grid } from "@/components/filterable-grid";
 import { RelatedSection } from "@/components/related-section";
 import { TagLink } from "@/components/tag-link";
 import { PenLine } from "lucide-react";
 import { CollectionView } from "@/components/collection-view";
+
+// Height calculation for grid distribution
+function getCoverHeight(w: number | null, h: number | null): number {
+	if (w && h) return 300 / (w / h);
+	return 170;
+}
+
+function getItemHeight(c: Content): number {
+	let h = 80;
+	if (c.cover) h += getCoverHeight(c.coverWidth, c.coverHeight);
+	if (isNote(c)) h += Math.min(c.content.length / 3, 100);
+	else if (isPage(c) && c.description) h += 40;
+	else if (isFolder(c) && !c.cover) {
+		const pages = getFeaturedChildren(c.slug).filter(isPage) as Page[];
+		if (pages.length > 0) {
+			h += 80;
+			if (pages[0].cover) h += getCoverHeight(pages[0].coverWidth, pages[0].coverHeight) * 0.7;
+		}
+	}
+	return h;
+}
+
+async function prepareGridItems(items: Content[]) {
+	return Promise.all(items.map(async (c) => ({
+		path: c.path,
+		tags: isPost(c) ? c.tags : [],
+		height: getItemHeight(c),
+		content: <Card content={c} renderedNoteContent={
+			isNote(c) ? (await renderMDXString(c.content, getMDXComponents())).mdxContent : undefined
+		} />,
+	})));
+}
 
 type Props = {
 	params: Promise<{ slug?: string[] }>;
@@ -116,7 +152,7 @@ async function NoteView({ note }: { note: Note }) {
 
 			{recs.length > 0 && (
 				<RelatedSection>
-					<MasonryGrid items={recs} />
+					<Grid items={await prepareGridItems(recs)} />
 				</RelatedSection>
 			)}
 		</article>
@@ -209,7 +245,7 @@ async function PageView({ page }: { page: Page }) {
 
 			{recs.length > 0 && (
 				<RelatedSection>
-					<MasonryGrid items={recs} />
+					<Grid items={await prepareGridItems(recs)} />
 				</RelatedSection>
 			)}
 		</article>
