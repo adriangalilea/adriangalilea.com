@@ -433,6 +433,8 @@ export function getTagsFromContent(items: Content[]): string[] {
 	for (const c of items) {
 		if (isPost(c)) {
 			for (const tag of c.tags) tags.add(tag);
+		} else if (isFolder(c)) {
+			for (const tag of getFolderTags(c)) tags.add(tag);
 		}
 	}
 	return [...tags].sort();
