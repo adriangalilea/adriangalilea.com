@@ -34,7 +34,7 @@ export function Grid({ items }: { items: Item[] }) {
 	const c4 = distribute(items, 4);
 
 	const render = (col: Item[]) => (
-		<div className="flex flex-col gap-4">
+		<div className="flex flex-col gap-6">
 			{col.map((item) => <div key={item.path}>{item.content}</div>)}
 		</div>
 	);
@@ -44,13 +44,13 @@ export function Grid({ items }: { items: Item[] }) {
 			<div className="grid grid-cols-1 gap-0 sm:hidden">
 				{items.map((item) => <div key={item.path}>{item.content}</div>)}
 			</div>
-			<div className="hidden sm:grid lg:hidden grid-cols-2 gap-4 items-start">
+			<div className="hidden sm:grid lg:hidden grid-cols-2 gap-6 items-start">
 				{c2.map((col, i) => <div key={i}>{render(col)}</div>)}
 			</div>
-			<div className="hidden lg:grid xl:hidden grid-cols-3 gap-4 items-start">
+			<div className="hidden lg:grid xl:hidden grid-cols-3 gap-6 items-start">
 				{c3.map((col, i) => <div key={i}>{render(col)}</div>)}
 			</div>
-			<div className="hidden xl:grid grid-cols-4 gap-4 items-start">
+			<div className="hidden xl:grid grid-cols-4 gap-6 items-start">
 				{c4.map((col, i) => <div key={i}>{render(col)}</div>)}
 			</div>
 		</>
