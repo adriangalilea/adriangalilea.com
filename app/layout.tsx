@@ -56,15 +56,15 @@ export default function RootLayout({
 					<LiquidGlassFilter />
 					{/* Desktop: full-width bar */}
 					<HideOnScroll className="hidden sm:block sticky top-0 z-50 mb-6">
-						<LiquidGlass as="nav" layer="l1" shadow="sm">
-							<div className="mx-auto flex h-14 w-full max-w-[90rem] items-baseline px-6 gap-4 pt-3.5">
+						<LiquidGlass as="nav" layer="l0" shadow="sm">
+							<div className="mx-auto flex h-14 w-full max-w-[90rem] items-center px-6 gap-4">
 								<NavbarBreadcrumb folderPaths={folderPaths} />
 							</div>
 						</LiquidGlass>
 					</HideOnScroll>
 					{/* Mobile: floating pill */}
 					<HideOnScroll className="sm:hidden sticky top-0 z-50 py-3 px-6 mb-4">
-						<LiquidGlass as="nav" layer="l1" shadow="lg" className="w-full rounded-full px-5 py-2">
+						<LiquidGlass as="nav" layer="l0" shadow="lg" className="w-full rounded-full px-5 py-2">
 							<NavbarBreadcrumb folderPaths={folderPaths} />
 						</LiquidGlass>
 					</HideOnScroll>
