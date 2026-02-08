@@ -69,7 +69,7 @@ export function TagFilter({ tags, basePath }: Props) {
 
 			<div
 				ref={scrollRef}
-				className="flex gap-2 overflow-x-auto scrollbar-none px-0.5 py-2 pr-8"
+				className="flex gap-2 overflow-x-auto scrollbar-none px-0.5 pr-8"
 			>
 				<Link
 					href={basePath}
@@ -118,7 +118,7 @@ export function TagFilterFallback({ tags, basePath }: Props) {
 
 	return (
 		<div className="relative mb-6">
-			<div className="flex gap-2 overflow-x-auto scrollbar-none px-0.5 py-2 pr-8">
+			<div className="flex gap-2 overflow-x-auto scrollbar-none px-0.5 pr-8">
 				<Link
 					href={basePath}
 					className={`${pill} ${pillActive}`}
