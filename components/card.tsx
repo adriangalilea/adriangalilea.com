@@ -184,19 +184,21 @@ function FolderCard({ folder }: { folder: Folder }) {
 // X-RAY FOLDER CARD - shows preview of internal posts
 // ============================================================================
 
-function MiniPageCard({ page }: { page: Page }) {
+function FeaturedCard({ item }: { item: Page | Note }) {
+	const note = isNote(item) ? item : null;
+
 	return (
-		<ClickableWrapper href={page.path} className={cn("group cursor-pointer", cardBase, cardHover)}>
-			{page.cover && (
+		<ClickableWrapper href={item.path} className={cn("group cursor-pointer", cardBase, cardHover)}>
+			{item.cover && (
 				<CoverImage
-					cover={page.cover}
-					slug={page.slug.join("/")}
-					title={page.title}
-					width={page.coverWidth}
-					height={page.coverHeight}
-					poster={page.poster}
-					blurDataURL={page.blurDataURL}
-					loop={page.coverLoop}
+					cover={item.cover}
+					slug={item.slug.join("/")}
+					title={note ? "" : item.title}
+					width={item.coverWidth}
+					height={item.coverHeight}
+					poster={item.poster}
+					blurDataURL={item.blurDataURL}
+					loop={item.coverLoop}
 					intrinsic
 					hoverPlay
 					size="small"
@@ -204,33 +206,50 @@ function MiniPageCard({ page }: { page: Page }) {
 				/>
 			)}
 			<div className="p-4">
-				<h4 className="font-medium text-sm leading-tight">{page.title}</h4>
-				{page.description && (
-					<p className="text-xs text-foreground-low mt-0.5 line-clamp-2">{page.description}</p>
-				)}
-				{page.publishedAt && (
-					<div className="mt-1.5 flex items-center gap-1.5 text-muted-foreground text-[11px] tabular-nums">
-						<time>
-							{new Date(page.publishedAt).toLocaleDateString("en-US", {
-								year: "numeric",
-								month: "short",
-								day: "numeric",
-							})}
-						</time>
-						{page.updatedAt && new Date(page.updatedAt) > new Date(page.publishedAt) && (
-							<>
-								<span className="text-foreground-lowest">·</span>
-								<PenLine className="size-2.5" />
+				{note ? (
+					<>
+						<p className="text-sm leading-relaxed">{note.content.trim()}</p>
+						{note.publishedAt && (
+							<time className="mt-3 block text-xs text-foreground-lowest">
+								{new Date(note.publishedAt).toLocaleDateString("en-US", {
+									year: "numeric",
+									month: "short",
+									day: "numeric",
+								})}
+							</time>
+						)}
+					</>
+				) : (
+					<>
+						<h4 className="font-medium text-sm leading-tight">{item.title}</h4>
+						{item.description && (
+							<p className="text-xs text-foreground-low mt-0.5 line-clamp-2">{item.description}</p>
+						)}
+						{item.publishedAt && (
+							<div className="mt-1.5 flex items-center gap-1.5 text-muted-foreground text-[11px] tabular-nums">
 								<time>
-									{new Date(page.updatedAt).toLocaleDateString("en-US", {
+									{new Date(item.publishedAt).toLocaleDateString("en-US", {
 										year: "numeric",
 										month: "short",
 										day: "numeric",
 									})}
 								</time>
-							</>
+								{item.updatedAt && new Date(item.updatedAt) > new Date(item.publishedAt) && (
+									<>
+										<span className="text-foreground-lowest">·</span>
+										<PenLine className="size-2.5" />
+										<time>
+											{new Date(item.updatedAt).toLocaleDateString("en-US", {
+												year: "numeric",
+												month: "short",
+												day: "numeric",
+											})}
+										</time>
+									</>
+								)}
+							</div>
 						)}
-					</div>
+					</>
 				)}
 			</div>
 			<CardShine />
@@ -240,9 +259,9 @@ function MiniPageCard({ page }: { page: Page }) {
 
 function XrayFolderCard({ folder }: { folder: Folder }) {
 	const colorKey = folder.status ? STATUS_CONFIG[folder.status].colorKey : null;
-	const featuredPages = getFeaturedChildren(folder.slug).filter(isPage);
-	const pagesToShow = featuredPages.slice(0, 1);
-	const remaining = featuredPages.length - 1;
+	const featuredChildren = getFeaturedChildren(folder.slug).filter((c) => isPage(c) || isNote(c));
+	const pagesToShow = featuredChildren.slice(0, 1);
+	const remaining = featuredChildren.length - 1;
 
 	return (
 		<div
@@ -268,8 +287,8 @@ function XrayFolderCard({ folder }: { folder: Folder }) {
 
 			{pagesToShow.length > 0 && (
 				<div className="px-4 pb-4">
-					{pagesToShow.map((page) => (
-						<MiniPageCard key={page.path} page={page} />
+					{pagesToShow.map((item) => (
+						<FeaturedCard key={item.path} item={item as Page | Note} />
 					))}
 					{remaining > 0 && (
 						<ClickableWrapper href={folder.path} className="mt-2 block text-xs text-foreground-lowest hover:text-foreground-low">
@@ -291,7 +310,7 @@ function shouldShowXray(content: Content): boolean {
 	if (!isFolder(content)) return false;
 	if (content.cover) return false;
 	const children = getFeaturedChildren(content.slug);
-	return children.some(isPage);
+	return children.some((c) => isPage(c) || isNote(c));
 }
 
 // ============================================================================
