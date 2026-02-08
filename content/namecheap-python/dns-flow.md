@@ -9,6 +9,9 @@ tags:
   - open-source
   - vibe-coding
 ---
+
+[![Downloads](https://pepy.tech/badge/namecheap-python)](https://pepy.tech/project/namecheap-python) [![Downloads/month](https://pepy.tech/badge/namecheap-python/month)](https://pepy.tech/project/namecheap-python)
+
 The vision is having a live website working at the end of your vibe-coding session. Domain registered, DNS configured. No context switches.
 
 Manually adding A records and copy-pasting nameservers is the opposite of a flow state. That is if you already found the suitable domain and own it, otherwise friction compounds. By the time DNS propagates you've lost the plot.
