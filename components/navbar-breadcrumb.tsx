@@ -35,7 +35,7 @@ export function NavbarBreadcrumb({ folderPaths }: Props) {
 		return (
 			<Link
 				href="/"
-				className="font-bold text-2xl sm:text-2xl tracking-tight transition-colors hover:text-accent-pop"
+				className="font-bold text-2xl sm:text-2xl tracking-tight transition-colors hover:text-foreground-low"
 			>
 				Adrian Galilea
 			</Link>
@@ -47,7 +47,7 @@ export function NavbarBreadcrumb({ folderPaths }: Props) {
 		<Breadcrumb>
 			<BreadcrumbList className="gap-1 flex-nowrap">
 				<BreadcrumbItem className="shrink-0">
-					<BreadcrumbLink asChild className="font-bold text-base sm:text-2xl tracking-tight text-foreground hover:text-accent-pop">
+					<BreadcrumbLink asChild className="font-bold text-base sm:text-2xl tracking-tight text-foreground hover:text-foreground-low">
 						<Link href="/"><span className="sm:hidden">AG</span><span className="hidden sm:inline">Adrian Galilea</span></Link>
 					</BreadcrumbLink>
 				</BreadcrumbItem>
@@ -55,7 +55,7 @@ export function NavbarBreadcrumb({ folderPaths }: Props) {
 					<Fragment key={item.href}>
 						<BreadcrumbSeparator className="text-foreground-lowest/50 text-sm sm:text-lg font-light shrink-0">/</BreadcrumbSeparator>
 						<BreadcrumbItem className="min-w-0">
-							<BreadcrumbLink asChild className="text-base sm:text-lg hover:text-accent-pop truncate block">
+							<BreadcrumbLink asChild className="text-base sm:text-lg hover:text-foreground-low truncate block">
 								<Link href={item.href}>{item.seg}</Link>
 							</BreadcrumbLink>
 						</BreadcrumbItem>
