@@ -10,6 +10,7 @@ import {
 	isPost,
 	getRecommendations,
 	getFeaturedChildren,
+	getAuthorForContent,
 	type Content,
 	type Note,
 	type Page,
@@ -25,6 +26,7 @@ import { RelatedSection } from "@/components/related-section";
 import { TagLink } from "@/components/tag-link";
 import { PenLine } from "lucide-react";
 import { CollectionView } from "@/components/collection-view";
+import { Quote } from "@/components/quote";
 
 // Height calculation for grid distribution
 function getCoverHeight(w: number | null, h: number | null): number {
@@ -95,6 +97,7 @@ export default async function ContentPage({ params }: Props) {
 async function NoteView({ note }: { note: Note }) {
 	const { mdxContent } = await renderMDX(note, getMDXComponents());
 	const recs = getRecommendations(note, 6);
+	const author = getAuthorForContent(note);
 
 	return (
 		<article className="pb-16">
@@ -138,7 +141,11 @@ async function NoteView({ note }: { note: Note }) {
 							</div>
 						)}
 
-						<div className="prose prose-p:leading-[1.8]">{mdxContent}</div>
+						{author ? (
+							<Quote author={author} source={note.source} size="lg">{mdxContent}</Quote>
+						) : (
+							<div className="prose prose-p:leading-[1.8]">{mdxContent}</div>
+						)}
 
 						{note.publishedAt && (
 							<time className="mt-6 block text-xs text-foreground-lowest tabular-nums">

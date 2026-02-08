@@ -20,6 +20,7 @@ const MEDIA_EXTENSIONS = [".png", ".jpg", ".jpeg", ".webp", ".gif", ".mp4", ".we
 const COVER_EXTENSIONS = [".png", ".webp", ".jpg", ".jpeg", ".gif", ".mp4", ".webm", ".mov"];
 const IMAGE_EXTENSIONS = [".png", ".webp", ".jpg", ".jpeg", ".gif"];
 const POSTER_EXTENSIONS = [".webp", ".jpg", ".jpeg", ".png"];
+const AVATAR_EXTENSIONS = [".png", ".webp", ".jpg", ".jpeg"];
 const ANIMATED_EXTENSIONS = [".gif", ".mp4", ".webm", ".mov"];
 const NON_WEBM_ANIMATED = [".gif", ".mp4", ".mov"];
 const OG_WIDTH = 1200;
@@ -68,6 +69,7 @@ type PostBase = ContentBase & {
 // Note: short-form, no title, no description
 export type Note = PostBase & {
 	type: "note";
+	source: string | null;
 };
 
 // Page: long-form with title
@@ -91,6 +93,8 @@ export type Folder = ContentBase & {
 	links: Record<string, string>;
 	kpis: { label: string; value: string }[];
 	techs: string[];
+	feedThrough: boolean;
+	avatar: string | null;
 };
 
 export type Content = Post | Folder;
@@ -277,6 +281,21 @@ function resolveCover(dir: string, slug: string[]): CoverInfo {
 	return null;
 }
 
+function resolveAvatar(dir: string, slug: string[]): string | null {
+	for (const ext of AVATAR_EXTENSIONS) {
+		const src = join(dir, `avatar${ext}`);
+		if (existsSync(src)) {
+			const slugPath = slug.join("/");
+			const destDir = join(PUBLIC_DIR, slugPath);
+			const dest = join(destDir, `avatar${ext}`);
+			mkdirSync(destDir, { recursive: true });
+			syncFile(src, dest);
+			return `/${slugPath}/avatar${ext}`;
+		}
+	}
+	return null;
+}
+
 export async function resolveOG(content: Content): Promise<string | null> {
 	const slugPath = content.slug.join("/");
 	const destDir = join(PUBLIC_DIR, slugPath);
@@ -366,6 +385,8 @@ function parseContent(filePath: string, slug: string[]): Content | null {
 				links: data.links ?? {},
 				kpis: data.kpis ?? [],
 				techs: data.techs ?? [],
+				feedThrough: data.feedThrough ?? false,
+				avatar: resolveAvatar(dir, slug),
 			};
 		}
 
@@ -382,6 +403,7 @@ function parseContent(filePath: string, slug: string[]): Content | null {
 				...base,
 				type: "note",
 				tags,
+				source: data.source ?? null,
 			};
 		}
 
@@ -512,10 +534,45 @@ export function getAllPages(): Page[] {
 }
 
 export function getChildrenForSlug(slug: string[]): Content[] {
-	if (slug.length === 0) {
-		return getRootContent();
+	const direct = slug.length === 0 ? getRootContent() : getChildren(slug);
+
+	// Collect non-folder descendants from feedThrough folders
+	const result: Content[] = [];
+	const feedThroughQueue: string[][] = [];
+
+	for (const c of direct) {
+		if (isFolder(c) && c.feedThrough) {
+			feedThroughQueue.push(c.slug);
+		} else {
+			result.push(c);
+		}
 	}
-	return getChildren(slug);
+
+	while (feedThroughQueue.length > 0) {
+		const folderSlug = feedThroughQueue.pop()!;
+		for (const child of getChildren(folderSlug)) {
+			if (isFolder(child) && (child as Folder).feedThrough) {
+				feedThroughQueue.push(child.slug);
+			} else if (!isFolder(child)) {
+				result.push(child);
+			}
+		}
+	}
+
+	return result;
+}
+
+export type AuthorInfo = { name: string; avatar: string | null; path: string };
+
+export function getAuthorForContent(c: Content): AuthorInfo | null {
+	const all = getAllContent();
+	for (let i = c.slug.length - 1; i >= 1; i--) {
+		const ancestorPath = c.slug.slice(0, i).join("/");
+		const folder = all.find((x) => x.slug.join("/") === ancestorPath && isFolder(x)) as Folder | undefined;
+		if (!folder?.feedThrough || !folder.avatar) continue;
+		return { name: folder.title, avatar: folder.avatar, path: folder.path };
+	}
+	return null;
 }
 
 export function getTagsFromContent(items: Content[]): string[] {
@@ -619,56 +676,3 @@ export function getRecommendations(content: Content, limit = 3): Content[] {
 		.map((s) => s.content);
 }
 
-// ============================================================================
-// FEED
-// ============================================================================
-
-export function getFeedContent(): Content[] {
-	const folderPaths = new Set(getAllFolders().map((f) => f.slug.join("/")));
-
-	return getAllContent()
-		.filter((c) => {
-			// Folders always show (they're containers)
-			if (isFolder(c)) return true;
-
-			// Non-folders must be published
-			if (!c.publishedAt) return false;
-
-			// Hide content inside folders (shown via folder page)
-			if (c.slug.length > 1) {
-				const parentPath = c.slug.slice(0, -1).join("/");
-				if (folderPaths.has(parentPath)) return false;
-			}
-
-			return true;
-		})
-		.sort((a, b) => {
-			// Get best date for sorting (folders use children's dates)
-			const aDate = getBestDateForSort(a);
-			const bDate = getBestDateForSort(b);
-			if (!aDate && !bDate) return 0;
-			if (!aDate) return 1;
-			if (!bDate) return -1;
-			return bDate.getTime() - aDate.getTime();
-		});
-}
-
-function getBestDateForSort(content: Content): Date | null {
-	if (content.publishedAt) {
-		return new Date(content.publishedAt);
-	}
-
-	// For folders without publishedAt, use best child date
-	if (isFolder(content)) {
-		const children = getChildren(content.slug);
-		const dates = children
-			.map((c) => c.publishedAt)
-			.filter((d): d is Date => d != null)
-			.map((d) => new Date(d));
-		if (dates.length > 0) {
-			return new Date(Math.max(...dates.map((d) => d.getTime())));
-		}
-	}
-
-	return null;
-}

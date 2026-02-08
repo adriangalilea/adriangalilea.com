@@ -1,10 +1,11 @@
 import type { ReactNode } from "react";
 import type { Content, Note, Page, Folder } from "@/lib/content";
-import { isNote, isPage, isFolder, getFeaturedChildren } from "@/lib/content";
+import { isNote, isPage, isFolder, getFeaturedChildren, getAuthorForContent } from "@/lib/content";
 import { StatusBadge, STATUS_CONFIG } from "@/components/status-badge";
 import { ClickableWrapper } from "@/components/clickable-wrapper";
 import { CoverImage } from "@/components/cover-image";
 import { cn } from "@/lib/utils";
+import { Quote } from "@/components/quote";
 import { PenLine } from "lucide-react";
 
 // ============================================================================
@@ -32,6 +33,11 @@ const statusHoverClasses: Record<string, string> = {
 // ============================================================================
 
 function NoteCard({ note, renderedContent }: { note: Note; renderedContent?: ReactNode }) {
+	const author = getAuthorForContent(note);
+	const body = renderedContent
+		? renderedContent
+		: <p className="text-sm leading-relaxed">{note.content.trim()}</p>;
+
 	return (
 		<ClickableWrapper
 			href={note.path}
@@ -53,21 +59,23 @@ function NoteCard({ note, renderedContent }: { note: Note; renderedContent?: Rea
 				/>
 			)}
 			<div className="p-4">
-				{renderedContent ? (
-					<div className="prose prose-sm max-w-none prose-p:my-0 prose-p:leading-relaxed">
-						{renderedContent}
-					</div>
+				{author ? (
+					<Quote author={author} size="sm">{body}</Quote>
 				) : (
-					<p className="text-sm leading-relaxed">{note.content.trim()}</p>
-				)}
-				{note.publishedAt && (
-					<time className="mt-3 block text-xs text-foreground-lowest">
-						{new Date(note.publishedAt).toLocaleDateString("en-US", {
-							year: "numeric",
-							month: "short",
-							day: "numeric",
-						})}
-					</time>
+					<>
+						<div className="prose prose-sm max-w-none prose-p:my-0 prose-p:leading-relaxed">
+							{body}
+						</div>
+						{note.publishedAt && (
+							<time className="mt-3 block text-xs text-foreground-lowest">
+								{new Date(note.publishedAt).toLocaleDateString("en-US", {
+									year: "numeric",
+									month: "short",
+									day: "numeric",
+								})}
+							</time>
+						)}
+					</>
 				)}
 			</div>
 			<CardShine />
