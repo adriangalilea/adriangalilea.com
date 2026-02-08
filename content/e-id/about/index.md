@@ -4,13 +4,14 @@ description: "Digital identity"
 tags:
   - side-quest
   - emoji-domains
-isDraft: true
 ---
 A constant memorable place for your ever-changing online presence.
 
 | Readable |  |
 | ---- | ---- |
 | e-id.to/adrian | _e-ID to Adrian_ |
+
+Also exploring [emoji domains.](/domain-collection) and harsher(no rounded-rect) UI design
 
 | Visual |  |
 | ---- | ---- |
@@ -22,6 +23,3 @@ Interchangeable Domains
   - [👤️️.to](https://👤️️.to)
 
 [Open Source](https://github.com/adriangalilea/e-id)
-
----
-[I like emoji domains.](/domain-collection)

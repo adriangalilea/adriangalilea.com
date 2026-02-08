@@ -6,6 +6,7 @@ tags:
   - side-quest
   - emoji-domains
 isDraft: true
+isPublished: false
 ---
 It was a Friday afternoon, I've spent the whole week reading Tip-Tap and ProseMirror docs to create the best self.fm editor... _ when my ADHD demon whispered_
 
