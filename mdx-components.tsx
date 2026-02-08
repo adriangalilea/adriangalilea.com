@@ -1,9 +1,21 @@
 import type { MDXComponents } from "mdx/types";
 import Image from "next/image";
 import Link from "next/link";
+import { getContentByPath, isNote } from "@/lib/content";
+import { Card } from "@/components/card";
+import { renderMDXString } from "@/lib/mdx";
+
+async function ContentQuote({ slug }: { slug: string }) {
+	const parts = slug.split("/");
+	const note = getContentByPath(parts);
+	if (!note || !isNote(note)) return null;
+	const { mdxContent } = await renderMDXString(note.content, getMDXComponents());
+	return <div className="not-prose my-6"><Card content={note} renderedNoteContent={mdxContent} /></div>;
+}
 
 export function getMDXComponents(): MDXComponents {
 	return {
+		ContentQuote,
 		a: ({ href, children, ...props }) => {
 			if (href?.startsWith("/") || href?.startsWith("#")) {
 				return <Link href={href} {...props}>{children}</Link>;

@@ -11,6 +11,7 @@ import {
 	getRecommendations,
 	getFeaturedChildren,
 	getAuthorForContent,
+	getBacklinks,
 	type Content,
 	type Note,
 	type Page,
@@ -98,6 +99,7 @@ async function NoteView({ note }: { note: Note }) {
 	const { mdxContent } = await renderMDX(note, getMDXComponents());
 	const recs = getRecommendations(note, 6);
 	const author = getAuthorForContent(note);
+	const backlinks = getBacklinks(note);
 
 	return (
 		<article className="pb-16">
@@ -155,6 +157,21 @@ async function NoteView({ note }: { note: Note }) {
 									day: "numeric",
 								})}
 							</time>
+						)}
+
+						{backlinks.length > 0 && (
+							<div className="mt-8 border-t border-border/50 pt-6">
+								<h2 className="text-xs uppercase tracking-wide text-foreground-lowest mb-3">Referenced in</h2>
+								<ul className="space-y-2">
+									{backlinks.map((bl) => (
+										<li key={bl.path}>
+											<a href={bl.path} className="text-sm text-foreground-low hover:text-foreground">
+												{isPage(bl) ? bl.title : isFolder(bl) ? bl.title : bl.slug[bl.slug.length - 1]}
+											</a>
+										</li>
+									))}
+								</ul>
+							</div>
 						)}
 					</div>
 				</div>

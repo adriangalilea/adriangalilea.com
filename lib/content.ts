@@ -575,6 +575,14 @@ export function getAuthorForContent(c: Content): AuthorInfo | null {
 	return null;
 }
 
+export function getBacklinks(target: Content): Content[] {
+	const targetSlug = target.slug.join("/");
+	return getAllContent().filter((c) => {
+		if (c.path === target.path) return false;
+		return c.content.includes(`slug="${targetSlug}"`);
+	});
+}
+
 export function getTagsFromContent(items: Content[]): string[] {
 	const tags = new Set<string>();
 	for (const c of items) {
