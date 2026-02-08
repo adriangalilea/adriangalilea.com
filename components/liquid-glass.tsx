@@ -6,7 +6,7 @@ type Shadow = "none" | "sm" | "md" | "lg";
 const LAYER_CONFIG: Record<Layer, { tint: string; blur: number; shine: string }> = {
 	l0: {
 		tint: "var(--glass-l0)",
-		blur: 32,
+		blur: 48,
 		shine: "inset 0 0.5px 0 0 rgba(255,255,255,0.06), inset 0 0 0 0.5px rgba(255,255,255,0.04)",
 	},
 	l1: {
