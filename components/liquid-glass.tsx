@@ -18,9 +18,9 @@ const LAYER_CONFIG: Record<Layer, { tint: string; blur: number; shine: string }>
 
 const SHADOW_CONFIG: Record<Shadow, string> = {
 	none: "none",
-	sm: "var(--shadow-sm)",
-	md: "var(--shadow-md)",
-	lg: "var(--shadow-lg)",
+	sm: "var(--glass-shadow-sm)",
+	md: "var(--glass-shadow-md)",
+	lg: "var(--glass-shadow-lg)",
 };
 
 type LiquidGlassProps<T extends ElementType = "div"> = {

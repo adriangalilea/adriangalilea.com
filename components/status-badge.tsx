@@ -61,7 +61,7 @@ function Glass({ className, colorKey, children }: { className?: string; colorKey
 	return (
 		<span
 			className={cn(
-				"isolate relative overflow-hidden backdrop-blur-xl shadow-md",
+				"isolate relative overflow-hidden backdrop-blur-xl shadow-[var(--glass-shadow-md)]",
 				c.text,
 				c.bg,
 				className
