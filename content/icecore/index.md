@@ -1,7 +1,7 @@
 ---
 type: folder
 title: icecore
-description: Trustless proofs for digital documents using Bitcoin — free, permanent, self-contained
+description: Freeze data in time using Bitcoin
 status: soon
 links:
   github: https://github.com/adriangalilea/icecore
