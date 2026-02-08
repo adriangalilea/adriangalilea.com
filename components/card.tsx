@@ -184,84 +184,11 @@ function FolderCard({ folder }: { folder: Folder }) {
 // X-RAY FOLDER CARD - shows preview of internal posts
 // ============================================================================
 
-function FeaturedCard({ item }: { item: Page | Note }) {
-	const note = isNote(item) ? item : null;
-
-	return (
-		<ClickableWrapper href={item.path} className={cn("group cursor-pointer", cardBase, cardHover)}>
-			{item.cover && (
-				<CoverImage
-					cover={item.cover}
-					slug={item.slug.join("/")}
-					title={note ? "" : item.title}
-					width={item.coverWidth}
-					height={item.coverHeight}
-					poster={item.poster}
-					blurDataURL={item.blurDataURL}
-					loop={item.coverLoop}
-					intrinsic
-					hoverPlay
-					size="small"
-					sizes="300px"
-				/>
-			)}
-			<div className="p-4">
-				{note ? (
-					<>
-						<p className="text-sm leading-relaxed">{note.content.trim()}</p>
-						{note.publishedAt && (
-							<time className="mt-3 block text-xs text-foreground-lowest">
-								{new Date(note.publishedAt).toLocaleDateString("en-US", {
-									year: "numeric",
-									month: "short",
-									day: "numeric",
-								})}
-							</time>
-						)}
-					</>
-				) : (
-					<>
-						<h4 className="font-medium text-sm leading-tight">{item.title}</h4>
-						{item.description && (
-							<p className="text-xs text-foreground-low mt-0.5 line-clamp-2">{item.description}</p>
-						)}
-						{item.publishedAt && (
-							<div className="mt-1.5 flex items-center gap-1.5 text-muted-foreground text-[11px] tabular-nums">
-								<time>
-									{new Date(item.publishedAt).toLocaleDateString("en-US", {
-										year: "numeric",
-										month: "short",
-										day: "numeric",
-									})}
-								</time>
-								{item.updatedAt && new Date(item.updatedAt) > new Date(item.publishedAt) && (
-									<>
-										<span className="text-foreground-lowest">·</span>
-										<PenLine className="size-2.5" />
-										<time>
-											{new Date(item.updatedAt).toLocaleDateString("en-US", {
-												year: "numeric",
-												month: "short",
-												day: "numeric",
-											})}
-										</time>
-									</>
-								)}
-							</div>
-						)}
-					</>
-				)}
-			</div>
-			<CardShine />
-		</ClickableWrapper>
-	);
-}
-
 function XrayFolderCard({ folder }: { folder: Folder }) {
 	const colorKey = folder.status ? STATUS_CONFIG[folder.status].colorKey : null;
-	const featuredChildren = getFeaturedChildren(folder.slug).filter((c) => isPage(c) || isNote(c));
-	const pagesToShow = featuredChildren.slice(0, 1);
-	const remaining = featuredChildren.length - 1;
+	const featured = getFeaturedChildren(folder.slug).filter((c) => !isFolder(c));
+	const toShow = featured.slice(0, 1);
+	const remaining = featured.length - 1;
 
 	return (
 		<div
@@ -285,10 +212,10 @@ function XrayFolderCard({ folder }: { folder: Folder }) {
 				</div>
 			</ClickableWrapper>
 
-			{pagesToShow.length > 0 && (
+			{toShow.length > 0 && (
 				<div className="px-4 pb-4">
-					{pagesToShow.map((item) => (
-						<FeaturedCard key={item.path} item={item as Page | Note} />
+					{toShow.map((item) => (
+						<Card key={item.path} content={item} />
 					))}
 					{remaining > 0 && (
 						<ClickableWrapper href={folder.path} className="mt-2 block text-xs text-foreground-lowest hover:text-foreground-low">
@@ -310,7 +237,7 @@ function shouldShowXray(content: Content): boolean {
 	if (!isFolder(content)) return false;
 	if (content.cover) return false;
 	const children = getFeaturedChildren(content.slug);
-	return children.some((c) => isPage(c) || isNote(c));
+	return children.some((c) => !isFolder(c));
 }
 
 // ============================================================================
