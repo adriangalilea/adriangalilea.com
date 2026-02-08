@@ -12,6 +12,16 @@ export function getMDXComponents(): MDXComponents {
 		},
 		img: ({ src, alt, ...props }) => {
 			if (!src) return null;
+			const isExternal = typeof src === "string" && src.startsWith("http");
+			const isBadge = isExternal && /shields\.io|pepy\.tech\/badge|badgen\.net|badge/.test(src);
+			if (isBadge) {
+				// biome-ignore lint: badges render inline at natural size
+				return <img src={src} alt={alt ?? ""} className="badge" {...props} />;
+			}
+			if (isExternal) {
+				// biome-ignore lint: external images bypass next/image
+				return <img src={src} alt={alt ?? ""} {...props} />;
+			}
 			const isAnimated = typeof src === "string" && src.endsWith(".gif");
 			return (
 				<Image
