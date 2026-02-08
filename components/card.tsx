@@ -4,7 +4,6 @@ import { isNote, isPage, isFolder, getFeaturedChildren, wasRecentlyUpdated } fro
 import { StatusBadge, STATUS_CONFIG } from "@/components/status-badge";
 import { ClickableWrapper } from "@/components/clickable-wrapper";
 import { CoverImage } from "@/components/cover-image";
-import { TagLink } from "@/components/tag-link";
 import { cn } from "@/lib/utils";
 import { PenLine } from "lucide-react";
 
@@ -54,16 +53,6 @@ function NoteCard({ note, renderedContent }: { note: Note; renderedContent?: Rea
 				/>
 			)}
 			<div className="p-4">
-				{note.tags.length > 0 && (
-					<p className="flex flex-wrap items-center gap-x-1.5 text-xs uppercase tracking-wide mb-2">
-						{note.tags.map((t, i) => (
-							<span key={t}>
-								<TagLink tag={t} />
-								{i < note.tags.length - 1 && <span className="text-muted-foreground">,</span>}
-							</span>
-						))}
-					</p>
-				)}
 				{renderedContent ? (
 					<div className="prose prose-sm max-w-none prose-p:my-0 prose-p:leading-relaxed">
 						{renderedContent}
@@ -112,16 +101,6 @@ function PageCard({ page }: { page: Page }) {
 				/>
 			)}
 			<div className="p-4">
-				{page.tags.length > 0 && (
-					<p className="flex flex-wrap items-center gap-x-1.5 text-xs uppercase tracking-wide mb-1">
-						{page.tags.map((t, i) => (
-							<span key={t}>
-								<TagLink tag={t} />
-								{i < page.tags.length - 1 && <span className="text-muted-foreground">,</span>}
-							</span>
-						))}
-					</p>
-				)}
 				<h3 className="font-semibold leading-tight tracking-tight">{page.title}</h3>
 				{page.description && (
 					<p className="text-sm text-foreground-low mt-1">{page.description}</p>
@@ -227,16 +206,6 @@ function MiniPageCard({ page }: { page: Page }) {
 				/>
 			)}
 			<div className="p-3">
-				{page.tags.length > 0 && (
-					<p className="flex flex-wrap items-center gap-x-1 text-[10px] uppercase tracking-wide mb-0.5">
-						{page.tags.slice(0, 2).map((t, i) => (
-							<span key={t}>
-								<TagLink tag={t} />
-								{i < Math.min(page.tags.length, 2) - 1 && <span className="text-muted-foreground">,</span>}
-							</span>
-						))}
-					</p>
-				)}
 				<h4 className="font-medium text-sm leading-tight">
 					{page.title}
 					{isUpdated && <span className="ml-1.5 text-[10px] text-accent-pop">updated</span>}
