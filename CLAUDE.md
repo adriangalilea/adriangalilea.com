@@ -61,3 +61,4 @@ Folders without a cover render as "x-ray" cards in the grid — they show a prev
 - Add comment section with GitHub and Telegram auth using Better Auth
 - Add email via Resend (ramih@baiteh.com)
 - Add backstory page
+- Generate OG images for quotes (author avatar + quote text + author name)
