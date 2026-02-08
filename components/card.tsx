@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import type { Content, Note, Page, Folder } from "@/lib/content";
-import { isNote, isPage, isFolder, getFeaturedChildren, wasRecentlyUpdated } from "@/lib/content";
+import { isNote, isPage, isFolder, getFeaturedChildren } from "@/lib/content";
 import { StatusBadge, STATUS_CONFIG } from "@/components/status-badge";
 import { ClickableWrapper } from "@/components/clickable-wrapper";
 import { CoverImage } from "@/components/cover-image";
@@ -185,8 +185,6 @@ function FolderCard({ folder }: { folder: Folder }) {
 // ============================================================================
 
 function MiniPageCard({ page }: { page: Page }) {
-	const isUpdated = wasRecentlyUpdated(page);
-
 	return (
 		<ClickableWrapper href={page.path} className={cn("group cursor-pointer", cardBase, cardHover)}>
 			{page.cover && (
@@ -205,13 +203,34 @@ function MiniPageCard({ page }: { page: Page }) {
 					sizes="300px"
 				/>
 			)}
-			<div className="p-3">
-				<h4 className="font-medium text-sm leading-tight">
-					{page.title}
-					{isUpdated && <span className="ml-1.5 text-[10px] text-accent-pop">updated</span>}
-				</h4>
+			<div className="p-4">
+				<h4 className="font-medium text-sm leading-tight">{page.title}</h4>
 				{page.description && (
 					<p className="text-xs text-foreground-low mt-0.5 line-clamp-2">{page.description}</p>
+				)}
+				{page.publishedAt && (
+					<div className="mt-1.5 flex items-center gap-1.5 text-muted-foreground text-[11px] tabular-nums">
+						<time>
+							{new Date(page.publishedAt).toLocaleDateString("en-US", {
+								year: "numeric",
+								month: "short",
+								day: "numeric",
+							})}
+						</time>
+						{page.updatedAt && new Date(page.updatedAt) > new Date(page.publishedAt) && (
+							<>
+								<span className="text-foreground-lowest">·</span>
+								<PenLine className="size-2.5" />
+								<time>
+									{new Date(page.updatedAt).toLocaleDateString("en-US", {
+										year: "numeric",
+										month: "short",
+										day: "numeric",
+									})}
+								</time>
+							</>
+						)}
+					</div>
 				)}
 			</div>
 			<CardShine />
