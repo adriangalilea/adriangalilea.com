@@ -1,7 +1,7 @@
 ---
 title: "DNS shouldn't break your flow"
 publishedAt: 2026-02-03
-description: "I built a Namecheap SDK so DNS stops being a context switch."
+description: "I built a Namecheap SDK so you can ship while vibe-coding."
 tags:
   - python
   - domains
@@ -9,19 +9,17 @@ tags:
   - open-source
   - vibe-coding
 ---
-The dream is: idea hits, you start coding, and by the end of the sitting you have a live site. Domain registered, DNS configured, deployed. No context switches.
+The vision is having a live website working at the end of your vibe-coding session. Domain registered, DNS configured. No context switches.
 
-In practice the last mile kills momentum. You're in flow, the app works locally, you push to deploy, and then... you open the Namecheap dashboard. Click through tabs. Wait for pages to load. Manually add A records one by one. Toggle WhoisGuard. Copy-paste nameservers. By the time DNS propagates you've lost the thread.
+Manually adding A records and copy-pasting nameservers is the opposite of a flow state. That is if you already found the suitable domain and own it, otherwise friction compounds. By the time DNS propagates you've lost the plot.
 
-I [collect domains](/blog/domain-collection). I do this a lot. Every time I start a new project, the same friction. The existing Python libraries for the Namecheap API were either abandoned or returned raw XML dicts. So I built [namecheap-python](https://github.com/adriangalilea/namecheap-python) — a proper SDK, a CLI, and a TUI.
-
-## The pitch
-
-You finish coding. You stay in the terminal:
+I [collect domains](/blog/domain-collection). Every time I start a new project, the same friction. The existing Python libraries for the Namecheap API were either abandoned or returned raw XML dicts. So I built [namecheap-python](https://github.com/adriangalilea/namecheap-python) a proper SDK with a CLI, and a TUI to showcase what it can do.
+## CLI
+*Perfect for Claude Code*
 
 ```bash
 # Is the domain available? How much?
-namecheap-cli domain check mycoolproject.dev
+namecheap-cli dns domain check mycoolproject.dev
 
 # Register it (if you have the SDK wired up)
 # Set up GitHub Pages DNS — five commands, done
@@ -38,9 +36,9 @@ namecheap-cli dns set-nameservers mycoolproject.dev ns1.vercel-dns.com ns2.verce
 namecheap-cli privacy enable mycoolproject.dev me@gmail.com
 ```
 
-No browser. No dashboard. No context switch. Back to coding.
+No browser. No dashboard. No context switch. Preserve the flow.
 
-Or if you're scripting deployments:
+This is how the SDK DX looks like:
 
 ```python
 from namecheap import Namecheap
