@@ -1,26 +1,21 @@
 "use client";
 
 import { MessageSquare } from "lucide-react";
-import Image from "next/image";
 import { useCallback, useEffect, useState } from "react";
 import { authClient } from "@/lib/auth-client";
 import { SignInButtons, SignOutButton } from "./auth-buttons";
-import { CharCounter } from "./comment-feed";
+import {
+  CharCounter,
+  CommentActions,
+  CommentBody,
+  type CommentData,
+  MAX_CHARS,
+  UserAvatar,
+} from "./comment-primitives";
 
-type Comment = {
-  id: string;
-  slug: string;
-  userId: string;
-  parentId: string | null;
-  content: string;
-  createdAt: string;
-  userName: string;
-  userImage: string | null;
-};
+type TreeNode = CommentData & { children: TreeNode[] };
 
-type TreeNode = Comment & { children: TreeNode[] };
-
-function buildTree(flat: Comment[]): TreeNode[] {
+function buildTree(flat: CommentData[]): TreeNode[] {
   const map = new Map<string, TreeNode>();
   const roots: TreeNode[] = [];
   for (const c of flat) map.set(c.id, { ...c, children: [] });
@@ -32,22 +27,6 @@ function buildTree(flat: Comment[]): TreeNode[] {
     }
   }
   return roots;
-}
-
-function timeAgo(date: string): string {
-  const seconds = Math.floor((Date.now() - new Date(date).getTime()) / 1000);
-  if (seconds < 60) return "just now";
-  const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return `${minutes}m ago`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
-  const days = Math.floor(hours / 24);
-  if (days < 30) return `${days}d ago`;
-  return new Date(date).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
 }
 
 function CommentNode({
@@ -67,9 +46,8 @@ function CommentNode({
   const [replyText, setReplyText] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const isOwn = userId === node.userId;
-  const isDeleted = node.content === "[deleted]";
 
-  const replyOverLimit = replyText.length > 280;
+  const replyOverLimit = replyText.length > MAX_CHARS;
 
   async function submitReply() {
     if (!replyText.trim() || replyOverLimit) return;
@@ -97,51 +75,21 @@ function CommentNode({
   return (
     <div className={depth > 0 ? "ml-6 border-l border-border/50 pl-4" : ""}>
       <div className="py-3">
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          {node.userImage && (
-            <Image
-              src={node.userImage}
-              alt=""
-              width={20}
-              height={20}
-              className="rounded-full"
-              unoptimized
+        <CommentBody
+          userName={node.userName}
+          userImage={node.userImage}
+          createdAt={node.createdAt}
+          content={node.content}
+          size="md"
+          actions={
+            <CommentActions
+              canReply={!!userId}
+              onReply={() => setReplying(!replying)}
+              canDelete={isOwn}
+              onDelete={handleDelete}
             />
-          )}
-          <span className="font-medium text-foreground-low">
-            {node.userName}
-          </span>
-          <span>{timeAgo(node.createdAt)}</span>
-        </div>
-        <div className="mt-1 text-sm">
-          {isDeleted ? (
-            <span className="italic text-muted-foreground">[deleted]</span>
-          ) : (
-            node.content
-          )}
-        </div>
-        {!isDeleted && (
-          <div className="mt-1 flex gap-3 text-xs text-muted-foreground">
-            {userId && (
-              <button
-                type="button"
-                onClick={() => setReplying(!replying)}
-                className="hover:text-foreground transition-colors"
-              >
-                reply
-              </button>
-            )}
-            {isOwn && (
-              <button
-                type="button"
-                onClick={handleDelete}
-                className="hover:text-destructive transition-colors"
-              >
-                delete
-              </button>
-            )}
-          </div>
-        )}
+          }
+        />
         {replying && (
           <div className="mt-2">
             <textarea
@@ -189,7 +137,7 @@ function CommentNode({
 }
 
 export function Comments({ slug }: { slug: string }) {
-  const [comments, setComments] = useState<Comment[]>([]);
+  const [comments, setComments] = useState<CommentData[]>([]);
   const [text, setText] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const { data: session } = authClient.useSession();
@@ -205,7 +153,7 @@ export function Comments({ slug }: { slug: string }) {
     fetchComments();
   }, [fetchComments]);
 
-  const overLimit = text.length > 280;
+  const overLimit = text.length > MAX_CHARS;
 
   async function submitComment() {
     if (!text.trim() || overLimit) return;
@@ -234,14 +182,7 @@ export function Comments({ slug }: { slug: string }) {
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               {session.user.image && (
-                <Image
-                  src={session.user.image}
-                  alt=""
-                  width={20}
-                  height={20}
-                  className="rounded-full"
-                  unoptimized
-                />
+                <UserAvatar src={session.user.image} size="md" />
               )}
               <span>{session.user.name}</span>
             </div>

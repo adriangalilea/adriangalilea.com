@@ -1,20 +1,9 @@
 "use client";
 
 import { Github, Send } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { GlassPill } from "@/components/liquid-glass";
 import { authClient } from "@/lib/auth-client";
-
-function useIsLocalhost() {
-  const [local, setLocal] = useState(false);
-  useEffect(() => {
-    setLocal(
-      window.location.hostname === "localhost" ||
-        window.location.hostname === "127.0.0.1",
-    );
-  }, []);
-  return local;
-}
 
 export function GitHubButton() {
   return (
@@ -53,16 +42,6 @@ export function TelegramButton() {
 }
 
 export function SignInButtons() {
-  const isLocal = useIsLocalhost();
-
-  if (isLocal) {
-    return (
-      <p className="text-xs text-muted-foreground italic">
-        Auth requires a public domain. Deploy to test sign-in.
-      </p>
-    );
-  }
-
   return (
     <div className="flex flex-wrap items-center gap-3">
       <GitHubButton />

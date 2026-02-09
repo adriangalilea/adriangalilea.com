@@ -1,7 +1,5 @@
 "use client";
 
-import { Github, Send } from "lucide-react";
-import Image from "next/image";
 import Link from "next/link";
 import {
   createContext,
@@ -12,20 +10,19 @@ import {
   useState,
 } from "react";
 import { authClient } from "@/lib/auth-client";
-import { GlassPill } from "./liquid-glass";
+import { SignInButtons } from "./auth-buttons";
+import {
+  CharCounter,
+  CommentActions,
+  CommentBody,
+  type CommentData,
+  MAX_CHARS,
+} from "./comment-primitives";
 
-type FeedComment = {
-  id: string;
-  slug: string;
-  userId: string;
-  content: string;
-  createdAt: string;
-  userName: string;
-  userImage: string | null;
-};
+export { CharCounter, MAX_CHARS };
 
 type SlugComments = {
-  comments: FeedComment[];
+  comments: CommentData[];
   total: number;
 };
 
@@ -63,85 +60,6 @@ export function CommentsFeedProvider({
   );
 }
 
-function timeAgo(date: string): string {
-  const seconds = Math.floor((Date.now() - new Date(date).getTime()) / 1000);
-  if (seconds < 60) return "just now";
-  const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return `${minutes}m ago`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
-  const days = Math.floor(hours / 24);
-  if (days < 30) return `${days}d ago`;
-  return new Date(date).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-}
-
-const MAX_CHARS = 280;
-const WARN_AT = 260;
-const DANGER_AT = 280;
-
-export function CharCounter({ length }: { length: number }) {
-  const charsLeft = MAX_CHARS - length;
-  const ratio = length / MAX_CHARS;
-  const r = 8;
-  const circumference = 2 * Math.PI * r;
-  const offset = circumference * (1 - Math.min(ratio, 1));
-  const overLimit = charsLeft < 0;
-
-  if (length === 0) return null;
-
-  const strokeColor =
-    overLimit || length >= DANGER_AT
-      ? "var(--color-destructive, #ef4444)"
-      : length >= WARN_AT
-        ? "#eab308"
-        : "var(--color-muted-foreground, #888)";
-
-  return (
-    <span className="inline-flex items-center gap-1 shrink-0">
-      <svg
-        aria-hidden="true"
-        width="20"
-        height="20"
-        viewBox="0 0 20 20"
-        className="rotate-[-90deg]"
-      >
-        <circle
-          cx="10"
-          cy="10"
-          r={r}
-          fill="none"
-          stroke="var(--color-border, #333)"
-          strokeWidth="2"
-        />
-        <circle
-          cx="10"
-          cy="10"
-          r={r}
-          fill="none"
-          stroke={strokeColor}
-          strokeWidth="2"
-          strokeDasharray={circumference}
-          strokeDashoffset={offset}
-          strokeLinecap="round"
-          className="transition-all duration-150"
-        />
-      </svg>
-      {charsLeft <= 20 && (
-        <span
-          className="text-[10px] tabular-nums font-medium"
-          style={{ color: strokeColor }}
-        >
-          {charsLeft}
-        </span>
-      )}
-    </span>
-  );
-}
-
 export function FeedComments({ slug, path }: { slug: string; path: string }) {
   const ctx = useContext(CommentsFeedContext);
   const { data: session } = authClient.useSession();
@@ -169,6 +87,15 @@ export function FeedComments({ slug, path }: { slug: string; path: string }) {
     ctx?.refresh();
   }
 
+  async function handleDelete(commentId: string) {
+    await fetch(`/api/comments/${slug}`, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: commentId }),
+    });
+    ctx?.refresh();
+  }
+
   return (
     <div
       className="mt-3 border-t border-border/30 pt-3"
@@ -178,29 +105,22 @@ export function FeedComments({ slug, path }: { slug: string; path: string }) {
       {commentsList.length > 0 && (
         <div className="space-y-2">
           {commentsList.map((c) => (
-            <div key={c.id} className="flex gap-2 text-xs">
-              {c.userImage && (
-                <Image
-                  src={c.userImage}
-                  alt=""
-                  width={18}
-                  height={18}
-                  className="rounded-full shrink-0 mt-0.5"
-                  unoptimized
-                />
-              )}
-              <div className="min-w-0">
-                <span className="font-medium text-foreground-low">
-                  {c.userName}
-                </span>
-                <span className="text-muted-foreground ml-1.5">
-                  {timeAgo(c.createdAt)}
-                </span>
-                <p className="text-foreground text-[13px] mt-0.5 break-words">
-                  {c.content}
-                </p>
-              </div>
-            </div>
+            <CommentBody
+              key={c.id}
+              userName={c.userName}
+              userImage={c.userImage}
+              createdAt={c.createdAt}
+              content={c.content}
+              size="sm"
+              actions={
+                session?.user.id === c.userId ? (
+                  <CommentActions
+                    canDelete
+                    onDelete={() => handleDelete(c.id)}
+                  />
+                ) : undefined
+              }
+            />
           ))}
           {remaining > 0 && (
             <Link
@@ -234,21 +154,7 @@ export function FeedComments({ slug, path }: { slug: string; path: string }) {
       ) : (
         <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
           <span>Comment with</span>
-          <GlassPill
-            as="button"
-            icon={Github}
-            label="GitHub"
-            onClick={() => authClient.signIn.social({ provider: "github" })}
-          />
-          <GlassPill
-            as="button"
-            icon={Send}
-            label="Telegram"
-            onClick={async () => {
-              const result = await authClient.telegramLoginPopup();
-              if (result) window.location.reload();
-            }}
-          />
+          <SignInButtons />
         </div>
       )}
     </div>
