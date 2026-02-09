@@ -3,6 +3,7 @@
 import { Github, Send } from "lucide-react";
 import { useEffect, useState } from "react";
 import { authClient } from "@/lib/auth-client";
+import { Button } from "@/components/ui/button";
 
 function useIsLocalhost() {
   const [local, setLocal] = useState(false);
@@ -15,19 +16,15 @@ function useIsLocalhost() {
   return local;
 }
 
-const btnClass =
-  "inline-flex items-center gap-2 rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted cursor-pointer";
-
 export function GitHubButton() {
   return (
-    <button
-      type="button"
+    <Button
+      variant="outline"
       onClick={() => authClient.signIn.social({ provider: "github" })}
-      className={btnClass}
     >
-      <Github size={16} />
+      <Github />
       GitHub
-    </button>
+    </Button>
   );
 }
 
@@ -45,15 +42,10 @@ export function TelegramButton() {
   }
 
   return (
-    <button
-      type="button"
-      onClick={handleClick}
-      disabled={loading}
-      className={btnClass}
-    >
-      <Send size={16} />
+    <Button variant="outline" onClick={handleClick} disabled={loading}>
+      <Send />
       {loading ? "..." : "Telegram"}
-    </button>
+    </Button>
   );
 }
 
