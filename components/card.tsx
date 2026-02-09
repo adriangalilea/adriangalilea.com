@@ -6,7 +6,7 @@ import { ClickableWrapper } from "@/components/clickable-wrapper";
 import { CoverImage } from "@/components/cover-image";
 import { cn } from "@/lib/utils";
 import { Quote } from "@/components/quote";
-import { PenLine, FolderOpen } from "lucide-react";
+import { PenLine, Folder as FolderIcon, FileText, StickyNote } from "lucide-react";
 
 // ============================================================================
 // STYLES
@@ -67,13 +67,16 @@ function NoteCard({ note, renderedContent }: { note: Note; renderedContent?: Rea
 							{body}
 						</div>
 						{note.publishedAt && (
-							<time className="mt-3 block text-xs text-foreground-lowest">
-								{new Date(note.publishedAt).toLocaleDateString("en-US", {
-									year: "numeric",
-									month: "short",
-									day: "numeric",
-								})}
-							</time>
+							<div className="mt-3 flex items-center gap-1.5 text-xs text-foreground-lowest">
+								<StickyNote className="size-3" />
+								<time>
+									{new Date(note.publishedAt).toLocaleDateString("en-US", {
+										year: "numeric",
+										month: "short",
+										day: "numeric",
+									})}
+								</time>
+							</div>
 						)}
 					</>
 				)}
@@ -115,6 +118,7 @@ function PageCard({ page }: { page: Page }) {
 				)}
 				{page.publishedAt && (
 					<div className="mt-2 flex items-center gap-1.5 text-muted-foreground text-xs tabular-nums">
+						<FileText className="size-3" />
 						<time>
 							{new Date(page.publishedAt).toLocaleDateString("en-US", {
 								year: "numeric",
@@ -180,7 +184,7 @@ function FolderCard({ folder }: { folder: Folder }) {
 			)}
 			<div className="p-4">
 				<div className="flex items-center gap-1.5">
-					<FolderOpen className="size-4 text-foreground-lowest" />
+					<FolderIcon className="size-4 text-foreground-lowest" />
 					<span className="font-semibold">{folder.title}</span>
 				</div>
 				{folder.description && (
@@ -217,7 +221,7 @@ function XrayFolderCard({ folder }: { folder: Folder }) {
 				<div className="flex items-start justify-between gap-2">
 					<div className="flex-1 min-w-0">
 						<div className="flex items-center gap-1.5">
-							<FolderOpen className="size-4 text-foreground-lowest" />
+							<FolderIcon className="size-4 text-foreground-lowest" />
 							<span className="font-semibold">{folder.title}</span>
 						</div>
 						{folder.description && (

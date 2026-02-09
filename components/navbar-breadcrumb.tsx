@@ -10,6 +10,7 @@ import {
 	BreadcrumbList,
 	BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
+import { Folder } from "lucide-react";
 
 type Props = {
 	folderPaths: string[];
@@ -55,8 +56,8 @@ export function NavbarBreadcrumb({ folderPaths }: Props) {
 					<Fragment key={item.href}>
 						<BreadcrumbSeparator className="text-foreground-lowest/50 text-sm sm:text-lg font-light shrink-0">/</BreadcrumbSeparator>
 						<BreadcrumbItem className="min-w-0">
-							<BreadcrumbLink asChild className="text-base sm:text-lg hover:text-foreground-low truncate block">
-								<Link href={item.href}>{item.seg}</Link>
+							<BreadcrumbLink asChild className="text-base sm:text-lg hover:text-foreground-low truncate">
+								<Link href={item.href} className="flex items-center gap-1.5"><Folder className="size-4 sm:size-5 shrink-0 text-foreground-low" />{item.seg}</Link>
 							</BreadcrumbLink>
 						</BreadcrumbItem>
 					</Fragment>
