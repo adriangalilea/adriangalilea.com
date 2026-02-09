@@ -1,7 +1,7 @@
+import { createHash, createHmac } from "node:crypto";
 import type { BetterAuthPlugin } from "better-auth";
 import { createAuthEndpoint } from "better-auth/api";
 import { setSessionCookie } from "better-auth/cookies";
-import { createHash, createHmac } from "node:crypto";
 
 type TelegramAuthData = {
   id: number;
@@ -36,7 +36,9 @@ function verifyHmac(data: TelegramAuthData, botToken: string, maxAge: number) {
     .join("\n");
 
   const secret = createHash("sha256").update(botToken).digest();
-  return createHmac("sha256", secret).update(checkString).digest("hex") === hash;
+  return (
+    createHmac("sha256", secret).update(checkString).digest("hex") === hash
+  );
 }
 
 export function telegram(opts: { botToken: string; maxAuthAge?: number }) {
@@ -65,10 +67,16 @@ export function telegram(opts: { botToken: string; maxAuthAge?: number }) {
         async (ctx) => {
           const body = ctx.body;
           if (!isValidShape(body)) {
-            return ctx.json({ error: "Invalid Telegram auth data" }, { status: 400 });
+            return ctx.json(
+              { error: "Invalid Telegram auth data" },
+              { status: 400 },
+            );
           }
           if (!verifyHmac(body, botToken, maxAuthAge)) {
-            return ctx.json({ error: "Invalid Telegram authentication" }, { status: 401 });
+            return ctx.json(
+              { error: "Invalid Telegram authentication" },
+              { status: 401 },
+            );
           }
 
           const tgId = body.id.toString();
@@ -112,11 +120,20 @@ export function telegram(opts: { botToken: string; maxAuthAge?: number }) {
             });
           }
 
-          const session = await ctx.context.internalAdapter.createSession(userId);
+          const session =
+            await ctx.context.internalAdapter.createSession(userId);
           const user = (await ctx.context.adapter.findOne({
             model: "user",
             where: [{ field: "id", value: userId }],
-          })) as { id: string; name: string; email: string; image?: string | null; createdAt: Date; updatedAt: Date; emailVerified: boolean };
+          })) as {
+            id: string;
+            name: string;
+            email: string;
+            image?: string | null;
+            createdAt: Date;
+            updatedAt: Date;
+            emailVerified: boolean;
+          };
           await setSessionCookie(ctx, { session, user });
           return ctx.json({ user, session });
         },

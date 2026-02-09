@@ -2,8 +2,8 @@
 
 import { Github, Send } from "lucide-react";
 import { useEffect, useState } from "react";
-import { authClient } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
+import { authClient } from "@/lib/auth-client";
 
 function useIsLocalhost() {
   const [local, setLocal] = useState(false);
