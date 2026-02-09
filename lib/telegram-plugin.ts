@@ -1,5 +1,5 @@
 import { createHash, createHmac } from "node:crypto";
-import type { BetterAuthPlugin } from "better-auth";
+import type { BetterAuthPlugin, User } from "better-auth";
 import { createAuthEndpoint } from "better-auth/api";
 import { setSessionCookie } from "better-auth/cookies";
 
@@ -84,7 +84,7 @@ export function telegram(opts: { botToken: string; maxAuthAge?: number }) {
             ? `${body.first_name} ${body.last_name}`
             : body.first_name;
 
-          const existing = (await ctx.context.adapter.findOne({
+          const existingAccount = (await ctx.context.adapter.findOne({
             model: "account",
             where: [
               { field: "providerId", value: "telegram" },
@@ -94,17 +94,21 @@ export function telegram(opts: { botToken: string; maxAuthAge?: number }) {
 
           let userId: string;
 
-          if (existing) {
-            userId = existing.userId;
+          if (existingAccount) {
+            userId = existingAccount.userId;
           } else {
+            const now = new Date();
             const newUser = await ctx.context.adapter.create({
               model: "user",
               data: {
                 name,
                 image: body.photo_url,
                 email: `tg_${tgId}@telegram.local`,
+                emailVerified: false,
                 telegramId: tgId,
                 telegramUsername: body.username,
+                createdAt: now,
+                updatedAt: now,
               },
             });
             userId = newUser.id;
@@ -116,24 +120,20 @@ export function telegram(opts: { botToken: string; maxAuthAge?: number }) {
                 accountId: tgId,
                 telegramId: tgId,
                 telegramUsername: body.username,
+                createdAt: now,
+                updatedAt: now,
               },
             });
           }
 
           const session =
             await ctx.context.internalAdapter.createSession(userId);
+
           const user = (await ctx.context.adapter.findOne({
             model: "user",
             where: [{ field: "id", value: userId }],
-          })) as {
-            id: string;
-            name: string;
-            email: string;
-            image?: string | null;
-            createdAt: Date;
-            updatedAt: Date;
-            emailVerified: boolean;
-          };
+          })) as User;
+
           await setSessionCookie(ctx, { session, user });
           return ctx.json({ user, session });
         },
