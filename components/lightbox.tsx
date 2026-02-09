@@ -185,7 +185,6 @@ function LightboxDialog({
 
   return (
     <Dialog.Portal>
-      <Dialog.Overlay className="lightbox-overlay" />
       <Dialog.Content className="lightbox-content">
         <VisuallyHidden.Root>
           <Dialog.Title>{alt || "Image lightbox"}</Dialog.Title>
@@ -193,7 +192,7 @@ function LightboxDialog({
         <Dialog.Close asChild>
           <button
             type="button"
-            className="fixed top-4 right-4 z-[60] rounded-full bg-white/10 p-2 text-white/70 hover:text-white hover:bg-white/20 transition-colors backdrop-blur-sm"
+            className="fixed top-4 right-4 z-[60] rounded-full bg-white/10 p-2 text-white/70 hover:text-white hover:bg-white/20 transition-colors"
             aria-label="Close"
           >
             <X className="size-5" />

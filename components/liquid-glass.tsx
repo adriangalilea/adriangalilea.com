@@ -2,12 +2,13 @@ import type { LucideIcon } from "lucide-react";
 import type { ComponentPropsWithoutRef, ElementType, ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
-type Layer = "l0" | "l1";
+type Layer = "l0" | "l1" | "scrim";
 type Shadow = "none" | "sm" | "md" | "lg";
 
 const SHINE: Record<Layer, string> = {
   l0: "inset 0 0.5px 0 0 rgba(255,255,255,0.06), inset 0 0 0 0.5px rgba(255,255,255,0.04)",
   l1: "inset 0 0.5px 0 0 rgba(255,255,255,0.1), inset 0 0 0 0.5px rgba(255,255,255,0.06)",
+  scrim: "none",
 };
 
 const OUTER_SHADOW: Record<Shadow, string | null> = {
@@ -31,8 +32,14 @@ type GlassSurfaceProps<T extends ElementType = "span"> = {
   layer?: Layer;
   shadow?: Shadow;
   distortion?: boolean;
-  children: ReactNode;
+  children?: ReactNode;
 } & Omit<ComponentPropsWithoutRef<T>, "children">;
+
+const BG: Record<Layer, string> = {
+  l0: "bg-[var(--glass-l0)]",
+  l1: "bg-[var(--glass-l1)]",
+  scrim: "bg-[var(--glass-scrim)]",
+};
 
 export function GlassSurface<T extends ElementType = "span">({
   as,
@@ -45,7 +52,7 @@ export function GlassSurface<T extends ElementType = "span">({
   ...rest
 }: GlassSurfaceProps<T>) {
   const Tag = as ?? "span";
-  const bg = layer === "l0" ? "bg-[var(--glass-l0)]" : "bg-[var(--glass-l1)]";
+  const bg = BG[layer];
 
   if (distortion) {
     return (
@@ -57,8 +64,8 @@ export function GlassSurface<T extends ElementType = "span">({
         <div
           className="absolute inset-0 z-0 overflow-hidden rounded-[inherit]"
           style={{
-            backdropFilter: "blur(24px)",
-            WebkitBackdropFilter: "blur(24px)",
+            backdropFilter: "var(--glass-backdrop)",
+            WebkitBackdropFilter: "var(--glass-backdrop)",
             filter: "url(#glass-distortion)",
           }}
         />
@@ -67,19 +74,20 @@ export function GlassSurface<T extends ElementType = "span">({
           className="absolute inset-0 z-[2] rounded-[inherit]"
           style={{ boxShadow: SHINE[layer] }}
         />
-        <div className="relative z-[3]">{children}</div>
+        <div className="relative z-[3] h-full">{children}</div>
       </Tag>
     );
   }
 
   return (
     <Tag
-      className={cn(
-        "isolate relative overflow-hidden backdrop-blur-xl",
-        bg,
-        className,
-      )}
-      style={{ boxShadow: buildBoxShadow(layer, shadow), ...style }}
+      className={cn("isolate relative overflow-hidden", bg, className)}
+      style={{
+        boxShadow: buildBoxShadow(layer, shadow),
+        backdropFilter: "var(--glass-backdrop)",
+        WebkitBackdropFilter: "var(--glass-backdrop)",
+        ...style,
+      }}
       {...rest}
     >
       {children}
