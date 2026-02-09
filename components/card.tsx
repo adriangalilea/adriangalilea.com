@@ -8,6 +8,7 @@ import type { ReactNode } from "react";
 import { ClickableWrapper } from "@/components/clickable-wrapper";
 import { FeedComments } from "@/components/comment-feed";
 import { CoverImage } from "@/components/cover-image";
+import { LightboxExpandButton } from "@/components/lightbox";
 import { Quote } from "@/components/quote";
 import { STATUS_CONFIG, StatusBadge } from "@/components/status-badge";
 import { FeedViewCount } from "@/components/view-counter";
@@ -19,6 +20,7 @@ import {
   isNote,
   isPage,
 } from "@/lib/content";
+import { isStaticCover } from "@/lib/media";
 import { cn } from "@/lib/utils";
 
 // ============================================================================
@@ -71,19 +73,24 @@ function NoteCard({
       )}
     >
       {note.cover && (
-        <CoverImage
-          cover={note.cover}
-          slug={note.slug.join("/")}
-          title=""
-          width={note.coverWidth}
-          height={note.coverHeight}
-          poster={note.poster}
-          blurDataURL={note.blurDataURL}
-          loop={note.coverLoop}
-          intrinsic
-          hoverPlay
-          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 400px"
-        />
+        <div className="relative">
+          <CoverImage
+            cover={note.cover}
+            slug={note.slug.join("/")}
+            title=""
+            width={note.coverWidth}
+            height={note.coverHeight}
+            poster={note.poster}
+            blurDataURL={note.blurDataURL}
+            loop={note.coverLoop}
+            intrinsic
+            hoverPlay
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 400px"
+          />
+          {isStaticCover(note.cover) && (
+            <LightboxExpandButton src={note.cover} />
+          )}
+        </div>
       )}
       <div className="p-4">
         {author ? (
@@ -142,19 +149,24 @@ function PageCard({ page }: { page: Page }) {
       )}
     >
       {page.cover && (
-        <CoverImage
-          cover={page.cover}
-          slug={page.slug.join("/")}
-          title={page.title}
-          width={page.coverWidth}
-          height={page.coverHeight}
-          poster={page.poster}
-          blurDataURL={page.blurDataURL}
-          loop={page.coverLoop}
-          intrinsic
-          hoverPlay
-          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 400px"
-        />
+        <div className="relative">
+          <CoverImage
+            cover={page.cover}
+            slug={page.slug.join("/")}
+            title={page.title}
+            width={page.coverWidth}
+            height={page.coverHeight}
+            poster={page.poster}
+            blurDataURL={page.blurDataURL}
+            loop={page.coverLoop}
+            intrinsic
+            hoverPlay
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 400px"
+          />
+          {isStaticCover(page.cover) && (
+            <LightboxExpandButton src={page.cover} alt={page.title} />
+          )}
+        </div>
       )}
       <div className="p-4">
         <h3 className="text-xl font-semibold leading-tight tracking-tight">
@@ -222,19 +234,24 @@ function FolderCard({ folder }: { folder: Folder }) {
     >
       {folder.status && <StatusBadge status={folder.status} absolute />}
       {folder.cover && (
-        <CoverImage
-          cover={folder.cover}
-          slug={folder.slug.join("/")}
-          title={folder.title}
-          width={folder.coverWidth}
-          height={folder.coverHeight}
-          poster={folder.poster}
-          blurDataURL={folder.blurDataURL}
-          loop={folder.coverLoop}
-          intrinsic
-          hoverPlay
-          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 400px"
-        />
+        <div className="relative">
+          <CoverImage
+            cover={folder.cover}
+            slug={folder.slug.join("/")}
+            title={folder.title}
+            width={folder.coverWidth}
+            height={folder.coverHeight}
+            poster={folder.poster}
+            blurDataURL={folder.blurDataURL}
+            loop={folder.coverLoop}
+            intrinsic
+            hoverPlay
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 400px"
+          />
+          {isStaticCover(folder.cover) && (
+            <LightboxExpandButton src={folder.cover} alt={folder.title} />
+          )}
+        </div>
       )}
       <div className="p-4">
         <div className="flex items-center gap-1.5">

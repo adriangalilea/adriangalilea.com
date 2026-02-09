@@ -1,6 +1,7 @@
 import { ExternalLink } from "lucide-react";
 import Image from "next/image";
 import type { ReactNode } from "react";
+import { Lightbox } from "@/components/lightbox";
 import type { AuthorInfo } from "@/lib/content";
 import { cn } from "@/lib/utils";
 
@@ -45,15 +46,26 @@ export function Quote({
           isLarge ? "mt-6 gap-3" : "mt-3 gap-2",
         )}
       >
-        {author.avatar && (
-          <Image
-            src={author.avatar}
-            alt=""
-            width={isLarge ? 48 : 24}
-            height={isLarge ? 48 : 24}
-            className={cn("rounded-full", isLarge ? "size-12" : "size-6")}
-          />
-        )}
+        {author.avatar &&
+          (isLarge ? (
+            <Lightbox src={author.avatar} alt={author.name}>
+              <Image
+                src={author.avatar}
+                alt=""
+                width={48}
+                height={48}
+                className="size-12 rounded-full"
+              />
+            </Lightbox>
+          ) : (
+            <Image
+              src={author.avatar}
+              alt=""
+              width={24}
+              height={24}
+              className="size-6 rounded-full"
+            />
+          ))}
         <span
           className={cn(
             "text-foreground-lowest",

@@ -130,6 +130,7 @@ async function NoteView({ note }: { note: Note }) {
                 loop={note.coverLoop}
                 sizes="(max-width: 1024px) 100vw, 672px"
                 priority
+                lightbox
               />
             </div>
           </figure>
@@ -247,6 +248,7 @@ async function PageView({ page }: { page: Page }) {
                 loop={page.coverLoop}
                 sizes="(max-width: 1024px) 100vw, 672px"
                 priority
+                lightbox
               />
             </div>
           </figure>

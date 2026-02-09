@@ -12,6 +12,15 @@ import matter from "gray-matter";
 import imageSize from "image-size";
 import readingTime from "reading-time";
 import sharp from "sharp";
+import {
+  ANIMATED_EXTENSIONS,
+  AVATAR_EXTENSIONS,
+  COVER_EXTENSIONS,
+  IMAGE_EXTENSIONS,
+  isMedia,
+  NON_WEBM_ANIMATED,
+  POSTER_EXTENSIONS,
+} from "@/lib/media";
 
 const CONTENT_DIR = join(process.cwd(), "content");
 const PUBLIC_DIR = join(process.cwd(), "public");
@@ -26,31 +35,6 @@ const blurManifest: Record<string, string> = (() => {
   }
 })();
 const NOTE_MAX_CHARS = 280;
-const MEDIA_EXTENSIONS = [
-  ".png",
-  ".jpg",
-  ".jpeg",
-  ".webp",
-  ".gif",
-  ".mp4",
-  ".webm",
-  ".mov",
-];
-const COVER_EXTENSIONS = [
-  ".png",
-  ".webp",
-  ".jpg",
-  ".jpeg",
-  ".gif",
-  ".mp4",
-  ".webm",
-  ".mov",
-];
-const IMAGE_EXTENSIONS = [".png", ".webp", ".jpg", ".jpeg", ".gif"];
-const POSTER_EXTENSIONS = [".webp", ".jpg", ".jpeg", ".png"];
-const AVATAR_EXTENSIONS = [".png", ".webp", ".jpg", ".jpeg"];
-const ANIMATED_EXTENSIONS = [".gif", ".mp4", ".webm", ".mov"];
-const NON_WEBM_ANIMATED = [".gif", ".mp4", ".mov"];
 const OG_WIDTH = 1200;
 const OG_HEIGHT = 630;
 
@@ -151,11 +135,6 @@ export function isFolder(c: Content): c is Folder {
 // HELPERS
 // ============================================================================
 
-function isMediaFile(filename: string): boolean {
-  const ext = parse(filename).ext.toLowerCase();
-  return MEDIA_EXTENSIONS.includes(ext);
-}
-
 function needsCopy(src: string, dest: string): boolean {
   if (!existsSync(dest)) return true;
   return statSync(src).size !== statSync(dest).size;
@@ -193,7 +172,7 @@ function extractTOC(content: string): TOCItem[] {
 
 function copyMedia(dir: string, slug: string[]): string[] {
   try {
-    const files = readdirSync(dir).filter(isMediaFile);
+    const files = readdirSync(dir).filter(isMedia);
     if (files.length === 0) return [];
 
     const slugPath = slug.join("/");

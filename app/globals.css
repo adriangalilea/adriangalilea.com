@@ -416,22 +416,12 @@
   color: var(--foreground-low);
 }
 
-/* Image captions: *italic text* on the line after an image (remark-breaks joins them with <br>) */
-.prose p:has(> img) > br {
-  display: none;
-}
-
-.prose p:has(> img) > img {
-  margin-bottom: 0;
-}
-
-.prose p:has(> img) > em:last-child {
-  display: block;
-  margin-top: 0.625em;
-  font-size: 0.8125rem;
-  line-height: 1.5;
-  color: var(--foreground-low);
+/* Lightbox caption: reset prose styles inside the overlay */
+.lightbox-caption em {
   font-style: italic;
+}
+.lightbox-caption del {
+  text-decoration: line-through;
 }
 
 /* ── Cover image grain ── */
@@ -527,6 +517,84 @@
 }
 .scrollbar-none::-webkit-scrollbar {
   display: none;
+}
+
+/* ── Lightbox ── */
+
+.lightbox-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: oklch(0.08 0.01 280 / 80%);
+  backdrop-filter: blur(20px) saturate(1.2);
+  -webkit-backdrop-filter: blur(20px) saturate(1.2);
+}
+
+.dark .lightbox-overlay {
+  background: oklch(0.06 0.015 280 / 85%);
+}
+
+.lightbox-overlay[data-state="open"] {
+  animation: lightbox-fade-in 0.2s ease-out;
+}
+
+.lightbox-overlay[data-state="closed"] {
+  animation: lightbox-fade-out 0.15s ease-in;
+}
+
+.lightbox-content {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  outline: none;
+}
+
+.lightbox-content[data-state="open"] {
+  animation: lightbox-content-in 0.2s ease-out;
+}
+
+.lightbox-content[data-state="closed"] {
+  animation: lightbox-content-out 0.15s ease-in;
+}
+
+@keyframes lightbox-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes lightbox-fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes lightbox-content-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes lightbox-content-out {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.95);
+  }
 }
 
 @keyframes grain {

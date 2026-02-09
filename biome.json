@@ -29,7 +29,11 @@
   },
   "overrides": [
     {
-      "includes": ["components/cover-image.tsx", "mdx-components.tsx"],
+      "includes": [
+        "components/cover-image.tsx",
+        "components/lightbox.tsx",
+        "mdx-components.tsx"
+      ],
       "linter": {
         "rules": {
           "performance": {
@@ -49,11 +53,12 @@
       }
     },
     {
-      "includes": ["components/comment-feed.tsx"],
+      "includes": ["components/comment-feed.tsx", "components/lightbox.tsx"],
       "linter": {
         "rules": {
           "a11y": {
-            "noStaticElementInteractions": "off"
+            "noStaticElementInteractions": "off",
+            "useKeyWithClickEvents": "off"
           }
         }
       }

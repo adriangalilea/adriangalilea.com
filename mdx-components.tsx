@@ -1,7 +1,9 @@
 import type { MDXComponents } from "mdx/types";
 import Image from "next/image";
 import Link from "next/link";
+import { Children, isValidElement, type ReactElement } from "react";
 import { Card } from "@/components/card";
+import { Lightbox } from "@/components/lightbox";
 import { getContentByPath, isNote } from "@/lib/content";
 import { renderMDXString } from "@/lib/mdx";
 
@@ -20,6 +22,23 @@ async function ContentQuote({ slug }: { slug: string }) {
   );
 }
 
+function findImgSrc(children: React.ReactNode): string | null {
+  let src: string | null = null;
+  Children.forEach(children, (child) => {
+    if (src) return;
+    if (isValidElement(child)) {
+      const props = child.props as Record<string, unknown>;
+      if (props.src && typeof props.src === "string") {
+        src = props.src;
+      }
+      if (props.children) {
+        src = findImgSrc(props.children as React.ReactNode);
+      }
+    }
+  });
+  return src;
+}
+
 export function getMDXComponents(): MDXComponents {
   return {
     ContentQuote,
@@ -35,6 +54,38 @@ export function getMDXComponents(): MDXComponents {
         <a href={href} target="_blank" rel="noopener noreferrer" {...props}>
           {children}
         </a>
+      );
+    },
+    figure: ({ children, ...props }) => {
+      const src = findImgSrc(children);
+
+      let imgNode: React.ReactNode = null;
+      let captionNode: React.ReactNode = null;
+
+      Children.forEach(children, (child) => {
+        if (!isValidElement(child)) return;
+        const el = child as ReactElement<Record<string, unknown>>;
+        if (
+          el.type === "figcaption" ||
+          (el.props && el.props.mdxType === "figcaption")
+        ) {
+          captionNode = el;
+        } else {
+          imgNode = child;
+        }
+      });
+
+      if (!src) {
+        return <figure {...props}>{children}</figure>;
+      }
+
+      return (
+        <figure {...props}>
+          <Lightbox src={src} caption={captionNode}>
+            {imgNode}
+          </Lightbox>
+          {captionNode}
+        </figure>
       );
     },
     img: ({ src, alt, ...props }) => {

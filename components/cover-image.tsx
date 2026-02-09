@@ -2,18 +2,9 @@
 
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
+import { Lightbox } from "@/components/lightbox";
 import { slugToGradient } from "@/lib/gradient";
-
-const VIDEO_EXTENSIONS = [".mp4", ".webm", ".mov"];
-const GIF_EXTENSION = ".gif";
-
-function isVideo(url: string): boolean {
-  return VIDEO_EXTENSIONS.some((ext) => url.toLowerCase().endsWith(ext));
-}
-
-function isGif(url: string): boolean {
-  return url.toLowerCase().endsWith(GIF_EXTENSION);
-}
+import { isGif, isVideo } from "@/lib/media";
 
 function GrainOverlay() {
   return (
@@ -41,6 +32,8 @@ type CoverImageProps = {
   hoverPlay?: boolean;
   /** Whether video covers loop (default true) */
   loop?: boolean;
+  /** Wrap static covers in a fullscreen lightbox on click */
+  lightbox?: boolean;
 };
 
 function AnimatedCover({
@@ -223,6 +216,7 @@ export function CoverImage({
   blurDataURL,
   hoverPlay,
   loop = true,
+  lightbox,
 }: CoverImageProps) {
   // Default dimensions if not provided
   const imgWidth = width ?? 1200;
@@ -338,7 +332,7 @@ export function CoverImage({
         ? "absolute inset-0 h-full w-full scale-[2] object-cover blur-2xl"
         : "absolute inset-0 h-full w-full scale-150 object-cover blur-3xl opacity-60";
 
-    return (
+    const fillContent = (
       <div
         className={`relative h-full w-full overflow-hidden ${size === "large" ? "bg-black" : ""}`}
         style={
@@ -369,6 +363,16 @@ export function CoverImage({
         <GrainOverlay />
       </div>
     );
+
+    if (lightbox) {
+      return (
+        <Lightbox src={cover} alt={title}>
+          {fillContent}
+        </Lightbox>
+      );
+    }
+
+    return fillContent;
   }
 
   // Fallback gradient when no cover

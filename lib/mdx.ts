@@ -3,6 +3,7 @@ import { compileMDX } from "next-mdx-remote/rsc";
 import rehypeSlug from "rehype-slug";
 import remarkGfm from "remark-gfm";
 import type { Content } from "./content";
+import rehypeFigure from "./rehype-figure";
 
 export async function renderMDX(content: Content, components?: MDXComponents) {
   const { content: mdxContent, frontmatter } = await compileMDX({
@@ -12,7 +13,7 @@ export async function renderMDX(content: Content, components?: MDXComponents) {
       parseFrontmatter: true,
       mdxOptions: {
         remarkPlugins: [remarkGfm],
-        rehypePlugins: [rehypeSlug],
+        rehypePlugins: [rehypeFigure, rehypeSlug],
       },
     },
   });
@@ -31,7 +32,7 @@ export async function renderMDXString(
       parseFrontmatter: true,
       mdxOptions: {
         remarkPlugins: [remarkGfm],
-        rehypePlugins: [rehypeSlug],
+        rehypePlugins: [rehypeFigure, rehypeSlug],
       },
     },
   });
