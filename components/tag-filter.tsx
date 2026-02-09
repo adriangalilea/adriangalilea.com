@@ -4,17 +4,13 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { useQueryState } from "nuqs";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { GlassSurface } from "@/components/liquid-glass";
+import { cn } from "@/lib/utils";
 
 type Props = {
   tags: string[];
   basePath: string;
 };
-
-const pill =
-  "shrink-0 rounded-full px-3 py-1 text-sm whitespace-nowrap glass-card";
-const pillActive = "!bg-accent-pop-bg text-accent-pop";
-const pillInactive =
-  "text-foreground-low hover:text-foreground-low hover:scale-[1.05] hover:-translate-y-0.5";
 
 function useScrollState(ref: React.RefObject<HTMLDivElement | null>) {
   const [canScrollLeft, setCanScrollLeft] = useState(false);
@@ -50,6 +46,33 @@ function scroll(
   ref.current?.scrollBy({ left: direction * 200, behavior: "smooth" });
 }
 
+function TagPill({
+  active,
+  children,
+  ...props
+}: {
+  active: boolean;
+  children: React.ReactNode;
+  href: string;
+  onClick: (e: React.MouseEvent) => void;
+}) {
+  return (
+    <Link className="shrink-0" {...props}>
+      <GlassSurface
+        shadow="md"
+        className={cn(
+          "block rounded-full px-3 py-1 text-sm whitespace-nowrap transition-colors",
+          active
+            ? "!bg-accent-pop-bg text-accent-pop"
+            : "text-foreground-low hover:text-foreground",
+        )}
+      >
+        {children}
+      </GlassSurface>
+    </Link>
+  );
+}
+
 export function TagFilter({ tags, basePath }: Props) {
   const [currentTag, setTag] = useQueryState("tag");
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -62,13 +85,15 @@ export function TagFilter({ tags, basePath }: Props) {
       {canScrollLeft && (
         <>
           <div className="absolute left-0 top-0 bottom-0 w-24 bg-gradient-to-r from-background via-background/80 to-transparent z-10 pointer-events-none" />
-          <button
+          <GlassSurface
+            as="button"
+            shadow="lg"
+            className="absolute left-0 top-1/2 -translate-y-1/2 z-20 size-7 rounded-full flex items-center justify-center text-foreground-lowest hover:text-foreground transition-colors hidden sm:flex"
             type="button"
             onClick={() => scroll(scrollRef, -1)}
-            className="absolute left-0 top-1/2 -translate-y-1/2 z-20 size-7 rounded-full glass-card-elevated flex items-center justify-center text-foreground-lowest hover:text-foreground transition-colors hidden sm:flex"
           >
             <ChevronLeft className="size-3.5" />
-          </button>
+          </GlassSurface>
         </>
       )}
 
@@ -76,41 +101,43 @@ export function TagFilter({ tags, basePath }: Props) {
         ref={scrollRef}
         className="flex gap-2 overflow-x-auto scrollbar-none px-0.5 pr-8"
       >
-        <Link
+        <TagPill
+          active={!currentTag}
           href={basePath}
           onClick={(e) => {
             e.preventDefault();
             setTag(null);
           }}
-          className={`${pill} ${!currentTag ? pillActive : pillInactive}`}
         >
           All
-        </Link>
+        </TagPill>
         {tags.map((tag) => (
-          <Link
+          <TagPill
             key={tag}
+            active={currentTag === tag}
             href={`${basePath}?tag=${encodeURIComponent(tag)}`}
             onClick={(e) => {
               e.preventDefault();
               setTag(tag);
             }}
-            className={`${pill} ${currentTag === tag ? pillActive : pillInactive}`}
           >
             {tag}
-          </Link>
+          </TagPill>
         ))}
       </div>
 
       {canScrollRight && (
         <>
           <div className="absolute right-0 top-0 bottom-0 w-24 bg-gradient-to-l from-background via-background/80 to-transparent z-10 pointer-events-none" />
-          <button
+          <GlassSurface
+            as="button"
+            shadow="lg"
+            className="absolute right-0 top-1/2 -translate-y-1/2 z-20 size-7 rounded-full flex items-center justify-center text-foreground-lowest hover:text-foreground transition-colors hidden sm:flex"
             type="button"
             onClick={() => scroll(scrollRef, 1)}
-            className="absolute right-0 top-1/2 -translate-y-1/2 z-20 size-7 rounded-full glass-card-elevated flex items-center justify-center text-foreground-lowest hover:text-foreground transition-colors hidden sm:flex"
           >
             <ChevronRight className="size-3.5" />
-          </button>
+          </GlassSurface>
         </>
       )}
     </div>
@@ -124,16 +151,27 @@ export function TagFilterFallback({ tags, basePath }: Props) {
   return (
     <div className="relative mb-6">
       <div className="flex gap-2 overflow-x-auto scrollbar-none px-0.5 pr-8">
-        <Link href={basePath} className={`${pill} ${pillActive}`}>
-          All
+        <Link href={basePath} className="shrink-0">
+          <GlassSurface
+            shadow="md"
+            className="block rounded-full px-3 py-1 text-sm whitespace-nowrap !bg-accent-pop-bg text-accent-pop"
+          >
+            All
+          </GlassSurface>
         </Link>
         {tags.map((tag) => (
           <Link
             key={tag}
             href={`${basePath}?tag=${encodeURIComponent(tag)}`}
-            className={`${pill} ${pillInactive}`}
+            className="shrink-0"
           >
-            {tag}
+            <GlassSurface
+              distortion
+              shadow="md"
+              className="block rounded-full px-3 py-1 text-sm whitespace-nowrap text-foreground-low hover:text-foreground transition-colors"
+            >
+              {tag}
+            </GlassSurface>
           </Link>
         ))}
       </div>

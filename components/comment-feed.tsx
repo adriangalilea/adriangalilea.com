@@ -12,7 +12,7 @@ import {
   useState,
 } from "react";
 import { authClient } from "@/lib/auth-client";
-import { GlassButton } from "./glass-button";
+import { GlassPill } from "./liquid-glass";
 
 type FeedComment = {
   id: string;
@@ -234,12 +234,14 @@ export function FeedComments({ slug, path }: { slug: string; path: string }) {
       ) : (
         <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
           <span>Comment with</span>
-          <GlassButton
+          <GlassPill
+            as="button"
             icon={Github}
             label="GitHub"
             onClick={() => authClient.signIn.social({ provider: "github" })}
           />
-          <GlassButton
+          <GlassPill
+            as="button"
             icon={Send}
             label="Telegram"
             onClick={async () => {

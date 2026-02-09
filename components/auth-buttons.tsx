@@ -2,7 +2,7 @@
 
 import { Github, Send } from "lucide-react";
 import { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
+import { GlassPill } from "@/components/liquid-glass";
 import { authClient } from "@/lib/auth-client";
 
 function useIsLocalhost() {
@@ -18,13 +18,13 @@ function useIsLocalhost() {
 
 export function GitHubButton() {
   return (
-    <Button
-      variant="outline"
+    <GlassPill
+      as="button"
+      variant="full"
+      icon={Github}
+      label="GitHub"
       onClick={() => authClient.signIn.social({ provider: "github" })}
-    >
-      <Github />
-      GitHub
-    </Button>
+    />
   );
 }
 
@@ -42,10 +42,13 @@ export function TelegramButton() {
   }
 
   return (
-    <Button variant="outline" onClick={handleClick} disabled={loading}>
-      <Send />
-      {loading ? "..." : "Telegram"}
-    </Button>
+    <GlassPill
+      as="button"
+      variant="full"
+      icon={Send}
+      label={loading ? "..." : "Telegram"}
+      onClick={handleClick}
+    />
   );
 }
 

@@ -5,6 +5,7 @@ import {
   Sunset,
   Trophy,
 } from "lucide-react";
+import { GlassPill } from "@/components/liquid-glass";
 import type { Status } from "@/lib/content";
 import { cn } from "@/lib/utils";
 
@@ -18,14 +19,12 @@ export const STATUS_CONFIG: Record<
   shipped: { icon: Trophy, label: "shipped", colorKey: "yellow" },
 };
 
-// Centralized status styling
 export const STATUS_COLORS: Record<
   string,
   {
     text: string;
     bg: string;
     border: string;
-    // CSS values for dynamic use
     colorVar: string;
     bgVar: string;
     borderVar: string;
@@ -65,31 +64,6 @@ export const STATUS_COLORS: Record<
   },
 };
 
-function Glass({
-  className,
-  colorKey,
-  children,
-}: {
-  className?: string;
-  colorKey: string;
-  children: React.ReactNode;
-}) {
-  const c = STATUS_COLORS[colorKey];
-  return (
-    <span
-      className={cn(
-        "isolate relative overflow-hidden backdrop-blur-xl shadow-[var(--glass-shadow-md)]",
-        c.text,
-        c.bg,
-        className,
-      )}
-    >
-      <span className="absolute inset-0 rounded-[inherit] shadow-[inset_0_0.5px_0_0_rgba(255,255,255,0.1),inset_0_0_0_0.5px_rgba(255,255,255,0.06)]" />
-      {children}
-    </span>
-  );
-}
-
 export function StatusBadge({
   status,
   absolute = false,
@@ -98,31 +72,21 @@ export function StatusBadge({
   absolute?: boolean;
 }) {
   const config = STATUS_CONFIG[status];
-  const Icon = config.icon;
+  const c = STATUS_COLORS[config.colorKey];
 
   return (
-    <span
+    <GlassPill
+      variant="collapsible"
+      expand="left"
+      shadow="md"
+      icon={config.icon}
+      label={config.label}
+      color={cn(c.text, c.bg)}
+      groupClass="group/status"
       className={cn(
-        "group/status inline-flex size-7",
+        "inline-flex size-7",
         absolute && "absolute top-3 right-3 z-10",
       )}
-    >
-      <Glass
-        colorKey={config.colorKey}
-        className={cn(
-          "absolute right-0 top-0 flex h-7 min-w-7 items-center justify-end rounded-full",
-          "gap-0 px-[7px]",
-          "group-hover/status:gap-1.5 group-hover/status:pl-3 group-hover/status:pr-2",
-          "max-sm:gap-1.5 max-sm:pl-3 max-sm:pr-2",
-        )}
-      >
-        <span className="relative z-10 max-w-0 overflow-hidden text-xs font-medium leading-none whitespace-nowrap opacity-0 transition-all duration-200 ease-out group-hover/status:max-w-24 group-hover/status:opacity-100 max-sm:max-w-24 max-sm:opacity-100">
-          {config.label}
-        </span>
-        <span className="relative z-10 flex size-3.5 items-center justify-center shrink-0">
-          <Icon className="size-3 shrink-0" />
-        </span>
-      </Glass>
-    </span>
+    />
   );
 }

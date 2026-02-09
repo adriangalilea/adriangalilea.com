@@ -4,7 +4,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import Link from "next/link";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { HideOnScroll } from "@/components/hide-on-scroll";
-import { LiquidGlass, LiquidGlassFilter } from "@/components/liquid-glass";
+import { GlassSurface, LiquidGlassFilter } from "@/components/liquid-glass";
 import { NavbarBreadcrumb } from "@/components/navbar-breadcrumb";
 import { ThemeProvider } from "@/components/theme-provider";
 import { socials } from "@/data/site";
@@ -57,25 +57,26 @@ export default function RootLayout({
             <LiquidGlassFilter />
             {/* Desktop: full-width bar */}
             <HideOnScroll className="hidden sm:block sticky top-0 z-50">
-              <LiquidGlass as="nav" layer="l0" shadow="sm">
+              <GlassSurface as="nav" layer="l0" shadow="sm" distortion>
                 <div className="mx-auto flex h-16 w-full max-w-[90rem] items-center px-6 gap-4">
                   <NavbarBreadcrumb folderPaths={folderPaths} />
                 </div>
-              </LiquidGlass>
+              </GlassSurface>
             </HideOnScroll>
             {/* Mobile: floating pill */}
             <HideOnScroll className="sm:hidden sticky top-0 z-50 py-3 px-6">
-              <LiquidGlass
+              <GlassSurface
                 as="nav"
                 layer="l0"
                 shadow="lg"
+                distortion
                 className="w-full rounded-full px-5 py-2"
               >
                 <NavbarBreadcrumb folderPaths={folderPaths} />
-              </LiquidGlass>
+              </GlassSurface>
             </HideOnScroll>
             <div className="flex-1">{children}</div>
-            <LiquidGlass as="footer" layer="l0">
+            <GlassSurface as="footer" layer="l0" distortion>
               <div className="mx-auto flex h-12 max-w-7xl items-center justify-center gap-3 px-6">
                 {socialLinks.map((l) => (
                   <Link
@@ -91,7 +92,7 @@ export default function RootLayout({
                   </Link>
                 ))}
               </div>
-            </LiquidGlass>
+            </GlassSurface>
           </NuqsAdapter>
         </ThemeProvider>
         <Analytics />
