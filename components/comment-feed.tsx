@@ -1,6 +1,6 @@
 "use client";
 
-import { MessageSquare } from "lucide-react";
+import { Github, Send } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -12,7 +12,7 @@ import {
   useState,
 } from "react";
 import { authClient } from "@/lib/auth-client";
-import { SignInButtons } from "./auth-buttons";
+import { GlassButton } from "./glass-button";
 
 type FeedComment = {
   id: string;
@@ -232,14 +232,21 @@ export function FeedComments({ slug, path }: { slug: string; path: string }) {
           </button>
         </form>
       ) : (
-        <div className="mt-2 flex items-center gap-2">
-          <MessageSquare className="size-3 text-muted-foreground" />
-          <span className="text-xs text-muted-foreground">
-            Sign in to comment
-          </span>
-          <div className="scale-75 origin-left">
-            <SignInButtons />
-          </div>
+        <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
+          <span>Comment with</span>
+          <GlassButton
+            icon={Github}
+            label="GitHub"
+            onClick={() => authClient.signIn.social({ provider: "github" })}
+          />
+          <GlassButton
+            icon={Send}
+            label="Telegram"
+            onClick={async () => {
+              const result = await authClient.telegramLoginPopup();
+              if (result) window.location.reload();
+            }}
+          />
         </div>
       )}
     </div>
