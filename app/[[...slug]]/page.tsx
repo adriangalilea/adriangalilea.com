@@ -207,9 +207,11 @@ async function NoteView({ note }: { note: Note }) {
                 </ul>
               </div>
             )}
-
-            <Comments slug={note.slug.join("/")} />
           </div>
+        </div>
+
+        <div className="max-w-2xl lg:ml-[248px]">
+          <Comments slug={note.slug.join("/")} />
         </div>
       </div>
 
@@ -317,9 +319,11 @@ async function PageView({ page }: { page: Page }) {
             </header>
 
             <div className="mt-8 prose prose-p:leading-[1.8]">{mdxContent}</div>
-
-            <Comments slug={page.slug.join("/")} />
           </div>
+        </div>
+
+        <div className="max-w-2xl lg:ml-[248px]">
+          <Comments slug={page.slug.join("/")} />
         </div>
       </div>
 
