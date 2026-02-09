@@ -91,7 +91,7 @@ function PageCard({ page }: { page: Page }) {
 	return (
 		<ClickableWrapper
 			href={page.path}
-			className={cn("group cursor-pointer", cardBase, cardHover, feedFlat, page.isDraft && cardDraft)}
+			className={cn("group relative cursor-pointer", cardBase, cardHover, feedFlat, page.isDraft && cardDraft)}
 		>
 			{page.cover && (
 				<CoverImage
@@ -109,7 +109,7 @@ function PageCard({ page }: { page: Page }) {
 				/>
 			)}
 			<div className="p-4">
-				<h3 className="font-semibold leading-tight tracking-tight">{page.title}</h3>
+				<h3 className="text-xl font-semibold leading-tight tracking-tight">{page.title}</h3>
 				{page.description && (
 					<p className="text-sm text-foreground-low mt-1">{page.description}</p>
 				)}
@@ -138,6 +138,7 @@ function PageCard({ page }: { page: Page }) {
 					</div>
 				)}
 			</div>
+			<span className="absolute bottom-3 right-3 text-foreground-lowest transition-transform group-hover:translate-x-0.5">&rarr;</span>
 			<CardShine />
 		</ClickableWrapper>
 	);
