@@ -1,22 +1,64 @@
-import { eq, sql } from "drizzle-orm";
-import { cacheLife } from "next/cache";
-import { db } from "@/lib/db";
-import { pageViews } from "@/lib/schema";
+"use client";
 
-export async function ViewCounter({ slug }: { slug: string }) {
-  "use cache";
-  cacheLife("minutes");
+import {
+  createContext,
+  type ReactNode,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 
-  const [row] = await db
-    .select({ count: sql<number>`count(distinct ${pageViews.visitor})` })
-    .from(pageViews)
-    .where(eq(pageViews.slug, slug));
+// Batch context for feed/collection pages
+const ViewCountsContext = createContext<Record<string, number> | null>(null);
 
-  const views = row?.count ?? 0;
+export function ViewCountsProvider({
+  slugs,
+  children,
+}: {
+  slugs: string[];
+  children: ReactNode;
+}) {
+  const [counts, setCounts] = useState<Record<string, number>>({});
+  const slugsKey = slugs.join(",");
 
+  useEffect(() => {
+    if (!slugsKey) return;
+    fetch(`/api/views/batch?slugs=${encodeURIComponent(slugsKey)}`)
+      .then((r) => r.json())
+      .then((data) => setCounts(data.counts ?? {}))
+      .catch(() => {});
+  }, [slugsKey]);
+
+  return <ViewCountsContext value={counts}>{children}</ViewCountsContext>;
+}
+
+// For feed cards — reads from batch context
+export function FeedViewCount({ slug }: { slug: string }) {
+  const counts = useContext(ViewCountsContext);
+  const count = counts?.[slug];
+  if (count === undefined) return null;
   return (
     <span className="text-muted-foreground">
-      {views.toLocaleString()} {views === 1 ? "view" : "views"}
+      {count.toLocaleString()} {count === 1 ? "view" : "views"}
+    </span>
+  );
+}
+
+// For individual page/note views — fetches its own count
+export function ViewCounter({ slug }: { slug: string }) {
+  const [count, setCount] = useState<number | undefined>(undefined);
+
+  useEffect(() => {
+    fetch(`/api/views/${slug}`)
+      .then((r) => r.json())
+      .then((data) => setCount(data.views))
+      .catch(() => {});
+  }, [slug]);
+
+  if (count === undefined) return null;
+  return (
+    <span className="text-muted-foreground">
+      {count.toLocaleString()} {count === 1 ? "view" : "views"}
     </span>
   );
 }

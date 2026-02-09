@@ -169,6 +169,29 @@ Images/media referenced with `./filename` get rewritten to `/${slugPath}/filenam
 
 Folders without a cover render as "x-ray" cards showing a preview of their top child. Folders with a cover render as regular cards.
 
+## View Counts
+
+View counts are **client-side only**. Pages are 100% static (SSG via `generateStaticParams`), view counts hydrate after load.
+
+**Feed/collection pages**: `ViewCountsProvider` wraps the grid, fetches all counts in one batch `GET /api/views/batch?slugs=a,b,c`. Each card renders `<FeedViewCount slug={...} />` which reads from React context.
+
+**Individual pages**: `<ViewCounter slug={...} />` fetches its own count from `GET /api/views/{slug}`.
+
+**Tracking**: `<TrackView>` / `<TrackViews>` fire `POST` requests to record visits.
+
+### Why not `"use cache"` + Suspense (PPR)?
+
+We tried server-side `"use cache"` with `cacheLife("minutes")` on `getViewCounts`. Problems:
+1. Awaiting it in `CollectionView` blocked the entire page render (no Suspense boundary around it).
+2. Moving it behind Suspense requires the cached data to flow into already-rendered cards, which means either context injection from a streamed component (complex) or per-card Suspense boundaries (N cache entries).
+3. In dev, `"use cache"` doesn't cache reliably so every load hit the DB.
+
+Client-side fetch is simpler, makes pages truly static (CDN-cacheable, zero server work), and view counts are non-critical enhancement data that every major site loads after paint.
+
+### `cacheComponents` is OFF
+
+Nothing uses `"use cache"` currently. If re-enabled, remember: `getAllContent()` does file copies (`cpSync`/`mkdirSync`) which trigger `Date.now()` internally, causing prerender warnings. The module-level memoization in `lib/content.ts` mitigates this by scanning once.
+
 ## Writing voice
 
 When writing posts on my behalf, match my tone. Reference: `content/shapes-of-knowledge/index.md` (unfinished but representative). Short sentences. Conversational. Bold for emphasis. No em-dashes. No filler. Say things once. If it sounds like a blog post template, rewrite it.

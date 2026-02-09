@@ -1,4 +1,3 @@
-import { Suspense } from "react";
 import { PenLine } from "lucide-react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
@@ -11,8 +10,8 @@ import { Quote } from "@/components/quote";
 import { RelatedSection } from "@/components/related-section";
 import { TagLink } from "@/components/tag-link";
 import { TOC } from "@/components/toc";
-import { ViewCounter } from "@/components/view-counter";
 import { TrackView } from "@/components/track-view";
+import { ViewCounter } from "@/components/view-counter";
 import {
   type Content,
   type Folder,
@@ -180,7 +179,7 @@ async function NoteView({ note }: { note: Note }) {
                   })}
                 </time>
                 <span className="text-muted-foreground">·</span>
-                <Suspense><ViewCounter slug={note.slug.join("/")} /></Suspense>
+                <ViewCounter slug={note.slug.join("/")} />
                 <TrackView slug={note.slug.join("/")} />
               </div>
             )}
@@ -311,7 +310,7 @@ async function PageView({ page }: { page: Page }) {
                     </>
                   )}
                   <span className="mx-2">·</span>
-                  <Suspense><ViewCounter slug={page.slug.join("/")} /></Suspense>
+                  <ViewCounter slug={page.slug.join("/")} />
                   <TrackView slug={page.slug.join("/")} />
                 </div>
               )}
