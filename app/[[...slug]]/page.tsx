@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Card } from "@/components/card";
 import { CollectionView } from "@/components/collection-view";
+import { Comments } from "@/components/comments";
 import { CoverImage } from "@/components/cover-image";
 import { Grid } from "@/components/filterable-grid";
 import { Quote } from "@/components/quote";
@@ -204,6 +205,8 @@ async function NoteView({ note }: { note: Note }) {
                 </ul>
               </div>
             )}
+
+            <Comments slug={note.slug.join("/")} />
           </div>
         </div>
       </div>
@@ -311,6 +314,8 @@ async function PageView({ page }: { page: Page }) {
             </header>
 
             <div className="mt-8 prose prose-p:leading-[1.8]">{mdxContent}</div>
+
+            <Comments slug={page.slug.join("/")} />
           </div>
         </div>
       </div>
