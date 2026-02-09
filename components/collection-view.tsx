@@ -95,7 +95,22 @@ export async function CollectionView({ folder, slug }: Props) {
   const allTags = getTagsFromContent(children);
   const basePath = slug.length === 0 ? "/" : `/${slug.join("/")}`;
 
-  const allSlugs = sortedChildren.map((c) => c.slug.join("/"));
+  // Include x-ray preview child slugs so their view counts get fetched
+  const xrayChildSlugs: string[] = [];
+  for (const c of sortedChildren) {
+    if (isFolder(c) && !c.cover) {
+      const featured = getFeaturedChildren(c.slug).filter(
+        (child) => !isFolder(child),
+      );
+      if (featured.length > 0) {
+        xrayChildSlugs.push(featured[0].slug.join("/"));
+      }
+    }
+  }
+  const allSlugs = [
+    ...sortedChildren.map((c) => c.slug.join("/")),
+    ...xrayChildSlugs,
+  ];
 
   // Pre-render all cards server-side (in sorted order)
   const items = await Promise.all(
