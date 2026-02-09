@@ -7,10 +7,11 @@ type QuoteProps = {
 	author: AuthorInfo;
 	children: ReactNode;
 	source?: string | null;
+	publishedAt?: Date | null;
 	size?: "sm" | "lg";
 };
 
-export function Quote({ author, children, source, size = "sm" }: QuoteProps) {
+export function Quote({ author, children, source, publishedAt, size = "sm" }: QuoteProps) {
 	const isLarge = size === "lg";
 
 	return (
@@ -34,6 +35,15 @@ export function Quote({ author, children, source, size = "sm" }: QuoteProps) {
 					<ExternalLink className="size-3" />
 					<span>Source</span>
 				</a>
+			)}
+			{publishedAt && (
+				<time className={cn("block text-xs text-foreground-lowest not-italic", isLarge ? "mt-3" : "mt-2")}>
+					{new Date(publishedAt).toLocaleDateString("en-US", {
+						year: "numeric",
+						month: "short",
+						day: "numeric",
+					})}
+				</time>
 			)}
 		</blockquote>
 	);

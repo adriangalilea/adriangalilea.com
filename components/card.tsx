@@ -60,7 +60,7 @@ function NoteCard({ note, renderedContent }: { note: Note; renderedContent?: Rea
 			)}
 			<div className="p-4">
 				{author ? (
-					<Quote author={author} size="sm">{body}</Quote>
+					<Quote author={author} publishedAt={note.publishedAt} size="sm">{body}</Quote>
 				) : (
 					<>
 						<div className="prose prose-sm max-w-none prose-p:my-0 prose-p:leading-relaxed">
