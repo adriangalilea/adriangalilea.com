@@ -200,6 +200,50 @@ Nothing uses `"use cache"` currently. If re-enabled, remember: `getAllContent()`
 
 When writing posts on my behalf, match my tone. Reference: `content/shapes-of-knowledge/index.md` (unfinished but representative). Short sentences. Conversational. Bold for emphasis. No em-dashes. No filler. Say things once. If it sounds like a blog post template, rewrite it.
 
+## External Content Sources
+
+Writing drafts and project notes live in several places outside this repo. This section tracks what's been imported and what's still pending.
+
+### Imported (duplicates still exist at source)
+
+These were copied into `content/` and adapted. The originals at source are stale duplicates.
+
+| Content | Source(s) |
+|---|---|
+| `memory-is-not-an-afterthought.md` | `~/self/writing/notes/memory-is-not-an-afterthought.md` |
+| `the-xy-problem.md` | `~/self/writing/references/xy-problem.md` |
+| `principles.md` | `~/self/writing/principles.md` |
+| `why-i-hate-apple.md` | `~/self/writing/notes/xdg-over-apple.md` + `~/Documents/writings/notes/why_I_hate_apple.md` |
+| `backstory.md` | `~/Documents/writings/Obsidian Vault/site/Adrian Galilea.md` |
+| `quotes/` (Carmack, Ango, Peterson) | `~/self/writing/references/{carmack-constraints,ango-style-constraint,peterson-rules-freedom}.md` |
+
+### Not yet imported
+
+#### Essays / opinion pieces
+- `~/Documents/writings/blog/blog/writings/posts/accesibility_is_all_you_need.md` - "We don't need new standards for AI" (CLAUDE.md/llm.txt/MCP are wrong, accessibility is the answer). Sub-essays in `atoms/` directory.
+- `~/Documents/writings/blog/blog/writings/posts/its_simpler.md` - "It's always simpler" (tiny stub)
+- `~/Documents/writings/notes/why_I_hate_taskwarrior.md` - Taskwarrior rant
+
+#### Old project writeups (Obsidian Vault)
+- `~/Documents/writings/Obsidian Vault/site/blog/1ALPHA.md` - Gaming platform project (2013-2020)
+- `~/Documents/writings/Obsidian Vault/site/blog/Magic Sleeve.md` - DIY magnetic laptop sleeve
+- `~/Documents/writings/Obsidian Vault/site/blog/Non-Fungible Thoughts (NFT's).md` - NFT opinion piece (Spanish/English mix)
+- `~/Documents/writings/Obsidian Vault/site/blog/Optimal auto-compounding on DeFi.md` - DeFi auto-compounding tool
+- `~/Documents/writings/Obsidian Vault/site/blog/Vvalue.md` - Portfolio valuation widget
+
+#### Knowledge management
+- `~/Documents/writings/blog/blog/SKM.md` - Self Knowledge Management protocol (related to self.fm / shapes-of-knowledge)
+- `~/Documents/writings/self/CATEGORIES.md` - Knowledge categories taxonomy
+
+#### self.fm design docs
+- `~/Downloads/three-spaces-concept.md` - Three spaces (my/our/world) design
+- `~/Downloads/platform-money-flows.md` - Monetization model
+- `~/Downloads/consensus-editing-system.md` - Community editing system
+
+#### UFS project
+- `~/ufs/design.md` - Universal File System technical spec
+- `~/ufs/self.md` - UFS project overview
+
 ## TODO
 
 - Add Vercel Analytics for traffic analysis
@@ -207,3 +251,4 @@ When writing posts on my behalf, match my tone. Reference: `content/shapes-of-kn
 - Add email  ramih baiteh email
 - Add backstory page
 - Generate OG images for quotes (author avatar + quote text + author name)
+- Clean up stale duplicates at source locations after confirming site versions are canonical
