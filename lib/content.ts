@@ -15,7 +15,6 @@ const blurManifest: Record<string, string> = (() => {
 		return {};
 	}
 })();
-const BUILD_TIME = new Date().getTime();
 const NOTE_MAX_CHARS = 280;
 const MEDIA_EXTENSIONS = [".png", ".jpg", ".jpeg", ".webp", ".gif", ".mp4", ".webm", ".mov"];
 const COVER_EXTENSIONS = [".png", ".webp", ".jpg", ".jpeg", ".gif", ".mp4", ".webm", ".mov"];
@@ -673,12 +672,6 @@ export function getRecommendations(content: Content, limit = 3): Content[] {
 
 		// Same type bonus
 		if (content.type === c.type) score += 5;
-
-		// Recency bonus (BUILD_TIME is stable across prerender)
-		if (c.publishedAt) {
-			const days = (BUILD_TIME - new Date(c.publishedAt).getTime()) / (1000 * 60 * 60 * 24);
-			score += Math.max(0, 10 - days / 30);
-		}
 
 		// Exclude drafts and unpublished
 		if (c.isDraft || !c.publishedAt) score = -1;
