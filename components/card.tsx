@@ -6,7 +6,7 @@ import { ClickableWrapper } from "@/components/clickable-wrapper";
 import { CoverImage } from "@/components/cover-image";
 import { cn } from "@/lib/utils";
 import { Quote } from "@/components/quote";
-import { PenLine } from "lucide-react";
+import { PenLine, FolderOpen } from "lucide-react";
 
 // ============================================================================
 // STYLES
@@ -179,7 +179,10 @@ function FolderCard({ folder }: { folder: Folder }) {
 				/>
 			)}
 			<div className="p-4">
-				<span className="font-semibold">{folder.title}</span>
+				<div className="flex items-center gap-1.5">
+					<FolderOpen className="size-4 text-foreground-lowest" />
+					<span className="font-semibold">{folder.title}</span>
+				</div>
 				{folder.description && (
 					<p className="text-sm text-foreground-low mt-1">{folder.description}</p>
 				)}
@@ -213,7 +216,10 @@ function XrayFolderCard({ folder }: { folder: Folder }) {
 			<ClickableWrapper href={folder.path} className="block p-4">
 				<div className="flex items-start justify-between gap-2">
 					<div className="flex-1 min-w-0">
-						<span className="font-semibold">{folder.title}</span>
+						<div className="flex items-center gap-1.5">
+							<FolderOpen className="size-4 text-foreground-lowest" />
+							<span className="font-semibold">{folder.title}</span>
+						</div>
 						{folder.description && (
 							<p className="text-sm text-foreground-low mt-1">{folder.description}</p>
 						)}
