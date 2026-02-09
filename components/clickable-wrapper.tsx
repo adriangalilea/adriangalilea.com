@@ -1,7 +1,12 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { type MouseEvent, type ReactNode, useRef } from "react";
+import {
+  type KeyboardEvent,
+  type MouseEvent,
+  type ReactNode,
+  useRef,
+} from "react";
 
 type ClickableWrapperProps = {
   href: string;
@@ -33,11 +38,17 @@ export function ClickableWrapper({
     router.push(href);
   };
 
+  const handleKeyDown = (e: KeyboardEvent) => {
+    if (e.key === "Enter") router.push(href);
+  };
+
   return (
     <article
+      tabIndex={0}
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
       onClick={handleClick}
+      onKeyDown={handleKeyDown}
       className={className}
     >
       {children}

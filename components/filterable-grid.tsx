@@ -52,19 +52,25 @@ export function Grid({ items }: { items: Item[] }) {
         ))}
       </div>
       <div className="hidden sm:grid lg:hidden grid-cols-2 gap-6 items-start">
-        {c2.map((col, i) => (
-          <div key={i}>{render(col)}</div>
-        ))}
+        {c2
+          .filter((col) => col.length > 0)
+          .map((col) => (
+            <div key={col[0].path}>{render(col)}</div>
+          ))}
       </div>
       <div className="hidden lg:grid xl:hidden grid-cols-3 gap-6 items-start">
-        {c3.map((col, i) => (
-          <div key={i}>{render(col)}</div>
-        ))}
+        {c3
+          .filter((col) => col.length > 0)
+          .map((col) => (
+            <div key={col[0].path}>{render(col)}</div>
+          ))}
       </div>
       <div className="hidden xl:grid grid-cols-4 gap-6 items-start">
-        {c4.map((col, i) => (
-          <div key={i}>{render(col)}</div>
-        ))}
+        {c4
+          .filter((col) => col.length > 0)
+          .map((col) => (
+            <div key={col[0].path}>{render(col)}</div>
+          ))}
       </div>
     </>
   );

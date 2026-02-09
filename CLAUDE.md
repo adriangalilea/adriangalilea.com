@@ -192,6 +192,10 @@ Client-side fetch is simpler, makes pages truly static (CDN-cacheable, zero serv
 
 Nothing uses `"use cache"` currently. If re-enabled, remember: `getAllContent()` does file copies (`cpSync`/`mkdirSync`) which trigger `Date.now()` internally, causing prerender warnings. The module-level memoization in `lib/content.ts` mitigates this by scanning once.
 
+## Clickable card pattern (`clickable-wrapper.tsx`)
+
+`<article>` with `onClick` + `onKeyDown` + `tabIndex={0}`. Biome's `noNoninteractiveTabindex` is disabled for this file via overrides because biome has no clean path for clickable cards: `role="link"` triggers `noNoninteractiveElementToInteractiveRole` + `useSemanticElements`. Wrapping the whole card in `<a>` would eliminate the override but changes DOM structure and may break the text-selection / drag-detection logic.
+
 ## Writing voice
 
 When writing posts on my behalf, match my tone. Reference: `content/shapes-of-knowledge/index.md` (unfinished but representative). Short sentences. Conversational. Bold for emphasis. No em-dashes. No filler. Say things once. If it sounds like a blog post template, rewrite it.

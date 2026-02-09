@@ -1,4 +1,5 @@
 import { ExternalLink } from "lucide-react";
+import Image from "next/image";
 import type { ReactNode } from "react";
 import type { AuthorInfo } from "@/lib/content";
 import { cn } from "@/lib/utils";
@@ -45,9 +46,11 @@ export function Quote({
         )}
       >
         {author.avatar && (
-          <img
+          <Image
             src={author.avatar}
             alt=""
+            width={isLarge ? 48 : 24}
+            height={isLarge ? 48 : 24}
             className={cn("rounded-full", isLarge ? "size-12" : "size-6")}
           />
         )}
