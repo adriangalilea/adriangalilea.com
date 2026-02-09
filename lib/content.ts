@@ -624,7 +624,7 @@ export function getAuthorForContent(c: Content): AuthorInfo | null {
     const folder = all.find(
       (x) => x.slug.join("/") === ancestorPath && isFolder(x),
     ) as Folder | undefined;
-    if (!folder?.feedThrough || !folder.avatar) continue;
+    if (!folder?.feedThrough) continue;
     return { name: folder.title, avatar: folder.avatar, path: folder.path };
   }
   return null;

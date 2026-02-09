@@ -39,10 +39,9 @@ export function Quote({
       >
         {children}
       </div>
-      <a
-        href={author.path}
+      <div
         className={cn(
-          "flex items-center hover:opacity-80 not-italic",
+          "flex items-center not-italic",
           isLarge ? "mt-6 gap-3" : "mt-3 gap-2",
         )}
       >
@@ -54,7 +53,7 @@ export function Quote({
                 alt=""
                 width={48}
                 height={48}
-                className="size-12 rounded-full"
+                className="size-12 rounded-full object-cover cursor-pointer"
               />
             </Lightbox>
           ) : (
@@ -63,18 +62,19 @@ export function Quote({
               alt=""
               width={24}
               height={24}
-              className="size-6 rounded-full"
+              className="size-6 rounded-full object-cover"
             />
           ))}
-        <span
+        <a
+          href={author.path}
           className={cn(
-            "text-foreground-lowest",
+            "text-foreground-lowest hover:opacity-80",
             isLarge ? "text-base font-medium" : "text-xs",
           )}
         >
           {author.name}
-        </span>
-      </a>
+        </a>
+      </div>
       {source && isLarge && (
         <a
           href={source}
