@@ -17,7 +17,7 @@ But if AI writes all the code, what do humans write?
 
 **Intentions.**
 
-## **Telos** (greek: end, purpose, goal)
+## Telos (greek: end, purpose, goal)
 
 Imagine you are writing a program that at some point requires a function that you don't know how to code.
 
