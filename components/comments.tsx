@@ -10,7 +10,6 @@ import {
   CommentBody,
   type CommentData,
   MAX_CHARS,
-  UserAvatar,
 } from "./comment-primitives";
 
 type TreeNode = CommentData & { children: TreeNode[] };
@@ -83,14 +82,13 @@ function CommentNode({
           size="md"
           actions={
             <CommentActions
-              canReply={!!userId}
               onReply={() => setReplying(!replying)}
               canDelete={isOwn}
               onDelete={handleDelete}
             />
           }
         />
-        {replying && (
+        {replying && userId && (
           <div className="mt-2">
             <textarea
               value={replyText}
@@ -119,6 +117,12 @@ function CommentNode({
                 <CharCounter length={replyText.length} />
               </div>
             </div>
+          </div>
+        )}
+        {replying && !userId && (
+          <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
+            <span>Sign in to reply</span>
+            <SignInButtons />
           </div>
         )}
       </div>
@@ -177,44 +181,30 @@ export function Comments({ slug }: { slug: string }) {
         Comments{comments.length > 0 && ` (${comments.length})`}
       </h2>
 
-      {session ? (
-        <div className="mt-4">
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              {session.user.image && (
-                <UserAvatar src={session.user.image} size="md" />
-              )}
-              <span>{session.user.name}</span>
-            </div>
-            <SignOutButton />
-          </div>
-          <textarea
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            placeholder="Write a comment..."
-            className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring resize-none"
-            rows={3}
-          />
-          <div className="mt-2 flex items-center gap-3">
-            <button
-              type="button"
-              onClick={submitComment}
-              disabled={submitting || !text.trim() || overLimit}
-              className="rounded-md bg-foreground px-4 py-1.5 text-sm font-medium text-background transition-opacity hover:opacity-80 disabled:opacity-40"
-            >
-              {submitting ? "Posting..." : "Post"}
-            </button>
-            <CharCounter length={text.length} />
+      <div className="mt-4">
+        <textarea
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          disabled={!session}
+          placeholder={session ? "Write a comment..." : "Sign in to comment..."}
+          className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring resize-none disabled:opacity-50 disabled:cursor-not-allowed"
+          rows={3}
+        />
+        <div className="mt-2 flex items-center gap-3 min-h-7">
+          <button
+            type="button"
+            onClick={submitComment}
+            disabled={!session || submitting || !text.trim() || overLimit}
+            className="rounded-md bg-foreground px-4 py-1.5 text-sm font-medium text-background transition-opacity hover:opacity-80 disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            {submitting ? "Posting..." : "Post"}
+          </button>
+          <CharCounter length={text.length} />
+          <div className="ml-auto">
+            {session ? <SignOutButton /> : <SignInButtons />}
           </div>
         </div>
-      ) : (
-        <div className="mt-4">
-          <p className="mb-3 text-sm text-muted-foreground">
-            Sign in to leave a comment.
-          </p>
-          <SignInButtons />
-        </div>
-      )}
+      </div>
 
       {tree.length > 0 && (
         <div className="mt-6">

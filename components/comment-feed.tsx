@@ -113,12 +113,13 @@ export function FeedComments({ slug, path }: { slug: string; path: string }) {
               content={c.content}
               size="sm"
               actions={
-                session?.user.id === c.userId ? (
-                  <CommentActions
-                    canDelete
-                    onDelete={() => handleDelete(c.id)}
-                  />
-                ) : undefined
+                <CommentActions
+                  onReply={() => {
+                    window.location.href = path;
+                  }}
+                  canDelete={session?.user.id === c.userId}
+                  onDelete={() => handleDelete(c.id)}
+                />
               }
             />
           ))}
@@ -133,8 +134,8 @@ export function FeedComments({ slug, path }: { slug: string; path: string }) {
         </div>
       )}
 
-      {session ? (
-        <form onSubmit={submit} className="mt-2 flex items-center gap-2">
+      <form onSubmit={submit} className="mt-2 flex items-center gap-2">
+        {session ? (
           <input
             type="text"
             value={text}
@@ -142,21 +143,28 @@ export function FeedComments({ slug, path }: { slug: string; path: string }) {
             placeholder="Reply directly..."
             className="flex-1 min-w-0 rounded-md border border-border/50 bg-background px-2.5 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-ring"
           />
-          <CharCounter length={text.length} />
-          <button
-            type="submit"
-            disabled={submitting || !text.trim() || overLimit}
-            className="rounded-md bg-foreground px-2.5 py-1 text-xs font-medium text-background transition-opacity hover:opacity-80 disabled:opacity-40 shrink-0"
-          >
-            {submitting ? "..." : "Post"}
-          </button>
-        </form>
-      ) : (
-        <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
-          <span>Comment with</span>
-          <SignInButtons />
-        </div>
-      )}
+        ) : (
+          <div className="group/signin relative flex-1 min-w-0">
+            <input
+              type="text"
+              disabled
+              placeholder="Sign in to comment..."
+              className="w-full rounded-md border border-border/50 bg-background px-2.5 py-1 text-xs opacity-50 cursor-not-allowed transition-opacity group-hover/signin:opacity-0"
+            />
+            <div className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity group-hover/signin:opacity-100">
+              <SignInButtons />
+            </div>
+          </div>
+        )}
+        <CharCounter length={text.length} />
+        <button
+          type="submit"
+          disabled={!session || submitting || !text.trim() || overLimit}
+          className="rounded-md bg-foreground px-2.5 py-1 text-xs font-medium text-background transition-opacity hover:opacity-80 disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
+        >
+          {submitting ? "..." : "Post"}
+        </button>
+      </form>
     </div>
   );
 }

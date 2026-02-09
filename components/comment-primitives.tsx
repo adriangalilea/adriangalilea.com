@@ -53,26 +53,21 @@ export function UserAvatar({
 export function CommentActions({
   onReply,
   onDelete,
-  canReply,
   canDelete,
 }: {
-  onReply?: () => void;
+  onReply: () => void;
   onDelete?: () => void;
-  canReply?: boolean;
   canDelete?: boolean;
 }) {
-  if (!canReply && !canDelete) return null;
   return (
     <div className="mt-1 flex gap-3 text-xs text-muted-foreground">
-      {canReply && onReply && (
-        <button
-          type="button"
-          onClick={onReply}
-          className="hover:text-foreground transition-colors"
-        >
-          reply
-        </button>
-      )}
+      <button
+        type="button"
+        onClick={onReply}
+        className="hover:text-foreground transition-colors"
+      >
+        reply
+      </button>
       {canDelete && onDelete && (
         <button
           type="button"
