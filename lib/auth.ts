@@ -1,7 +1,7 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { nextCookies } from "better-auth/next-js";
-import { telegram } from "better-auth-telegram";
+import { telegram } from "./telegram-plugin";
 import { db } from "./db";
 
 export const auth = betterAuth({
@@ -15,7 +15,6 @@ export const auth = betterAuth({
   plugins: [
     telegram({
       botToken: process.env.TELEGRAM_BOT_TOKEN as string,
-      botUsername: process.env.TELEGRAM_BOT_USERNAME as string,
     }),
     nextCookies(),
   ],

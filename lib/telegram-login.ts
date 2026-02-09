@@ -1,5 +1,5 @@
 import type { BetterAuthClientPlugin } from "better-auth/client";
-import type { telegram } from "better-auth-telegram";
+import type { telegram } from "./telegram-plugin";
 
 type TelegramAuthData = {
   id: number;
