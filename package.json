@@ -6,8 +6,12 @@
     "dev": "node scripts/generate-blur.mjs && next dev",
     "build": "node scripts/generate-blur.mjs && next build",
     "start": "next start",
+    "check": "biome check --write",
     "lint": "biome check",
-    "format": "biome format --write"
+    "format": "biome format --write",
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio",
+    "db:generate": "drizzle-kit generate"
   },
   "dependencies": {
     "@libsql/client": "^0.17.0",
