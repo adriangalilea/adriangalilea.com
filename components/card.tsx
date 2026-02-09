@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import type { ReactNode } from "react";
 import { ClickableWrapper } from "@/components/clickable-wrapper";
+import { FeedComments } from "@/components/comment-feed";
 import { CoverImage } from "@/components/cover-image";
 import { Quote } from "@/components/quote";
 import { STATUS_CONFIG, StatusBadge } from "@/components/status-badge";
@@ -117,6 +118,7 @@ function NoteCard({
             </div>
           </>
         )}
+        <FeedComments slug={note.slug.join("/")} path={note.path} />
       </div>
       <CardShine />
     </ClickableWrapper>

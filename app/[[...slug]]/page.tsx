@@ -41,7 +41,7 @@ function getCoverHeight(w: number | null, h: number | null): number {
 function getItemHeight(c: Content): number {
   let h = 80;
   if (c.cover) h += getCoverHeight(c.coverWidth, c.coverHeight);
-  if (isNote(c)) h += Math.min(c.content.length / 3, 100);
+  if (isNote(c)) h += Math.min(c.content.length / 3, 100) + 80;
   else if (isPage(c) && c.description) h += 40;
   else if (isFolder(c) && !c.cover) {
     const pages = getFeaturedChildren(c.slug).filter(isPage) as Page[];

@@ -47,7 +47,7 @@ export async function POST(
   if (!content || content.length === 0) {
     return NextResponse.json({ error: "Content required" }, { status: 400 });
   }
-  if (content.length > 2000) {
+  if (content.length > 280) {
     return NextResponse.json({ error: "Too long" }, { status: 400 });
   }
 

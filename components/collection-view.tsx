@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { Card } from "@/components/card";
+import { CommentsFeedProvider } from "@/components/comment-feed";
 import { FilterableGrid, GridFallback } from "@/components/filterable-grid";
 import { TagFilter, TagFilterFallback } from "@/components/tag-filter";
 import { TrackViews } from "@/components/track-view";
@@ -28,7 +29,7 @@ function getItemHeight(content: Content): number {
   let h = 80;
   if (content.cover)
     h += getCoverHeight(content.coverWidth, content.coverHeight);
-  if (isNote(content)) h += Math.min(content.content.length / 3, 100);
+  if (isNote(content)) h += Math.min(content.content.length / 3, 100) + 80;
   else if (isPage(content) && content.description) h += 40;
   else if (isFolder(content) && !content.cover) {
     const pages = getFeaturedChildren(content.slug).filter(isPage) as Page[];
@@ -127,74 +128,80 @@ export async function CollectionView({ folder, slug }: Props) {
 
   return (
     <ViewCountsProvider slugs={allSlugs}>
-      <div className="mx-auto w-full max-w-[90rem] px-6 pb-6">
-        <TrackViews slugs={noteSlugs} />
-        {folder && <h1 className="sr-only">{folder.title}</h1>}
+      <CommentsFeedProvider slugs={noteSlugs}>
+        <div className="mx-auto w-full max-w-[90rem] px-6 pb-6">
+          <TrackViews slugs={noteSlugs} />
+          {folder && <h1 className="sr-only">{folder.title}</h1>}
 
-        {/* Folder Header */}
-        {folder &&
-          (folder.description ||
-            Object.keys(folder.links).length > 0 ||
-            folder.kpis.length > 0) && (
-            <header className="mb-6">
-              {folder.description && (
-                <p className="text-xl text-foreground-low">
-                  {folder.description}
-                </p>
-              )}
-              {Object.keys(folder.links).length > 0 && (
-                <div className="mt-4 flex flex-wrap gap-3">
-                  {Object.entries(folder.links).map(([key, url]) => (
-                    <a
-                      key={key}
-                      href={url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-sm text-accent-pop hover:underline"
-                    >
-                      {key}
-                    </a>
-                  ))}
-                </div>
-              )}
-              {folder.kpis.length > 0 && (
-                <div className="mt-6 flex flex-wrap gap-6">
-                  {folder.kpis.map((kpi) => (
-                    <div key={kpi.label}>
-                      <div className="text-2xl font-bold">{kpi.value}</div>
-                      <div className="text-sm text-foreground-lowest">
-                        {kpi.label}
+          {/* Folder Header */}
+          {folder &&
+            (folder.description ||
+              Object.keys(folder.links).length > 0 ||
+              folder.kpis.length > 0) && (
+              <header className="mb-6">
+                {folder.description && (
+                  <p className="text-xl text-foreground-low">
+                    {folder.description}
+                  </p>
+                )}
+                {Object.keys(folder.links).length > 0 && (
+                  <div className="mt-4 flex flex-wrap gap-3">
+                    {Object.entries(folder.links).map(([key, url]) => (
+                      <a
+                        key={key}
+                        href={url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm text-accent-pop hover:underline"
+                      >
+                        {key}
+                      </a>
+                    ))}
+                  </div>
+                )}
+                {folder.kpis.length > 0 && (
+                  <div className="mt-6 flex flex-wrap gap-6">
+                    {folder.kpis.map((kpi) => (
+                      <div key={kpi.label}>
+                        <div className="text-2xl font-bold">{kpi.value}</div>
+                        <div className="text-sm text-foreground-lowest">
+                          {kpi.label}
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </header>
+                    ))}
+                  </div>
+                )}
+              </header>
+            )}
+
+          {/* MDX Content */}
+          {mdxContent && (
+            <div className="prose prose-p:leading-[1.8] mb-12">
+              {mdxContent}
+            </div>
           )}
 
-        {/* MDX Content */}
-        {mdxContent && (
-          <div className="prose prose-p:leading-[1.8] mb-12">{mdxContent}</div>
-        )}
-
-        {/* Tag Filter - SSG with client enhancement */}
-        {allTags.length > 0 && (
-          <Suspense
-            fallback={<TagFilterFallback tags={allTags} basePath={basePath} />}
-          >
-            <TagFilter tags={allTags} basePath={basePath} />
-          </Suspense>
-        )}
-
-        {/* Grid - SSG with client-side filtering */}
-        {items.length > 0 && (
-          <section>
-            <Suspense fallback={<GridFallback items={items} />}>
-              <FilterableGrid items={items} />
+          {/* Tag Filter - SSG with client enhancement */}
+          {allTags.length > 0 && (
+            <Suspense
+              fallback={
+                <TagFilterFallback tags={allTags} basePath={basePath} />
+              }
+            >
+              <TagFilter tags={allTags} basePath={basePath} />
             </Suspense>
-          </section>
-        )}
-      </div>
+          )}
+
+          {/* Grid - SSG with client-side filtering */}
+          {items.length > 0 && (
+            <section>
+              <Suspense fallback={<GridFallback items={items} />}>
+                <FilterableGrid items={items} />
+              </Suspense>
+            </section>
+          )}
+        </div>
+      </CommentsFeedProvider>
     </ViewCountsProvider>
   );
 }
