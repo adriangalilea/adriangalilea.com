@@ -1,3 +1,6 @@
+import type { BetterAuthClientPlugin } from "better-auth/client";
+import type { telegram } from "better-auth-telegram";
+
 type TelegramAuthData = {
   id: number;
   first_name: string;
@@ -60,22 +63,8 @@ function openPopup(botId: number): Promise<TelegramAuthData | null> {
 export function telegramLoginClient(opts: { botId: number }) {
   return {
     id: "telegram",
-    $InferServerPlugin: {} as {
-      id: "telegram";
-      endpoints: {
-        signInWithTelegram: {
-          method: "POST";
-          body: TelegramAuthData;
-        };
-      };
-    },
-    getActions: ($fetch: Function) => ({
-      signInWithTelegram: async (authData: TelegramAuthData) => {
-        return await $fetch("/telegram/signin", {
-          method: "POST",
-          body: authData,
-        });
-      },
+    $InferServerPlugin: {} as ReturnType<typeof telegram>,
+    getActions: ($fetch) => ({
       // Load script + open popup + POST to server, all in one call.
       // Returns the session response or null if the user cancelled.
       telegramLoginPopup: async () => {
@@ -88,5 +77,5 @@ export function telegramLoginClient(opts: { botId: number }) {
         });
       },
     }),
-  };
+  } satisfies BetterAuthClientPlugin;
 }
