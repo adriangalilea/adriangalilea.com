@@ -240,6 +240,10 @@ These were copied into `content/` and adapted. The originals at source are stale
 - `~/Downloads/platform-money-flows.md` - Monetization model
 - `~/Downloads/consensus-editing-system.md` - Community editing system
 
+#### Forma - contract system (imported as folder, not on GitHub yet)
+- `~/Developer/_pattern/README.md` - Genesis writeup and manifesto (canonical source)
+- NOTE: naming collision with `~/Developer/apple/forma` (iOS LiDAR app, separate project)
+
 #### UFS project
 - `~/ufs/design.md` - Universal File System technical spec
 - `~/ufs/self.md` - UFS project overview
