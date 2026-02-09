@@ -3,16 +3,19 @@ import { getAllContent, isNote, isPage } from "@/lib/content";
 
 export function GET() {
   const published = getAllContent()
-    .filter((c) => (isPage(c) || isNote(c)) && c.publishedAt && !c.isDraft)
+    .filter(
+      (c): c is typeof c & { publishedAt: string } =>
+        (isPage(c) || isNote(c)) && !!c.publishedAt && !c.isDraft,
+    )
     .sort(
       (a, b) =>
-        new Date(b.publishedAt!).getTime() - new Date(a.publishedAt!).getTime(),
+        new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime(),
     );
 
   const items = published
     .map((c) => {
       const url = `${SITE_URL}${c.path}`;
-      const pubDate = new Date(c.publishedAt!).toUTCString();
+      const pubDate = new Date(c.publishedAt).toUTCString();
       const title = isPage(c) ? c.title : c.content.slice(0, 80);
       const description = isPage(c) ? c.description : null;
       return `    <item>
