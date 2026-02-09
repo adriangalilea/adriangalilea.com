@@ -8,9 +8,7 @@ tags:
   - teleological-programming
 ---
 
-> In 12 months we may be in a world where AI writes all the code
->
-> - Dario Amodei, Anthropic CEO, 2025
+<ContentQuote slug="quotes/dario-amodei/on-ai-writing-code" />
 
 But if AI writes all the code, what do humans write?
 
