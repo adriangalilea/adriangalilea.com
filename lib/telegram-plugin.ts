@@ -98,24 +98,37 @@ export function telegram(opts: { botToken: string; maxAuthAge?: number }) {
             userId = existingAccount.userId;
           } else {
             const now = new Date();
-            const newUser = await ctx.context.adapter.create({
+            const email = `tg_${tgId}@telegram.local`;
+
+            // Check for orphaned user (created by a previous failed attempt)
+            const existingUser = (await ctx.context.adapter.findOne({
               model: "user",
-              data: {
-                name,
-                image: body.photo_url,
-                email: `tg_${tgId}@telegram.local`,
-                emailVerified: false,
-                telegramId: tgId,
-                telegramUsername: body.username,
-                createdAt: now,
-                updatedAt: now,
-              },
-            });
-            userId = newUser.id;
+              where: [{ field: "email", value: email }],
+            })) as { id: string } | null;
+
+            if (existingUser) {
+              userId = existingUser.id;
+            } else {
+              const newUser = await ctx.context.adapter.create({
+                model: "user",
+                data: {
+                  name,
+                  image: body.photo_url,
+                  email,
+                  emailVerified: false,
+                  telegramId: tgId,
+                  telegramUsername: body.username,
+                  createdAt: now,
+                  updatedAt: now,
+                },
+              });
+              userId = newUser.id;
+            }
+
             await ctx.context.adapter.create({
               model: "account",
               data: {
-                userId: newUser.id,
+                userId,
                 providerId: "telegram",
                 accountId: tgId,
                 telegramId: tgId,
