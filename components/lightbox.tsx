@@ -10,9 +10,19 @@ import {
   useState,
 } from "react";
 
+function touchDistance(a: React.Touch, b: React.Touch): number {
+  const dx = a.clientX - b.clientX;
+  const dy = a.clientY - b.clientY;
+  return Math.sqrt(dx * dx + dy * dy);
+}
+
+function clampScale(s: number): number {
+  return Math.min(4, Math.max(1, s));
+}
+
 function useLightbox() {
   const [open, setOpen] = useState(false);
-  const [zoomed, setZoomed] = useState(false);
+  const [scale, setScale] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [dragStart, setDragStart] = useState<{
     x: number;
@@ -24,6 +34,10 @@ function useLightbox() {
   const [swipeStart, setSwipeStart] = useState<number | null>(null);
   const imgRef = useRef<HTMLImageElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const pinchRef = useRef<{ dist: number; scale: number } | null>(null);
+  const touchMovedRef = useRef(false);
+
+  const zoomed = scale > 1;
 
   const [fittedSize, setFittedSize] = useState<{
     w: number;
@@ -31,12 +45,14 @@ function useLightbox() {
   } | null>(null);
 
   const resetState = useCallback(() => {
-    setZoomed(false);
+    setScale(1);
     setPan({ x: 0, y: 0 });
     setSwipeY(0);
     setSwipeStart(null);
     setDragStart(null);
     setFittedSize(null);
+    pinchRef.current = null;
+    touchMovedRef.current = false;
   }, []);
 
   useEffect(() => {
@@ -58,14 +74,18 @@ function useLightbox() {
       parseFloat(cs.paddingTop) -
       parseFloat(cs.paddingBottom) -
       48; // reserve space for caption
-    const scale = Math.min(maxW / naturalWidth, maxH / naturalHeight);
-    setFittedSize({ w: naturalWidth * scale, h: naturalHeight * scale });
+    const fitScale = Math.min(maxW / naturalWidth, maxH / naturalHeight);
+    setFittedSize({ w: naturalWidth * fitScale, h: naturalHeight * fitScale });
   }, []);
 
   const toggleZoom = (e: React.MouseEvent<HTMLImageElement>) => {
     e.stopPropagation();
+    if (touchMovedRef.current) {
+      touchMovedRef.current = false;
+      return;
+    }
     if (zoomed) {
-      setZoomed(false);
+      setScale(1);
       setPan({ x: 0, y: 0 });
       return;
     }
@@ -78,17 +98,17 @@ function useLightbox() {
       x: (0.5 - clickX) * rect.width,
       y: (0.5 - clickY) * rect.height,
     });
-    setZoomed(true);
+    setScale(2);
   };
 
   const toggleZoomKeyboard = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
       if (zoomed) {
-        setZoomed(false);
+        setScale(1);
         setPan({ x: 0, y: 0 });
       } else {
-        setZoomed(true);
+        setScale(2);
       }
     }
   };
@@ -110,6 +130,17 @@ function useLightbox() {
   const onMouseUp = () => setDragStart(null);
 
   const onTouchStart = (e: React.TouchEvent) => {
+    touchMovedRef.current = false;
+
+    if (e.touches.length === 2) {
+      // Start pinch
+      const dist = touchDistance(e.touches[0], e.touches[1]);
+      pinchRef.current = { dist, scale };
+      setDragStart(null);
+      setSwipeStart(null);
+      return;
+    }
+
     const touch = e.touches[0];
     if (zoomed) {
       setDragStart({
@@ -124,8 +155,19 @@ function useLightbox() {
   };
 
   const onTouchMove = (e: React.TouchEvent) => {
+    touchMovedRef.current = true;
+
+    if (e.touches.length === 2 && pinchRef.current) {
+      const dist = touchDistance(e.touches[0], e.touches[1]);
+      const newScale = clampScale(
+        pinchRef.current.scale * (dist / pinchRef.current.dist),
+      );
+      setScale(newScale);
+      return;
+    }
+
     const touch = e.touches[0];
-    if (zoomed && dragStart) {
+    if (scale > 1 && dragStart) {
       setPan({
         x: dragStart.panX + (touch.clientX - dragStart.x),
         y: dragStart.panY + (touch.clientY - dragStart.y),
@@ -136,13 +178,38 @@ function useLightbox() {
     }
   };
 
-  const onTouchEnd = () => {
-    if (zoomed) {
-      setDragStart(null);
-    } else {
-      if (swipeY > 120) setOpen(false);
-      else setSwipeY(0);
-      setSwipeStart(null);
+  const onTouchEnd = (e: React.TouchEvent) => {
+    if (e.touches.length === 1 && pinchRef.current) {
+      // Dropped from 2 fingers to 1: transition pinch → drag
+      pinchRef.current = null;
+      const touch = e.touches[0];
+      setDragStart({
+        x: touch.clientX,
+        y: touch.clientY,
+        panX: pan.x,
+        panY: pan.y,
+      });
+      return;
+    }
+
+    if (e.touches.length === 0) {
+      if (pinchRef.current) {
+        pinchRef.current = null;
+        // Snap to 1x if barely zoomed
+        if (scale < 1.15) {
+          setScale(1);
+          setPan({ x: 0, y: 0 });
+        }
+        return;
+      }
+
+      if (scale > 1) {
+        setDragStart(null);
+      } else {
+        if (swipeY > 120) setOpen(false);
+        else setSwipeY(0);
+        setSwipeStart(null);
+      }
     }
   };
 
@@ -150,8 +217,10 @@ function useLightbox() {
     open,
     setOpen,
     zoomed,
+    scale,
     pan,
     dragStart,
+    pinchRef,
     swipeY,
     fittedSize,
     imgRef,
@@ -203,6 +272,7 @@ function LightboxDialog({
           ref={lb.containerRef}
           className="flex flex-col items-center justify-center w-full h-full p-4 sm:p-8"
           style={{
+            touchAction: "none",
             transform: lb.swipeY > 0 ? `translateY(${lb.swipeY}px)` : undefined,
             opacity: lb.swipeY > 0 ? 1 - lb.swipeY / 300 : undefined,
             transition:
@@ -231,11 +301,12 @@ function LightboxDialog({
               height: lb.fittedSize ? lb.fittedSize.h : "auto",
               cursor: lb.zoomed ? "zoom-out" : "zoom-in",
               transform: lb.zoomed
-                ? `scale(2) translate(${lb.pan.x / 2}px, ${lb.pan.y / 2}px)`
+                ? `scale(${lb.scale}) translate(${lb.pan.x / lb.scale}px, ${lb.pan.y / lb.scale}px)`
                 : "scale(1)",
-              transition: lb.dragStart
-                ? "none"
-                : "transform 0.3s cubic-bezier(0.25, 0.1, 0.25, 1)",
+              transition:
+                lb.dragStart || lb.pinchRef.current
+                  ? "none"
+                  : "transform 0.3s cubic-bezier(0.25, 0.1, 0.25, 1)",
             }}
           />
           {caption && !lb.zoomed && (
