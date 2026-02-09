@@ -6,7 +6,6 @@ tags:
   - ai
   - python
   - teleological-programming
-isDraft: true
 ---
 
 > In 12 months we may be in a world where AI writes all the code
