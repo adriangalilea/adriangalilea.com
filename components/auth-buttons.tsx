@@ -1,7 +1,7 @@
 "use client";
 
-import { Github } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { Github, Send } from "lucide-react";
+import { useEffect, useState } from "react";
 import { authClient } from "@/lib/auth-client";
 
 function useIsLocalhost() {
@@ -15,12 +15,15 @@ function useIsLocalhost() {
   return local;
 }
 
+const btnClass =
+  "inline-flex items-center gap-2 rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted cursor-pointer";
+
 export function GitHubButton() {
   return (
     <button
       type="button"
       onClick={() => authClient.signIn.social({ provider: "github" })}
-      className="inline-flex items-center gap-2 rounded-lg bg-foreground px-4 py-2 text-sm font-medium text-background transition-opacity hover:opacity-80"
+      className={btnClass}
     >
       <Github size={16} />
       GitHub
@@ -29,26 +32,29 @@ export function GitHubButton() {
 }
 
 export function TelegramButton() {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const initialized = useRef(false);
+  const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    if (initialized.current || !containerRef.current) return;
-    initialized.current = true;
-    const containerId = `tg-login-${Math.random().toString(36).slice(2, 8)}`;
-    containerRef.current.id = containerId;
+  async function handleClick() {
+    setLoading(true);
+    const result = await authClient.telegramLoginPopup();
+    if (result) {
+      window.location.reload();
+    } else {
+      setLoading(false);
+    }
+  }
 
-    authClient.initTelegramWidget(
-      containerId,
-      { size: "large", cornerRadius: 8 },
-      async (authData) => {
-        await authClient.signInWithTelegram(authData);
-        window.location.reload();
-      },
-    );
-  }, []);
-
-  return <div ref={containerRef} />;
+  return (
+    <button
+      type="button"
+      onClick={handleClick}
+      disabled={loading}
+      className={btnClass}
+    >
+      <Send size={16} />
+      {loading ? "..." : "Telegram"}
+    </button>
+  );
 }
 
 export function SignInButtons() {

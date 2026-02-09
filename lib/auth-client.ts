@@ -1,6 +1,10 @@
 import { createAuthClient } from "better-auth/react";
-import { telegramClient } from "better-auth-telegram/client";
+import { telegramLoginClient } from "./telegram-login";
 
 export const authClient = createAuthClient({
-  plugins: [telegramClient()],
+  plugins: [
+    telegramLoginClient({
+      botId: Number(process.env.NEXT_PUBLIC_TELEGRAM_BOT_ID),
+    }),
+  ],
 });
