@@ -10,8 +10,6 @@ tags:
   - vibe-coding
 ---
 
-# What is the best language for vibe coding?
-
 Context windows are finite. Tokens spent on boilerplate are tokens not spent reasoning. Inference speed is token-bound. API cost scales with tokens. **The more expensive a language is per feature, the less complexity you can fit in a conversation, and the slower and more expensive every iteration becomes.** This compounds.
 
 I had a hypothesis: **Python is the cheapest language for LLM-assisted development.** Not because of preference. Because of token economics.
