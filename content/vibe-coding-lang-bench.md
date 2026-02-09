@@ -1,5 +1,5 @@
 ---
-title: "What is the best language for vibe coding?"
+title: "What is the best vibe coding language?"
 publishedAt: 2026-02-09
 description: "Python vs Rust vs Elixir. Token counts, iteration cost, and what actually matters."
 tags:
