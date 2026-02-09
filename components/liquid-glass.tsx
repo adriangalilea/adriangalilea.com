@@ -77,7 +77,7 @@ export function LiquidGlass<T extends ElementType = "div">({
 
 export function LiquidGlassFilter() {
   return (
-    <svg style={{ display: "none" }}>
+    <svg aria-hidden="true" style={{ display: "none" }}>
       <filter
         id="glass-distortion"
         x="0%"

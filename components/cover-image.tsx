@@ -167,7 +167,19 @@ function AnimatedCover({
       ref={containerRef}
       className={`relative ${intrinsic ? "" : "h-full w-full"} overflow-hidden ${size === "large" ? "bg-black" : ""} ${isClickable ? "cursor-pointer" : ""}`}
       style={containerStyle}
-      onClick={isClickable ? handleClick : undefined}
+      {...(isClickable
+        ? {
+            role: "button",
+            tabIndex: 0,
+            onClick: handleClick,
+            onKeyDown: (e: React.KeyboardEvent) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                handleClick();
+              }
+            },
+          }
+        : undefined)}
     >
       {hoverPlay && poster && (
         <img

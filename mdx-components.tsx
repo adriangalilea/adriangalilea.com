@@ -44,11 +44,9 @@ export function getMDXComponents(): MDXComponents {
         isExternal &&
         /shields\.io|pepy\.tech\/badge|badgen\.net|badge/.test(src);
       if (isBadge) {
-        // biome-ignore lint: badges render inline at natural size
         return <img src={src} alt={alt ?? ""} className="badge" {...props} />;
       }
       if (isExternal) {
-        // biome-ignore lint: external images bypass next/image
         return <img src={src} alt={alt ?? ""} {...props} />;
       }
       const isAnimated = typeof src === "string" && src.endsWith(".gif");

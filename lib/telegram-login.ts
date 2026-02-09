@@ -50,9 +50,10 @@ function loadScript(): Promise<void> {
 
 function openPopup(botId: number): Promise<TelegramAuthData | null> {
   return new Promise((resolve) => {
-    window.Telegram!.Login.auth(
-      { bot_id: botId, request_access: true },
-      (data) => resolve(data || null),
+    const tg = window.Telegram;
+    if (!tg) throw new Error("Telegram widget script failed to load");
+    tg.Login.auth({ bot_id: botId, request_access: true }, (data) =>
+      resolve(data || null),
     );
   });
 }

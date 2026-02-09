@@ -25,7 +25,7 @@ export function NavbarBreadcrumb({ folderPaths }: Props) {
   const folderSegments: { seg: string; href: string }[] = [];
 
   for (let i = 0; i < segments.length; i++) {
-    const href = "/" + segments.slice(0, i + 1).join("/");
+    const href = `/${segments.slice(0, i + 1).join("/")}`;
     if (folderSet.has(href)) {
       folderSegments.push({ seg: segments[i], href });
     }

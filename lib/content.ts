@@ -177,8 +177,11 @@ function slugify(text: string): string {
 function extractTOC(content: string): TOCItem[] {
   const headingRegex = /^(#{2,4})\s+(.+)$/gm;
   const items: TOCItem[] = [];
-  let match: RegExpExecArray | null;
-  while ((match = headingRegex.exec(content)) !== null) {
+  for (
+    let match = headingRegex.exec(content);
+    match !== null;
+    match = headingRegex.exec(content)
+  ) {
     items.push({
       depth: match[1].length,
       title: match[2].trim(),
@@ -546,7 +549,7 @@ export function getAllContent(): Content[] {
         seen.set(c.path, c);
       }
       console.warn(
-        `Duplicate slug: ${c.path} - keeping ${seen.get(c.path)!.type}, discarding ${c.type}`,
+        `Duplicate slug: ${c.path} - keeping ${seen.get(c.path)?.type}, discarding ${c.type}`,
       );
     } else {
       seen.set(c.path, c);
@@ -616,8 +619,11 @@ export function getChildrenForSlug(slug: string[]): Content[] {
     }
   }
 
-  while (feedThroughQueue.length > 0) {
-    const folderSlug = feedThroughQueue.pop()!;
+  for (
+    let folderSlug = feedThroughQueue.pop();
+    folderSlug !== undefined;
+    folderSlug = feedThroughQueue.pop()
+  ) {
     for (const child of getChildren(folderSlug)) {
       if (isFolder(child) && (child as Folder).feedThrough) {
         feedThroughQueue.push(child.slug);
