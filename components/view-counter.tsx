@@ -2,15 +2,15 @@
 
 import { useEffect, useState } from "react";
 
-export function ViewCounter({ slug }: { slug: string }) {
+export function ViewCounter({ slug, track = true }: { slug: string; track?: boolean }) {
   const [views, setViews] = useState<number | null>(null);
 
   useEffect(() => {
-    fetch(`/api/views/${slug}`, { method: "POST" })
+    fetch(`/api/views/${slug}`, { method: track ? "POST" : "GET" })
       .then((r) => r.json())
       .then((d) => setViews(d.views))
       .catch(() => {});
-  }, [slug]);
+  }, [slug, track]);
 
   if (views === null) return null;
 

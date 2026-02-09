@@ -6,7 +6,8 @@ import { ClickableWrapper } from "@/components/clickable-wrapper";
 import { CoverImage } from "@/components/cover-image";
 import { cn } from "@/lib/utils";
 import { Quote } from "@/components/quote";
-import { PenLine, Folder as FolderIcon, FileText, StickyNote } from "lucide-react";
+import { PenLine, Folder as FolderIcon, FileText, StickyNote, Eye } from "lucide-react";
+import { ViewCounter } from "@/components/view-counter";
 
 // ============================================================================
 // STYLES
@@ -60,24 +61,33 @@ function NoteCard({ note, renderedContent }: { note: Note; renderedContent?: Rea
 			)}
 			<div className="p-4">
 				{author ? (
-					<Quote author={author} publishedAt={note.publishedAt} size="sm">{body}</Quote>
+					<>
+						<Quote author={author} publishedAt={note.publishedAt} size="sm">{body}</Quote>
+						<div className="mt-2 flex items-center gap-1.5 text-xs text-foreground-lowest">
+							<ViewCounter slug={note.slug.join("/")} />
+						</div>
+					</>
 				) : (
 					<>
 						<div className="prose prose-sm max-w-none prose-p:my-0 prose-p:leading-relaxed">
 							{body}
 						</div>
-						{note.publishedAt && (
-							<div className="mt-3 flex items-center gap-1.5 text-xs text-foreground-lowest">
-								<StickyNote className="size-3" />
-								<time>
-									{new Date(note.publishedAt).toLocaleDateString("en-US", {
-										year: "numeric",
-										month: "short",
-										day: "numeric",
-									})}
-								</time>
-							</div>
-						)}
+						<div className="mt-3 flex items-center gap-1.5 text-xs text-foreground-lowest">
+							{note.publishedAt && (
+								<>
+									<StickyNote className="size-3" />
+									<time>
+										{new Date(note.publishedAt).toLocaleDateString("en-US", {
+											year: "numeric",
+											month: "short",
+											day: "numeric",
+										})}
+									</time>
+									<span>·</span>
+								</>
+							)}
+							<ViewCounter slug={note.slug.join("/")} />
+						</div>
 					</>
 				)}
 			</div>
@@ -116,31 +126,35 @@ function PageCard({ page }: { page: Page }) {
 				{page.description && (
 					<p className="text-sm text-foreground-low mt-1">{page.description}</p>
 				)}
-				{page.publishedAt && (
-					<div className="mt-2 flex items-center gap-1.5 text-muted-foreground text-xs tabular-nums">
-						<FileText className="size-3" />
-						<time>
-							{new Date(page.publishedAt).toLocaleDateString("en-US", {
-								year: "numeric",
-								month: "short",
-								day: "numeric",
-							})}
-						</time>
-						{page.updatedAt && new Date(page.updatedAt) > new Date(page.publishedAt) && (
-							<>
-								<span className="text-foreground-lowest">·</span>
-								<PenLine className="size-3" />
-								<time>
-									{new Date(page.updatedAt).toLocaleDateString("en-US", {
-										year: "numeric",
-										month: "short",
-										day: "numeric",
-									})}
-								</time>
-							</>
-						)}
-					</div>
-				)}
+				<div className="mt-2 flex items-center gap-1.5 text-muted-foreground text-xs tabular-nums">
+					{page.publishedAt && (
+						<>
+							<FileText className="size-3" />
+							<time>
+								{new Date(page.publishedAt).toLocaleDateString("en-US", {
+									year: "numeric",
+									month: "short",
+									day: "numeric",
+								})}
+							</time>
+							{page.updatedAt && new Date(page.updatedAt) > new Date(page.publishedAt) && (
+								<>
+									<span className="text-foreground-lowest">·</span>
+									<PenLine className="size-3" />
+									<time>
+										{new Date(page.updatedAt).toLocaleDateString("en-US", {
+											year: "numeric",
+											month: "short",
+											day: "numeric",
+										})}
+									</time>
+								</>
+							)}
+							<span className="text-foreground-lowest">·</span>
+						</>
+					)}
+					<ViewCounter slug={page.slug.join("/")} track={false} />
+				</div>
 			</div>
 			<span className="absolute bottom-3 right-3 text-foreground-lowest transition-transform group-hover:translate-x-0.5">&rarr;</span>
 			<CardShine />
@@ -190,6 +204,9 @@ function FolderCard({ folder }: { folder: Folder }) {
 				{folder.description && (
 					<p className="text-sm text-foreground-low mt-1">{folder.description}</p>
 				)}
+				<div className="mt-2 flex items-center gap-1.5 text-xs text-foreground-lowest">
+					<ViewCounter slug={folder.slug.join("/")} track={false} />
+				</div>
 			</div>
 			<CardShine />
 		</ClickableWrapper>
