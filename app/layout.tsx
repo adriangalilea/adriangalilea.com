@@ -1,6 +1,4 @@
 import { Analytics } from "@vercel/analytics/react";
-import { Github, Mail, Rss, Send } from "lucide-react";
-import type { LucideIcon } from "lucide-react";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Link from "next/link";
@@ -35,17 +33,10 @@ export const metadata: Metadata = {
   },
 };
 
-const iconMap: Record<string, LucideIcon> = {
-  telegram: Send,
-  github: Github,
-  "e-mail": Mail,
-  rss: Rss,
-};
-
 const socialLinks = socials.map((s) => ({
   href: s.link,
   label: s.label,
-  icon: iconMap[s.label],
+  icon: s.icon,
   external: s.link.startsWith("http"),
 }));
 
