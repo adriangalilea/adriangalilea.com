@@ -34,10 +34,11 @@ tags:
   - ai
   - python
 ---
-# What is the best language for vibe coding?
 
 Article body here...
 ```
+
+**Do NOT put an h1 (`#`) in the body.** The `title` frontmatter field already renders as the page heading. An h1 in the body creates a duplicate title.
 
 ### Folder (Project)
 
@@ -167,6 +168,10 @@ Images/media referenced with `./filename` get rewritten to `/${slugPath}/filenam
 ## X-ray cards
 
 Folders without a cover render as "x-ray" cards showing a preview of their top child. Folders with a cover render as regular cards.
+
+## Writing voice
+
+When writing posts on my behalf, match my tone. Reference: `content/shapes-of-knowledge/index.md` (unfinished but representative). Short sentences. Conversational. Bold for emphasis. No em-dashes. No filler. Say things once. If it sounds like a blog post template, rewrite it.
 
 ## TODO
 
