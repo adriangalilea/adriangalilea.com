@@ -1,18 +1,18 @@
-"use client";
+import { eq, sql } from "drizzle-orm";
+import { cacheLife } from "next/cache";
+import { db } from "@/lib/db";
+import { pageViews } from "@/lib/schema";
 
-import { useEffect, useState } from "react";
+export async function ViewCounter({ slug }: { slug: string }) {
+  "use cache";
+  cacheLife("minutes");
 
-export function ViewCounter({ slug, track = true }: { slug: string; track?: boolean }) {
-  const [views, setViews] = useState<number | null>(null);
+  const [row] = await db
+    .select({ count: sql<number>`count(distinct ${pageViews.visitor})` })
+    .from(pageViews)
+    .where(eq(pageViews.slug, slug));
 
-  useEffect(() => {
-    fetch(`/api/views/${slug}`, { method: track ? "POST" : "GET" })
-      .then((r) => r.json())
-      .then((d) => setViews(d.views))
-      .catch(() => {});
-  }, [slug, track]);
-
-  if (views === null) return null;
+  const views = row?.count ?? 0;
 
   return (
     <span className="text-muted-foreground">

@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { Suspense, type ReactNode } from "react";
 import type { Content, Note, Page, Folder } from "@/lib/content";
 import { isNote, isPage, isFolder, getFeaturedChildren, getAuthorForContent } from "@/lib/content";
 import { StatusBadge, STATUS_CONFIG } from "@/components/status-badge";
@@ -6,8 +6,9 @@ import { ClickableWrapper } from "@/components/clickable-wrapper";
 import { CoverImage } from "@/components/cover-image";
 import { cn } from "@/lib/utils";
 import { Quote } from "@/components/quote";
-import { PenLine, Folder as FolderIcon, FileText, StickyNote, Eye } from "lucide-react";
 import { ViewCounter } from "@/components/view-counter";
+import { TrackView } from "@/components/track-view";
+import { PenLine, Folder as FolderIcon, FileText, StickyNote } from "lucide-react";
 
 // ============================================================================
 // STYLES
@@ -64,7 +65,7 @@ function NoteCard({ note, renderedContent }: { note: Note; renderedContent?: Rea
 					<>
 						<Quote author={author} publishedAt={note.publishedAt} size="sm">{body}</Quote>
 						<div className="mt-2 flex items-center gap-1.5 text-xs text-foreground-lowest">
-							<ViewCounter slug={note.slug.join("/")} />
+							<Suspense><ViewCounter slug={note.slug.join("/")} /></Suspense>
 						</div>
 					</>
 				) : (
@@ -86,10 +87,11 @@ function NoteCard({ note, renderedContent }: { note: Note; renderedContent?: Rea
 									<span>·</span>
 								</>
 							)}
-							<ViewCounter slug={note.slug.join("/")} />
+							<Suspense><ViewCounter slug={note.slug.join("/")} /></Suspense>
 						</div>
 					</>
 				)}
+				<TrackView slug={note.slug.join("/")} />
 			</div>
 			<CardShine />
 		</ClickableWrapper>
@@ -153,7 +155,7 @@ function PageCard({ page }: { page: Page }) {
 							<span className="text-foreground-lowest">·</span>
 						</>
 					)}
-					<ViewCounter slug={page.slug.join("/")} track={false} />
+					<Suspense><ViewCounter slug={page.slug.join("/")} /></Suspense>
 				</div>
 			</div>
 			<span className="absolute bottom-3 right-3 text-foreground-lowest transition-transform group-hover:translate-x-0.5">&rarr;</span>
@@ -205,7 +207,7 @@ function FolderCard({ folder }: { folder: Folder }) {
 					<p className="text-sm text-foreground-low mt-1">{folder.description}</p>
 				)}
 				<div className="mt-2 flex items-center gap-1.5 text-xs text-foreground-lowest">
-					<ViewCounter slug={folder.slug.join("/")} track={false} />
+					<Suspense><ViewCounter slug={folder.slug.join("/")} /></Suspense>
 				</div>
 			</div>
 			<CardShine />

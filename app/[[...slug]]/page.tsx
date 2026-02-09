@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { PenLine } from "lucide-react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
@@ -11,6 +12,7 @@ import { RelatedSection } from "@/components/related-section";
 import { TagLink } from "@/components/tag-link";
 import { TOC } from "@/components/toc";
 import { ViewCounter } from "@/components/view-counter";
+import { TrackView } from "@/components/track-view";
 import {
   type Content,
   type Folder,
@@ -178,7 +180,8 @@ async function NoteView({ note }: { note: Note }) {
                   })}
                 </time>
                 <span className="text-muted-foreground">·</span>
-                <ViewCounter slug={note.slug.join("/")} />
+                <Suspense><ViewCounter slug={note.slug.join("/")} /></Suspense>
+                <TrackView slug={note.slug.join("/")} />
               </div>
             )}
 
@@ -308,7 +311,8 @@ async function PageView({ page }: { page: Page }) {
                     </>
                   )}
                   <span className="mx-2">·</span>
-                  <ViewCounter slug={page.slug.join("/")} />
+                  <Suspense><ViewCounter slug={page.slug.join("/")} /></Suspense>
+                  <TrackView slug={page.slug.join("/")} />
                 </div>
               )}
             </header>
@@ -358,7 +362,7 @@ export async function generateMetadata({
   const description = isNote(content)
     ? content.content.slice(0, 160)
     : ((content as Page | Folder).description ?? undefined);
-  const ogUrl = await resolveOG(content);
+  const ogUrl = resolveOG(content);
 
   return {
     title,

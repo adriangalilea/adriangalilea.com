@@ -15,6 +15,7 @@ const blurManifest: Record<string, string> = (() => {
 		return {};
 	}
 })();
+const BUILD_TIME = new Date().getTime();
 const NOTE_MAX_CHARS = 280;
 const MEDIA_EXTENSIONS = [".png", ".jpg", ".jpeg", ".webp", ".gif", ".mp4", ".webm", ".mov"];
 const COVER_EXTENSIONS = [".png", ".webp", ".jpg", ".jpeg", ".gif", ".mp4", ".webm", ".mov"];
@@ -296,7 +297,15 @@ function resolveAvatar(dir: string, slug: string[]): string | null {
 	return null;
 }
 
-export async function resolveOG(content: Content): Promise<string | null> {
+// Sync check — only returns URL if OG was already generated at build time.
+export function resolveOG(content: Content): string | null {
+	const slugPath = content.slug.join("/");
+	const dest = join(PUBLIC_DIR, slugPath, "og.png");
+	return existsSync(dest) ? `/${slugPath}/og.png` : null;
+}
+
+// Async generation — called from build scripts, not at render time.
+export async function generateOG(content: Content): Promise<string | null> {
 	const slugPath = content.slug.join("/");
 	const destDir = join(PUBLIC_DIR, slugPath);
 	const dest = join(destDir, "og.png");
@@ -665,9 +674,9 @@ export function getRecommendations(content: Content, limit = 3): Content[] {
 		// Same type bonus
 		if (content.type === c.type) score += 5;
 
-		// Recency bonus
+		// Recency bonus (BUILD_TIME is stable across prerender)
 		if (c.publishedAt) {
-			const days = (Date.now() - new Date(c.publishedAt).getTime()) / (1000 * 60 * 60 * 24);
+			const days = (BUILD_TIME - new Date(c.publishedAt).getTime()) / (1000 * 60 * 60 * 24);
 			score += Math.max(0, 10 - days / 30);
 		}
 
