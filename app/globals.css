@@ -202,7 +202,7 @@
   --tw-prose-bullets: var(--foreground-lowest);
   --tw-prose-hr: var(--border);
   --tw-prose-quotes: var(--foreground-low);
-  --tw-prose-quote-borders: var(--accent-pop);
+  --tw-prose-quote-borders: color-mix(in srgb, var(--foreground-lowest) 30%, transparent);
   --tw-prose-captions: var(--foreground-low);
   --tw-prose-kbd: var(--foreground);
   --tw-prose-kbd-shadows: var(--foreground);
@@ -309,7 +309,7 @@
 
 .prose :where(blockquote):not(:where([class~="not-prose"] *)) {
   border-left-width: 2px;
-  border-left-color: var(--accent-pop);
+  border-left-color: color-mix(in srgb, var(--foreground-lowest) 30%, transparent);
   color: var(--foreground-low);
   font-style: italic;
   padding-left: 1.25rem;
