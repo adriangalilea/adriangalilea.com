@@ -1,5 +1,6 @@
 import { Analytics } from "@vercel/analytics/react";
 import { Github, Mail, Rss, Send } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Link from "next/link";
@@ -8,6 +9,7 @@ import { HideOnScroll } from "@/components/hide-on-scroll";
 import { LiquidGlass, LiquidGlassFilter } from "@/components/liquid-glass";
 import { NavbarBreadcrumb } from "@/components/navbar-breadcrumb";
 import { ThemeProvider } from "@/components/theme-provider";
+import { socials } from "@/data/site";
 import { getAllFolders } from "@/lib/content";
 import "./globals.css";
 
@@ -33,27 +35,19 @@ export const metadata: Metadata = {
   },
 };
 
-const socialLinks = [
-  {
-    href: "https://github.com/adriangalilea",
-    label: "GitHub",
-    icon: Github,
-    external: true,
-  },
-  {
-    href: "https://t.me/adriangalilea",
-    label: "Telegram",
-    icon: Send,
-    external: true,
-  },
-  {
-    href: "mailto:adriangalilea@gmail.com",
-    label: "Email",
-    icon: Mail,
-    external: false,
-  },
-  { href: "/blog/rss.xml", label: "RSS", icon: Rss, external: false },
-];
+const iconMap: Record<string, LucideIcon> = {
+  telegram: Send,
+  github: Github,
+  "e-mail": Mail,
+  rss: Rss,
+};
+
+const socialLinks = socials.map((s) => ({
+  href: s.link,
+  label: s.label,
+  icon: iconMap[s.label],
+  external: s.link.startsWith("http"),
+}));
 
 export default function RootLayout({
   children,
