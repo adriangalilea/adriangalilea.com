@@ -27,9 +27,9 @@ import {
   isPost,
   type Note,
   type Page,
-  resolveOG,
 } from "@/lib/content";
 import { renderMDX, renderMDXString } from "@/lib/mdx";
+import { stripMarkdown } from "@/lib/utils";
 import { getMDXComponents } from "@/mdx-components";
 
 // Height calculation for grid distribution
@@ -357,19 +357,36 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug = [] } = await params;
 
-  // Root has default metadata from layout
-  if (slug.length === 0) {
-    return {};
-  }
+  if (slug.length === 0) return {};
 
   const content = getContentByPath(slug);
   if (!content) return {};
 
-  const title = isNote(content) ? undefined : (content as Page | Folder).title;
-  const description = isNote(content)
-    ? content.content.slice(0, 160)
-    : ((content as Page | Folder).description ?? undefined);
-  const ogUrl = resolveOG(content);
+  const author = isNote(content) ? getAuthorForContent(content) : null;
+
+  let title: string | undefined;
+  let description: string | undefined;
+  if (isNote(content)) {
+    const clean = stripMarkdown(content.content);
+    if (author) {
+      title = `${author.name} Quote`;
+    } else {
+      title = clean.slice(0, 70);
+      description = clean.length > 70 ? clean.slice(0, 160) : undefined;
+    }
+  } else {
+    title = (content as Page | Folder).title;
+    description = (content as Page | Folder).description ?? undefined;
+  }
+
+  const slugStr = slug.join("/");
+  const hasOG =
+    (isNote(content) && !!author) ||
+    ((isPage(content) || isFolder(content)) && !!content.cover);
+
+  const ogImage = hasOG
+    ? { url: `/og/${slugStr}`, width: 1200, height: 630 }
+    : null;
 
   return {
     title,
@@ -377,15 +394,13 @@ export async function generateMetadata({
     openGraph: {
       title,
       description: description ?? undefined,
-      ...(ogUrl && {
-        images: [{ url: ogUrl, width: 1200, height: 630 }],
-      }),
+      ...(ogImage && { images: [ogImage] }),
     },
     twitter: {
-      card: "summary_large_image",
+      card: ogImage ? "summary_large_image" : "summary",
       title,
       description,
-      ...(ogUrl && { images: [ogUrl] }),
+      ...(ogImage && { images: [ogImage.url] }),
     },
   };
 }

@@ -8,9 +8,6 @@ const OUT_DIR = join(process.cwd(), ".next");
 const OUT_FILE = join(OUT_DIR, "blur-manifest.json");
 
 const IMAGE_EXTENSIONS = new Set([".png", ".webp", ".jpg", ".jpeg"]);
-const COVER_EXTENSIONS = [".png", ".webp", ".jpg", ".jpeg", ".gif"];
-const OG_WIDTH = 1200;
-const OG_HEIGHT = 630;
 
 function findBlurSources(dir) {
   const results = [];
@@ -59,60 +56,49 @@ console.log(
   `Blur manifest: ${Object.keys(manifest).length} entries written to ${OUT_FILE}`,
 );
 
-// OG image generation
-function findContentDirs(dir) {
-  const dirs = [];
+// OG blur: generate heavily blurred 1200x630 PNGs for Satori OG backgrounds.
+// Satori doesn't support CSS filter:blur(), so we pre-render them here.
+// Finds cover/poster/og images in content dirs, outputs to public/<slug>/<name>.og.blur.png
+
+function findOGSources(dir) {
+  const results = [];
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
     if (entry.name.startsWith(".")) continue;
     const full = join(dir, entry.name);
     if (entry.isDirectory()) {
-      dirs.push(full);
-      dirs.push(...findContentDirs(full));
+      results.push(...findOGSources(full));
+      continue;
+    }
+    const { name, ext } = parse(entry.name);
+    if (
+      (name === "cover" || name === "poster" || name === "og") &&
+      IMAGE_EXTENSIONS.has(ext.toLowerCase())
+    ) {
+      results.push(full);
     }
   }
-  return dirs;
+  return results;
 }
 
-async function generateOG(contentDir, slugPath) {
-  const destDir = join(PUBLIC_DIR, slugPath);
-  const dest = join(destDir, "og.png");
-  if (existsSync(dest)) return;
-
-  for (const ext of COVER_EXTENSIONS) {
-    const src = join(contentDir, `cover${ext}`);
-    if (!existsSync(src)) continue;
-    mkdirSync(destDir, { recursive: true });
-    try {
-      const bg = await sharp(src)
-        .resize(OG_WIDTH, OG_HEIGHT, { fit: "cover" })
-        .blur(50)
-        .modulate({ brightness: 0.7 })
-        .png()
-        .toBuffer();
-      const meta = await sharp(src).metadata();
-      const scale = OG_HEIGHT / (meta.height ?? OG_HEIGHT);
-      const fgW = Math.round((meta.width ?? OG_WIDTH) * scale);
-      const fg = await sharp(src)
-        .resize(fgW, OG_HEIGHT, { fit: "inside" })
-        .png()
-        .toBuffer();
-      await sharp(bg)
-        .composite([{ input: fg, gravity: "centre" }])
-        .png()
-        .toFile(dest);
-      console.log(`OG: ${slugPath}/og.png`);
-    } catch (e) {
-      console.warn(`OG failed for ${slugPath}:`, e.message);
-    }
-    return;
-  }
-}
-
-let ogCount = 0;
-for (const dir of [CONTENT_DIR, ...findContentDirs(CONTENT_DIR)]) {
-  const slugPath = relative(CONTENT_DIR, dir) || "";
+let ogBlurCount = 0;
+for (const src of findOGSources(CONTENT_DIR)) {
+  const slugPath = relative(CONTENT_DIR, parse(src).dir);
   if (!slugPath) continue;
-  await generateOG(dir, slugPath);
-  ogCount++;
+  const { name } = parse(src);
+  const destDir = join(PUBLIC_DIR, slugPath);
+  const dest = join(destDir, `${name}.og.blur.png`);
+  if (existsSync(dest)) continue;
+  try {
+    mkdirSync(destDir, { recursive: true });
+    await sharp(src)
+      .resize(1200, 630, { fit: "cover" })
+      .blur(60)
+      .modulate({ brightness: 1.3 })
+      .png()
+      .toFile(dest);
+    ogBlurCount++;
+  } catch (e) {
+    console.warn(`OG blur failed for ${slugPath}/${name}:`, e.message);
+  }
 }
-console.log(`OG images: checked ${ogCount} content directories`);
+console.log(`OG blur: ${ogBlurCount} new images generated`);

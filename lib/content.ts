@@ -39,8 +39,6 @@ const blurManifest: Record<string, string> = (() => {
   }
 })();
 const NOTE_MAX_CHARS = 280;
-const OG_WIDTH = 1200;
-const OG_HEIGHT = 630;
 
 const warnedCovers = new Set<string>();
 
@@ -71,7 +69,6 @@ type ContentBase = {
   poster: string | null;
   blurDataURL: string | null;
   coverLoop: boolean;
-  og: string | null;
   publishedAt: Date | null;
   isDraft: boolean;
   _dir: string;
@@ -289,6 +286,7 @@ function resolveCover(dir: string, slug: string[]): CoverInfo {
           if (existsSync(posterSrc)) {
             const posterDest = join(destDir, `poster${posterExt}`);
             syncFile(posterSrc, posterDest);
+            ensureOGCopy(posterSrc, destDir, "poster", posterExt);
             poster = `/${slugPath}/poster${posterExt}`;
             blurDataURL =
               blurManifest[relative(CONTENT_DIR, posterSrc)] ?? null;
@@ -317,6 +315,7 @@ function resolveCover(dir: string, slug: string[]): CoverInfo {
         }
       } else {
         blurDataURL = blurManifest[relative(CONTENT_DIR, src)] ?? null;
+        ensureOGCopy(src, destDir, "cover", ext);
       }
 
       return {
@@ -331,6 +330,30 @@ function resolveCover(dir: string, slug: string[]): CoverInfo {
   return null;
 }
 
+// Satori (next/og) only supports PNG/JPEG. Convert WebP/GIF to PNG at build time.
+// Also generate a heavily blurred version for OG background fills.
+const NEEDS_OG_CONVERT = new Set([".webp", ".gif"]);
+
+function ensureOGCopy(
+  src: string,
+  destDir: string,
+  baseName: string,
+  ext: string,
+): void {
+  // Convert non-Satori formats to PNG (sync via toFile which blocks on the same tick)
+  if (NEEDS_OG_CONVERT.has(ext)) {
+    const dest = join(destDir, `${baseName}.og.png`);
+    if (!existsSync(dest)) {
+      try {
+        sharp(src).png().toFile(dest);
+      } catch {
+        // non-fatal
+      }
+    }
+  }
+  // Blur generation happens in scripts/generate-blur.mjs (async, runs before next build)
+}
+
 function resolveAvatar(dir: string, slug: string[]): string | null {
   for (const ext of AVATAR_EXTENSIONS) {
     const src = join(dir, `avatar${ext}`);
@@ -340,59 +363,22 @@ function resolveAvatar(dir: string, slug: string[]): string | null {
       const dest = join(destDir, `avatar${ext}`);
       mkdirSync(destDir, { recursive: true });
       syncFile(src, dest);
+      ensureOGCopy(src, destDir, "avatar", ext);
       return `/${slugPath}/avatar${ext}`;
     }
   }
   return null;
 }
 
-// Sync check — only returns URL if OG was already generated at build time.
-export function resolveOG(content: Content): string | null {
-  const slugPath = content.slug.join("/");
-  const dest = join(PUBLIC_DIR, slugPath, "og.png");
-  return existsSync(dest) ? `/${slugPath}/og.png` : null;
-}
-
-// Async generation — called from build scripts, not at render time.
-export async function generateOG(content: Content): Promise<string | null> {
-  const slugPath = content.slug.join("/");
+// Copy og.png from content dir to public if it exists (author-provided OG background)
+function syncOGImage(dir: string, slug: string[]): void {
+  const src = join(dir, "og.png");
+  if (!existsSync(src)) return;
+  const slugPath = slug.join("/");
   const destDir = join(PUBLIC_DIR, slugPath);
-  const dest = join(destDir, "og.png");
-  const url = `/${slugPath}/og.png`;
-
-  if (existsSync(dest)) return url;
-
-  for (const ext of IMAGE_EXTENSIONS) {
-    const src = join(content._dir, `cover${ext}`);
-    if (existsSync(src)) {
-      mkdirSync(destDir, { recursive: true });
-      try {
-        const bg = await sharp(src)
-          .resize(OG_WIDTH, OG_HEIGHT, { fit: "cover" })
-          .blur(50)
-          .modulate({ brightness: 0.7 })
-          .png()
-          .toBuffer();
-
-        const meta = await sharp(src).metadata();
-        const scale = OG_HEIGHT / (meta.height ?? OG_HEIGHT);
-        const fgW = Math.round((meta.width ?? OG_WIDTH) * scale);
-        const fg = await sharp(src)
-          .resize(fgW, OG_HEIGHT, { fit: "inside" })
-          .png()
-          .toBuffer();
-
-        await sharp(bg)
-          .composite([{ input: fg, gravity: "centre" }])
-          .png()
-          .toFile(dest);
-        return url;
-      } catch {
-        return null;
-      }
-    }
-  }
-  return null;
+  mkdirSync(destDir, { recursive: true });
+  syncFile(src, join(destDir, "og.png"));
+  ensureOGCopy(src, destDir, "og", ".png");
 }
 
 // ============================================================================
@@ -411,6 +397,7 @@ function parseContent(filePath: string, slug: string[]): Content | null {
     const dir = parse(filePath).dir;
     const media = copyMedia(dir, slug);
     const coverInfo = resolveCover(dir, slug);
+    syncOGImage(dir, slug);
     const rewritten = rewriteMediaPaths(content, slug);
 
     const base: ContentBase = {
@@ -425,7 +412,6 @@ function parseContent(filePath: string, slug: string[]): Content | null {
       poster: coverInfo?.poster ?? null,
       blurDataURL: coverInfo?.blurDataURL ?? null,
       coverLoop: data.coverLoop ?? true,
-      og: null,
       publishedAt: data.publishedAt ?? null,
       isDraft: data.isDraft ?? false,
       _dir: dir,

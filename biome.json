@@ -32,12 +32,16 @@
       "includes": [
         "components/cover-image.tsx",
         "components/lightbox.tsx",
-        "mdx-components.tsx"
+        "mdx-components.tsx",
+        "lib/og.tsx"
       ],
       "linter": {
         "rules": {
           "performance": {
             "noImgElement": "off"
+          },
+          "a11y": {
+            "useAltText": "off"
           }
         }
       }
