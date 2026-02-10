@@ -364,6 +364,14 @@ function resolveAvatar(dir: string, slug: string[]): string | null {
       mkdirSync(destDir, { recursive: true });
       syncFile(src, dest);
       ensureOGCopy(src, destDir, "avatar", ext);
+      // Clean up stale avatar files from previous formats
+      for (const staleExt of AVATAR_EXTENSIONS) {
+        if (staleExt === ext) continue;
+        const stale = join(destDir, `avatar${staleExt}`);
+        if (existsSync(stale)) unlinkSync(stale);
+        const staleOg = join(destDir, "avatar.og.png");
+        if (staleExt !== ".png" && existsSync(staleOg)) unlinkSync(staleOg);
+      }
       return `/${slugPath}/avatar${ext}`;
     }
   }
