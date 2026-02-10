@@ -130,7 +130,16 @@ export function generateQuoteOG(content: Content): ImageResponse {
         </span>
         <span
           style={{
-            fontSize: 30,
+            fontSize:
+              text.length < 60
+                ? 52
+                : text.length < 100
+                  ? 46
+                  : text.length < 140
+                    ? 40
+                    : text.length < 180
+                      ? 36
+                      : 34,
             color: "#e5e5e5",
             fontStyle: "italic",
             lineHeight: 1.5,
