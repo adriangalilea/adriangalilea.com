@@ -394,6 +394,7 @@ export async function generateMetadata({
     openGraph: {
       title,
       description: description ?? undefined,
+      siteName: "Adrian Galilea",
       ...(ogImage && { images: [ogImage] }),
     },
     twitter: {
