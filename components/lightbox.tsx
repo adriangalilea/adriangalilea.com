@@ -36,6 +36,9 @@ function useLightbox() {
   const containerRef = useRef<HTMLDivElement>(null);
   const pinchRef = useRef<{ dist: number; scale: number } | null>(null);
   const touchMovedRef = useRef(false);
+  const mouseDraggedRef = useRef(false);
+  const wheelingRef = useRef(false);
+  const wheelTimeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   const zoomed = scale > 1;
 
@@ -53,11 +56,36 @@ function useLightbox() {
     setFittedSize(null);
     pinchRef.current = null;
     touchMovedRef.current = false;
+    mouseDraggedRef.current = false;
+    wheelingRef.current = false;
+    clearTimeout(wheelTimeoutRef.current);
   }, []);
 
   useEffect(() => {
     if (!open) resetState();
   }, [open, resetState]);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el || !open) return;
+
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      wheelingRef.current = true;
+      clearTimeout(wheelTimeoutRef.current);
+      wheelTimeoutRef.current = setTimeout(() => {
+        wheelingRef.current = false;
+      }, 150);
+      if (e.ctrlKey) {
+        setScale((prev) => clampScale(prev * (1 - e.deltaY * 0.01)));
+      } else if (scale > 1) {
+        setPan((prev) => ({ x: prev.x - e.deltaX, y: prev.y - e.deltaY }));
+      }
+    };
+
+    el.addEventListener("wheel", onWheel, { passive: false });
+    return () => el.removeEventListener("wheel", onWheel);
+  }, [open, scale]);
 
   const onImgLoad = useCallback(() => {
     const img = imgRef.current;
@@ -82,6 +110,10 @@ function useLightbox() {
     e.stopPropagation();
     if (touchMovedRef.current) {
       touchMovedRef.current = false;
+      return;
+    }
+    if (mouseDraggedRef.current) {
+      mouseDraggedRef.current = false;
       return;
     }
     if (zoomed) {
@@ -116,11 +148,13 @@ function useLightbox() {
   const onMouseDown = (e: React.MouseEvent) => {
     if (!zoomed) return;
     e.preventDefault();
+    mouseDraggedRef.current = false;
     setDragStart({ x: e.clientX, y: e.clientY, panX: pan.x, panY: pan.y });
   };
 
   const onMouseMove = (e: React.MouseEvent) => {
     if (!dragStart) return;
+    mouseDraggedRef.current = true;
     setPan({
       x: dragStart.panX + (e.clientX - dragStart.x),
       y: dragStart.panY + (e.clientY - dragStart.y),
@@ -221,6 +255,7 @@ function useLightbox() {
     pan,
     dragStart,
     pinchRef,
+    wheelingRef,
     swipeY,
     fittedSize,
     imgRef,
@@ -255,7 +290,7 @@ function LightboxDialog({
   return (
     <Dialog.Portal>
       <Dialog.Content
-        className="lightbox-content"
+        className="fixed inset-0 z-50 outline-none bg-(--glass-scrim)"
         onPointerDown={(e) => e.stopPropagation()}
         onClick={(e) => e.stopPropagation()}
       >
@@ -303,18 +338,22 @@ function LightboxDialog({
             style={{
               width: lb.fittedSize ? lb.fittedSize.w : "auto",
               height: lb.fittedSize ? lb.fittedSize.h : "auto",
-              cursor: lb.zoomed ? "zoom-out" : "zoom-in",
+              cursor: lb.zoomed
+                ? lb.dragStart
+                  ? "grabbing"
+                  : "zoom-out"
+                : "zoom-in",
               transform: lb.zoomed
                 ? `scale(${lb.scale}) translate(${lb.pan.x / lb.scale}px, ${lb.pan.y / lb.scale}px)`
                 : "scale(1)",
               transition:
-                lb.dragStart || lb.pinchRef.current
+                lb.dragStart || lb.pinchRef.current || lb.wheelingRef.current
                   ? "none"
                   : "transform 0.3s cubic-bezier(0.25, 0.1, 0.25, 1)",
             }}
           />
           {caption && !lb.zoomed && (
-            <div className="mt-4 text-sm text-white/60 text-center max-w-xl lightbox-caption">
+            <div className="mt-4 text-sm text-white/60 text-center max-w-xl [&_em]:italic [&_del]:line-through">
               {caption}
             </div>
           )}

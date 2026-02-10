@@ -426,14 +426,6 @@
   color: var(--foreground-low);
 }
 
-/* Lightbox caption: reset prose styles inside the overlay */
-.lightbox-caption em {
-  font-style: italic;
-}
-.lightbox-caption del {
-  text-decoration: line-through;
-}
-
 /* ── Cover image grain ── */
 
 .cover-grain {
@@ -532,16 +524,6 @@
 }
 .scrollbar-none::-webkit-scrollbar {
   display: none;
-}
-
-/* ── Lightbox ── */
-
-.lightbox-content {
-  position: fixed;
-  inset: 0;
-  z-index: 50;
-  outline: none;
-  background: var(--glass-scrim);
 }
 
 @keyframes grain {
