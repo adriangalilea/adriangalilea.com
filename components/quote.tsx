@@ -10,6 +10,7 @@ type QuoteProps = {
   children: ReactNode;
   source?: string | null;
   publishedAt?: Date | null;
+  estimatedDate?: string | null;
   size?: "sm" | "lg";
 };
 
@@ -18,6 +19,7 @@ export function Quote({
   children,
   source,
   publishedAt,
+  estimatedDate,
   size = "sm",
 }: QuoteProps) {
   const isLarge = size === "lg";
@@ -86,18 +88,20 @@ export function Quote({
           <span>Source</span>
         </a>
       )}
-      {publishedAt && (
+      {(estimatedDate ||
+        (publishedAt && new Date(publishedAt).getFullYear() >= 1000)) && (
         <time
           className={cn(
             "block text-xs text-foreground-lowest not-italic",
             isLarge ? "mt-3" : "mt-2",
           )}
         >
-          {new Date(publishedAt).toLocaleDateString("en-US", {
-            year: "numeric",
-            month: "short",
-            day: "numeric",
-          })}
+          {estimatedDate ??
+            new Date(publishedAt!).toLocaleDateString("en-US", {
+              year: "numeric",
+              month: "short",
+              day: "numeric",
+            })}
         </time>
       )}
     </blockquote>

@@ -1,5 +1,5 @@
 ---
-publishedAt: 2022-10-09
+publishedAt: 1851-01-01
 ---
 
 It is difficult to find happiness within oneself, but it is impossible to find it anywhere else.

@@ -83,6 +83,7 @@ type PostBase = ContentBase & {
 export type Note = PostBase & {
   type: "note";
   source: string | null;
+  estimatedDate: string | null;
 };
 
 // Page: long-form with title
@@ -475,6 +476,7 @@ function parseContent(filePath: string, slug: string[]): Content | null {
         type: "note",
         tags,
         source: data.source ?? null,
+        estimatedDate: data.estimatedDate ?? null,
       };
     }
 

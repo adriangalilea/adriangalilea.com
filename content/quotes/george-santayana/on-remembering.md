@@ -1,5 +1,5 @@
 ---
-publishedAt: 2025-03-18
+publishedAt: 1905-01-01
 source: https://en.wikipedia.org/wiki/The_Life_of_Reason
 ---
 

@@ -95,7 +95,7 @@ function NoteCard({
       <div className="p-4">
         {author ? (
           <>
-            <Quote author={author} publishedAt={note.publishedAt} size="sm">
+            <Quote author={author} publishedAt={note.publishedAt} estimatedDate={note.estimatedDate} size="sm">
               {body}
             </Quote>
             <div className="mt-2 flex items-center gap-1.5 text-xs text-foreground-lowest">

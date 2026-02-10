@@ -171,14 +171,17 @@ async function NoteView({ note }: { note: Note }) {
               <div className="prose prose-p:leading-[1.8]">{mdxContent}</div>
             )}
 
-            {note.publishedAt && (
+            {(note.estimatedDate ||
+              (note.publishedAt &&
+                new Date(note.publishedAt).getFullYear() >= 1000)) && (
               <div className="mt-6 flex items-center gap-2 text-xs text-foreground-lowest tabular-nums">
                 <time>
-                  {new Date(note.publishedAt).toLocaleDateString("en-US", {
-                    year: "numeric",
-                    month: "long",
-                    day: "numeric",
-                  })}
+                  {note.estimatedDate ??
+                    new Date(note.publishedAt!).toLocaleDateString("en-US", {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    })}
                 </time>
                 <span className="text-muted-foreground">·</span>
                 <ViewCounter slug={note.slug.join("/")} />

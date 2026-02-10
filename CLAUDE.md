@@ -266,6 +266,8 @@ These were copied into `content/` and adapted. The originals at source are stale
 
 ## TODO
 
+- Masonry sorting is broken — especially visible at `/quotes`, the ordering algorithm fails
+- Date model is broken — frontmatter should have one single date field; `publishedAt` is the wrong concept for quotes (it was meant for notes/pages). Quotes need a different date semantic (original utterance/publication date). Ancient quotes (BC era) use `estimatedDate` string field as a workaround but the whole model needs rethinking.
 - Add Vercel Analytics for traffic analysis
 - Add comment section with GitHub and Telegram auth using Better Auth
 - Add email  ramih baiteh email
