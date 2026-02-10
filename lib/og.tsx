@@ -122,21 +122,49 @@ export function generateQuoteOG(content: Content): ImageResponse {
         width: "100%",
         height: "100%",
         display: "flex",
-        flexDirection: "column",
         backgroundColor: "#0a0a0a",
         fontFamily: "Geist",
-        padding: PAD,
+        position: "relative",
+        overflow: "hidden",
       }}
     >
+      {avatarData && (
+        <img
+          src={avatarData}
+          style={{
+            position: "absolute",
+            top: 0,
+            right: 0,
+            width: 600,
+            height: H,
+            objectFit: "cover",
+            objectPosition: "center top",
+            opacity: 0.55,
+          }}
+        />
+      )}
+      {avatarData && (
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            right: 0,
+            width: 720,
+            height: H,
+            background:
+              "linear-gradient(to right, #0a0a0a 25%, rgba(10,10,10,0.5) 55%, rgba(10,10,10,0.2) 100%)",
+          }}
+        />
+      )}
       <span
         style={{
           position: "absolute",
-          top: "40%",
+          top: "35%",
           left: PAD - 20,
           transform: "translateY(-50%)",
           fontSize: 360,
           color: accent,
-          opacity: 0.25,
+          opacity: 0.2,
           lineHeight: 1,
         }}
       >
@@ -146,45 +174,41 @@ export function generateQuoteOG(content: Content): ImageResponse {
         style={{
           display: "flex",
           flexDirection: "column",
-          justifyContent: "center",
-          flex: 1,
-          paddingLeft: 50,
-          paddingRight: 20,
+          padding: PAD,
+          width: "100%",
+          height: "100%",
         }}
       >
-        <span
+        <div
           style={{
-            fontSize,
-            color: "#e5e5e5",
-            fontStyle: "italic",
-            lineHeight: 1.5,
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center",
+            flex: 1,
+            maxWidth: 700,
+            paddingLeft: 50,
           }}
         >
-          {text}
-        </span>
-      </div>
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 20,
-        }}
-      >
-        {avatarData && (
-          <img
-            src={avatarData}
-            width={80}
-            height={80}
-            style={{ borderRadius: 40, objectFit: "cover" }}
-          />
-        )}
+          <span
+            style={{
+              fontSize,
+              color: "#e5e5e5",
+              fontStyle: "italic",
+              lineHeight: 1.5,
+            }}
+          >
+            {text}
+          </span>
+        </div>
         <span
           style={{
-            fontSize: 40,
-            letterSpacing: "0.08em",
+            fontSize: 28,
+            letterSpacing: "0.18em",
             textTransform: "uppercase",
             fontWeight: 700,
-            color: "#bbb",
+            color: accent,
+            opacity: 0.9,
+            paddingLeft: 50,
           }}
         >
           {author.name}
