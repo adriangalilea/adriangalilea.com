@@ -149,21 +149,29 @@ export function FeedComments({ slug, path }: { slug: string; path: string }) {
               type="text"
               disabled
               placeholder="Sign in to comment..."
-              className="w-full rounded-md border border-border/50 bg-background px-2.5 py-1 text-xs opacity-50 cursor-not-allowed transition-opacity group-hover/signin:opacity-0"
+              className="w-full rounded-md border border-border/50 bg-background px-2.5 py-1 text-xs opacity-50 cursor-not-allowed transition-opacity hidden sm:block group-hover/signin:opacity-0"
             />
-            <div className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity group-hover/signin:opacity-100">
+            <div className="hidden sm:flex absolute inset-0 items-center justify-center opacity-0 transition-opacity group-hover/signin:opacity-100">
+              <SignInButtons />
+            </div>
+            <div className="flex sm:hidden items-center gap-3">
+              <span className="text-xs text-foreground-low shrink-0">Sign in to comment</span>
               <SignInButtons />
             </div>
           </div>
         )}
-        <CharCounter length={text.length} />
-        <button
-          type="submit"
-          disabled={!session || submitting || !text.trim() || overLimit}
-          className="rounded-md bg-foreground px-2.5 py-1 text-xs font-medium text-background transition-opacity hover:opacity-80 disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
-        >
-          {submitting ? "..." : "Post"}
-        </button>
+        {session && (
+          <>
+            <CharCounter length={text.length} />
+            <button
+              type="submit"
+              disabled={submitting || !text.trim() || overLimit}
+              className="rounded-md bg-foreground px-2.5 py-1 text-xs font-medium text-background transition-opacity hover:opacity-80 disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
+            >
+              {submitting ? "..." : "Post"}
+            </button>
+          </>
+        )}
       </form>
     </div>
   );
