@@ -356,6 +356,12 @@
   padding-left: 1.25rem;
 }
 
+.prose :where(blockquote p):not(:where([class~="not-prose"] *)) {
+  white-space: pre-line;
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
 /* Code */
 
 .prose :where(code):not(:where(pre *, [class~="not-prose"] *)) {
