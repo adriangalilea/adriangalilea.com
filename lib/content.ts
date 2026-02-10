@@ -451,7 +451,8 @@ function parseContent(filePath: string, slug: string[]): Content | null {
 
     if (!data.title) {
       const textLength = textContent.trim().length;
-      if (textLength > NOTE_MAX_CHARS) {
+      const isQuote = slug[0] === "quotes";
+      if (!isQuote && textLength > NOTE_MAX_CHARS) {
         throw new Error(
           `Note exceeds ${NOTE_MAX_CHARS} chars: ${filePath} (${textLength} chars). Add a title to make it a page.`,
         );
