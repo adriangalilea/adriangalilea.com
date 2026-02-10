@@ -159,47 +159,48 @@ function slugify(text: string): string {
 
 const mdxParser = unified().use(remarkParse).use(remarkMdx);
 
-function extractTextContent(source: string): string {
-  const tree = mdxParser.parse(source);
-  return mdastToString(tree);
-}
-
 const NOTE_EMBED_NAMES = new Set(["ContentQuote"]);
 const NOTE_MAX_EMBEDS = 1;
 
-function countEmbeds(source: string): number {
-  const tree = mdxParser.parse(source);
-  let count = 0;
-  const stack = [...tree.children];
-  for (let node = stack.pop(); node !== undefined; node = stack.pop()) {
-    if (
-      node.type === "mdxJsxFlowElement" &&
-      NOTE_EMBED_NAMES.has((node as { name: string }).name)
-    ) {
-      count++;
-    }
-    if ("children" in node) {
-      stack.push(...(node as { children: typeof tree.children }).children);
-    }
-  }
-  return count;
-}
+type MDXAnalysis = {
+  textContent: string;
+  toc: TOCItem[];
+  embedCount: number;
+};
 
-function extractTOC(content: string): TOCItem[] {
-  const headingRegex = /^(#{2,4})\s+(.+)$/gm;
-  const items: TOCItem[] = [];
-  for (
-    let match = headingRegex.exec(content);
-    match !== null;
-    match = headingRegex.exec(content)
-  ) {
-    items.push({
-      depth: match[1].length,
-      title: match[2].trim(),
-      id: slugify(match[2].trim()),
-    });
+function analyzeMDX(source: string): MDXAnalysis {
+  const tree = mdxParser.parse(source);
+  const toc: TOCItem[] = [];
+  let embedCount = 0;
+
+  function walk(nodes: typeof tree.children) {
+    for (const node of nodes) {
+      if (node.type === "heading") {
+        const depth = (node as { depth: number }).depth;
+        if (depth >= 2 && depth <= 4) {
+          const title = mdastToString(node);
+          toc.push({ depth, title, id: slugify(title) });
+        }
+      }
+      if (
+        node.type === "mdxJsxFlowElement" &&
+        NOTE_EMBED_NAMES.has((node as { name: string }).name)
+      ) {
+        embedCount++;
+      }
+      if ("children" in node) {
+        walk((node as { children: typeof tree.children }).children);
+      }
+    }
   }
-  return items;
+
+  walk(tree.children);
+
+  return {
+    textContent: mdastToString(tree),
+    toc,
+    embedCount,
+  };
 }
 
 function copyMedia(dir: string, slug: string[]): string[] {
@@ -402,14 +403,15 @@ function parseContent(filePath: string, slug: string[]): Content | null {
   try {
     const raw = readFileSync(filePath, "utf-8");
     const { data, content } = matter(raw);
-    const stats = readingTime(content);
+
+    if (data.isPublished === false) return null;
+
+    const { textContent, toc, embedCount } = analyzeMDX(content);
+    const stats = readingTime(textContent);
     const dir = parse(filePath).dir;
     const media = copyMedia(dir, slug);
     const coverInfo = resolveCover(dir, slug);
     const rewritten = rewriteMediaPaths(content, slug);
-
-    // isPublished: false = completely hidden, not even parsed
-    if (data.isPublished === false) return null;
 
     const base: ContentBase = {
       slug,
@@ -444,7 +446,6 @@ function parseContent(filePath: string, slug: string[]): Content | null {
       }
     }
 
-    // Folder: explicit type in frontmatter
     if (data.type === "folder") {
       return {
         ...base,
@@ -462,18 +463,16 @@ function parseContent(filePath: string, slug: string[]): Content | null {
 
     const tags = data.tags ?? [];
 
-    // Note: no title, max 280 chars of text content, max 1 embed
     if (!data.title) {
-      const textLength = extractTextContent(content).trim().length;
+      const textLength = textContent.trim().length;
       if (textLength > NOTE_MAX_CHARS) {
         throw new Error(
           `Note exceeds ${NOTE_MAX_CHARS} chars: ${filePath} (${textLength} chars). Add a title to make it a page.`,
         );
       }
-      const embeds = countEmbeds(content);
-      if (embeds > NOTE_MAX_EMBEDS) {
+      if (embedCount > NOTE_MAX_EMBEDS) {
         throw new Error(
-          `Note has ${embeds} embeds: ${filePath} (max ${NOTE_MAX_EMBEDS}). Add a title to make it a page.`,
+          `Note has ${embedCount} embeds: ${filePath} (max ${NOTE_MAX_EMBEDS}). Add a title to make it a page.`,
         );
       }
       return {
@@ -484,13 +483,12 @@ function parseContent(filePath: string, slug: string[]): Content | null {
       };
     }
 
-    // Page: has title
     return {
       ...base,
       type: "page",
       title: data.title,
       description: data.description ?? null,
-      toc: extractTOC(content),
+      toc,
       tags,
       updatedAt: data.updatedAt ?? null,
       pinned: data.pinned ?? false,
