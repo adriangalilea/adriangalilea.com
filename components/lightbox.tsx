@@ -16,6 +16,13 @@ function touchDistance(a: React.Touch, b: React.Touch): number {
   return Math.sqrt(dx * dx + dy * dy);
 }
 
+function touchMidpoint(
+  a: React.Touch,
+  b: React.Touch,
+): { x: number; y: number } {
+  return { x: (a.clientX + b.clientX) / 2, y: (a.clientY + b.clientY) / 2 };
+}
+
 function clampScale(s: number): number {
   return Math.min(4, Math.max(1, s));
 }
@@ -34,7 +41,14 @@ function useLightbox() {
   const [swipeStart, setSwipeStart] = useState<number | null>(null);
   const imgRef = useRef<HTMLImageElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const pinchRef = useRef<{ dist: number; scale: number } | null>(null);
+  const pinchRef = useRef<{
+    dist: number;
+    scale: number;
+    panX: number;
+    panY: number;
+    midX: number;
+    midY: number;
+  } | null>(null);
   const touchMovedRef = useRef(false);
   const mouseDraggedRef = useRef(false);
   const wheelingRef = useRef(false);
@@ -196,9 +210,16 @@ function useLightbox() {
     touchMovedRef.current = false;
 
     if (e.touches.length === 2) {
-      // Start pinch
       const dist = touchDistance(e.touches[0], e.touches[1]);
-      pinchRef.current = { dist, scale };
+      const mid = touchMidpoint(e.touches[0], e.touches[1]);
+      pinchRef.current = {
+        dist,
+        scale,
+        panX: pan.x,
+        panY: pan.y,
+        midX: mid.x,
+        midY: mid.y,
+      };
       setDragStart(null);
       setSwipeStart(null);
       return;
@@ -225,6 +246,20 @@ function useLightbox() {
       const newScale = clampScale(
         pinchRef.current.scale * (dist / pinchRef.current.dist),
       );
+      const ratio = newScale / pinchRef.current.scale;
+      const mid = touchMidpoint(e.touches[0], e.touches[1]);
+      const el = containerRef.current;
+      if (el) {
+        const rect = el.getBoundingClientRect();
+        const cx = rect.left + rect.width / 2;
+        const cy = rect.top + rect.height / 2;
+        const smx = pinchRef.current.midX - cx;
+        const smy = pinchRef.current.midY - cy;
+        setPan({
+          x: mid.x - cx - (smx - pinchRef.current.panX) * ratio,
+          y: mid.y - cy - (smy - pinchRef.current.panY) * ratio,
+        });
+      }
       setScale(newScale);
       return;
     }
