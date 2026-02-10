@@ -10,8 +10,12 @@ import {
 import { join, parse, relative } from "node:path";
 import matter from "gray-matter";
 import imageSize from "image-size";
+import { toString as mdastToString } from "mdast-util-to-string";
 import readingTime from "reading-time";
+import remarkMdx from "remark-mdx";
+import remarkParse from "remark-parse";
 import sharp from "sharp";
+import { unified } from "unified";
 import {
   ANIMATED_EXTENSIONS,
   AVATAR_EXTENSIONS,
@@ -151,6 +155,34 @@ function slugify(text: string): string {
     .replace(/\s+/g, "-")
     .replace(/-+/g, "-")
     .trim();
+}
+
+const mdxParser = unified().use(remarkParse).use(remarkMdx);
+
+function extractTextContent(source: string): string {
+  const tree = mdxParser.parse(source);
+  return mdastToString(tree);
+}
+
+const NOTE_EMBED_NAMES = new Set(["ContentQuote"]);
+const NOTE_MAX_EMBEDS = 1;
+
+function countEmbeds(source: string): number {
+  const tree = mdxParser.parse(source);
+  let count = 0;
+  const stack = [...tree.children];
+  for (let node = stack.pop(); node !== undefined; node = stack.pop()) {
+    if (
+      node.type === "mdxJsxFlowElement" &&
+      NOTE_EMBED_NAMES.has((node as { name: string }).name)
+    ) {
+      count++;
+    }
+    if ("children" in node) {
+      stack.push(...(node as { children: typeof tree.children }).children);
+    }
+  }
+  return count;
 }
 
 function extractTOC(content: string): TOCItem[] {
@@ -430,11 +462,18 @@ function parseContent(filePath: string, slug: string[]): Content | null {
 
     const tags = data.tags ?? [];
 
-    // Note: no title, max 280 chars
+    // Note: no title, max 280 chars of text content, max 1 embed
     if (!data.title) {
-      if (content.trim().length > NOTE_MAX_CHARS) {
+      const textLength = extractTextContent(content).trim().length;
+      if (textLength > NOTE_MAX_CHARS) {
         throw new Error(
-          `Note exceeds ${NOTE_MAX_CHARS} chars: ${filePath} (${content.trim().length} chars). Add a title to make it a page.`,
+          `Note exceeds ${NOTE_MAX_CHARS} chars: ${filePath} (${textLength} chars). Add a title to make it a page.`,
+        );
+      }
+      const embeds = countEmbeds(content);
+      if (embeds > NOTE_MAX_EMBEDS) {
+        throw new Error(
+          `Note has ${embeds} embeds: ${filePath} (max ${NOTE_MAX_EMBEDS}). Add a title to make it a page.`,
         );
       }
       return {
