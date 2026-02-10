@@ -1,7 +1,6 @@
 ---
 title: "Genesis"
 publishedAt: 2026-01-12
-description: "How a 6-line health check spiraled into regex hell and why contracts need to live with their owner"
 tags:
   - programming
   - dx
