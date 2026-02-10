@@ -75,8 +75,8 @@ def get_wikipedia_image_url(title: str) -> str | None:
         with urllib.request.urlopen(req) as resp:
             data = json.loads(resp.read())
         return (
-            data.get("thumbnail", {}).get("source")
-            or data.get("originalimage", {}).get("source")
+            data.get("originalimage", {}).get("source")
+            or data.get("thumbnail", {}).get("source")
         )
     except Exception as e:
         print(f"  Wikipedia API error: {e}")
