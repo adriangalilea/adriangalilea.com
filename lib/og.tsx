@@ -128,18 +128,30 @@ export function generateQuoteOG(content: Content): ImageResponse {
         padding: PAD,
       }}
     >
+      <span
+        style={{
+          position: "absolute",
+          top: "40%",
+          left: PAD - 20,
+          transform: "translateY(-50%)",
+          fontSize: 360,
+          color: accent,
+          opacity: 0.25,
+          lineHeight: 1,
+        }}
+      >
+        {"\u201C"}
+      </span>
       <div
         style={{
           display: "flex",
           flexDirection: "column",
           justifyContent: "center",
           flex: 1,
-          gap: 16,
+          paddingLeft: 50,
+          paddingRight: 20,
         }}
       >
-        <span style={{ fontSize: 96, color: accent, lineHeight: 0.8 }}>
-          {"\u201C"}
-        </span>
         <span
           style={{
             fontSize,
@@ -155,15 +167,15 @@ export function generateQuoteOG(content: Content): ImageResponse {
         style={{
           display: "flex",
           alignItems: "center",
-          gap: 18,
+          gap: 20,
         }}
       >
         {avatarData && (
           <img
             src={avatarData}
-            width={64}
-            height={64}
-            style={{ borderRadius: 32 }}
+            width={80}
+            height={80}
+            style={{ borderRadius: 40, objectFit: "cover" }}
           />
         )}
         <span
