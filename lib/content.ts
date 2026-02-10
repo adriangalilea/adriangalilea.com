@@ -688,7 +688,7 @@ function scoreForFeatured(c: Content): number {
 
 export function getFeaturedChildren(folderSlug: string[]): Content[] {
   return getChildren(folderSlug)
-    .filter((c) => c.publishedAt && !c.isDraft)
+    .filter((c) => c.publishedAt)
     .sort((a, b) => scoreForFeatured(b) - scoreForFeatured(a));
 }
 

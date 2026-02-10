@@ -78,8 +78,6 @@ function getBestDate(content: Content): Date | null {
 
 function sortByRelevancy(items: Content[]): Content[] {
   return [...items].sort((a, b) => {
-    if (a.isDraft && !b.isDraft) return 1;
-    if (!a.isDraft && b.isDraft) return -1;
     const aDate = getBestDate(a);
     const bDate = getBestDate(b);
     if (!aDate && !bDate) return 0;
