@@ -1,6 +1,12 @@
 # adriangalilea.com
 
-Next.js personal site. `pnpm dev` to run.
+Next.js personal site.
+
+`pnpm dev` to run
+`pnpm check`
+`pnpm lint`
+`pnpm format`
+`pnpm build`
 
 ## Content Architecture
 
