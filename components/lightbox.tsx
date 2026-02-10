@@ -77,7 +77,18 @@ function useLightbox() {
         wheelingRef.current = false;
       }, 150);
       if (e.ctrlKey) {
-        setScale((prev) => clampScale(prev * (1 - e.deltaY * 0.01)));
+        const newScale = clampScale(scale * (1 - e.deltaY * 0.01));
+        if (newScale !== scale) {
+          const ratio = newScale / scale;
+          const rect = el.getBoundingClientRect();
+          const cx = rect.left + rect.width / 2;
+          const cy = rect.top + rect.height / 2;
+          setScale(newScale);
+          setPan((prev) => ({
+            x: prev.x * ratio - (e.clientX - cx) * (ratio - 1),
+            y: prev.y * ratio - (e.clientY - cy) * (ratio - 1),
+          }));
+        }
       } else if (scale > 1) {
         setPan((prev) => ({ x: prev.x - e.deltaX, y: prev.y - e.deltaY }));
       }
@@ -87,10 +98,22 @@ function useLightbox() {
     return () => el.removeEventListener("wheel", onWheel);
   }, [open, scale]);
 
-  const onImgLoad = useCallback(() => {
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el || !fittedSize || scale <= 1) return;
+    const maxX = Math.max(0, (fittedSize.w * scale - el.clientWidth) / 2);
+    const maxY = Math.max(0, (fittedSize.h * scale - el.clientHeight) / 2);
+    const cx = Math.min(maxX, Math.max(-maxX, pan.x));
+    const cy = Math.min(maxY, Math.max(-maxY, pan.y));
+    if (cx !== pan.x || cy !== pan.y) {
+      setPan({ x: cx, y: cy });
+    }
+  }, [pan, scale, fittedSize]);
+
+  const recalcFittedSize = useCallback(() => {
     const img = imgRef.current;
     const container = containerRef.current;
-    if (!img || !container) return;
+    if (!img || !container || !img.naturalWidth) return;
     const { naturalWidth, naturalHeight } = img;
     const cs = getComputedStyle(container);
     const maxW =
@@ -105,6 +128,12 @@ function useLightbox() {
     const fitScale = Math.min(maxW / naturalWidth, maxH / naturalHeight);
     setFittedSize({ w: naturalWidth * fitScale, h: naturalHeight * fitScale });
   }, []);
+
+  useEffect(() => {
+    if (!open) return;
+    window.addEventListener("resize", recalcFittedSize);
+    return () => window.removeEventListener("resize", recalcFittedSize);
+  }, [open, recalcFittedSize]);
 
   const toggleZoom = (e: React.MouseEvent<HTMLImageElement>) => {
     e.stopPropagation();
@@ -256,13 +285,14 @@ function useLightbox() {
     dragStart,
     pinchRef,
     wheelingRef,
+    mouseDraggedRef,
     swipeY,
     fittedSize,
     imgRef,
     containerRef,
     toggleZoom,
     toggleZoomKeyboard,
-    onImgLoad,
+    recalcFittedSize,
     onMouseDown,
     onMouseMove,
     onMouseUp,
@@ -284,7 +314,12 @@ function LightboxDialog({
   lb: ReturnType<typeof useLightbox>;
 }) {
   const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (e.target === e.currentTarget) lb.setOpen(false);
+    if (e.target !== e.currentTarget) return;
+    if (lb.mouseDraggedRef.current) {
+      lb.mouseDraggedRef.current = false;
+      return;
+    }
+    lb.setOpen(false);
   };
 
   return (
@@ -331,7 +366,7 @@ function LightboxDialog({
             src={src}
             alt={alt}
             draggable={false}
-            onLoad={lb.onImgLoad}
+            onLoad={lb.recalcFittedSize}
             onClick={lb.toggleZoom}
             onKeyDown={lb.toggleZoomKeyboard}
             className="select-none"
