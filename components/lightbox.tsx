@@ -254,7 +254,11 @@ function LightboxDialog({
 
   return (
     <Dialog.Portal>
-      <Dialog.Content className="lightbox-content">
+      <Dialog.Content
+        className="lightbox-content"
+        onPointerDown={(e) => e.stopPropagation()}
+        onClick={(e) => e.stopPropagation()}
+      >
         <VisuallyHidden.Root>
           <Dialog.Title>{alt || "Image lightbox"}</Dialog.Title>
         </VisuallyHidden.Root>

@@ -155,7 +155,9 @@ export function FeedComments({ slug, path }: { slug: string; path: string }) {
               <SignInButtons />
             </div>
             <div className="flex sm:hidden items-center gap-3">
-              <span className="text-xs text-foreground-low shrink-0">Sign in to comment</span>
+              <span className="text-xs text-foreground-low shrink-0">
+                Sign in to comment
+              </span>
               <SignInButtons />
             </div>
           </div>

@@ -30,7 +30,7 @@ export function ClickableWrapper({
   };
 
   const handleClick = (e: MouseEvent) => {
-    if ((e.target as HTMLElement).closest("a")) return;
+    if ((e.target as HTMLElement).closest("a, button")) return;
     if (isDragging.current) {
       const selection = window.getSelection();
       if (selection && selection.toString().length > 0) return;
