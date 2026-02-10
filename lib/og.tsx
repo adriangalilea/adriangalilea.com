@@ -105,6 +105,17 @@ export function generateQuoteOG(content: Content): ImageResponse {
   const text = stripMarkdown(content.content).slice(0, 240);
   const avatarData = loadAvatarBase64(content);
 
+  const fontSize =
+    text.length < 60
+      ? 52
+      : text.length < 100
+        ? 46
+        : text.length < 140
+          ? 40
+          : text.length < 180
+            ? 36
+            : 34;
+
   return new ImageResponse(
     <div
       style={{
@@ -112,7 +123,6 @@ export function generateQuoteOG(content: Content): ImageResponse {
         height: "100%",
         display: "flex",
         flexDirection: "column",
-        justifyContent: "center",
         backgroundColor: "#0a0a0a",
         fontFamily: "Geist",
         padding: PAD,
@@ -122,6 +132,8 @@ export function generateQuoteOG(content: Content): ImageResponse {
         style={{
           display: "flex",
           flexDirection: "column",
+          justifyContent: "center",
+          flex: 1,
           gap: 16,
         }}
       >
@@ -130,16 +142,7 @@ export function generateQuoteOG(content: Content): ImageResponse {
         </span>
         <span
           style={{
-            fontSize:
-              text.length < 60
-                ? 52
-                : text.length < 100
-                  ? 46
-                  : text.length < 140
-                    ? 40
-                    : text.length < 180
-                      ? 36
-                      : 34,
+            fontSize,
             color: "#e5e5e5",
             fontStyle: "italic",
             lineHeight: 1.5,
@@ -147,24 +150,33 @@ export function generateQuoteOG(content: Content): ImageResponse {
         >
           {text}
         </span>
-        <div
+      </div>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 18,
+        }}
+      >
+        {avatarData && (
+          <img
+            src={avatarData}
+            width={64}
+            height={64}
+            style={{ borderRadius: 32 }}
+          />
+        )}
+        <span
           style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 14,
-            marginTop: 8,
+            fontSize: 40,
+            letterSpacing: "0.08em",
+            textTransform: "uppercase",
+            fontWeight: 700,
+            color: "#bbb",
           }}
         >
-          {avatarData && (
-            <img
-              src={avatarData}
-              width={44}
-              height={44}
-              style={{ borderRadius: 22 }}
-            />
-          )}
-          <span style={{ fontSize: 22, color: "#999" }}>{author.name}</span>
-        </div>
+          {author.name}
+        </span>
       </div>
     </div>,
     { width: W, height: H, fonts: getFonts() },
