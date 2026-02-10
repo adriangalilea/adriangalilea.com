@@ -8,6 +8,16 @@ Next.js personal site.
 `pnpm format`
 `pnpm build`
 
+## Quality standard
+
+Fix root causes, not symptoms. When something breaks, trace it to the actual mechanism (e.g., React portal event bubbling, not "add another stopPropagation"). Understand framework internals — surface-level API knowledge isn't enough.
+
+Use the right tool for the job: React state for things that drive renders, refs for internal bookkeeping and gesture tracking, direct DOM mutations for 60fps animations. Native event listeners when React's abstractions get in the way (passive wheel events). Centralize invariants in one place (a single clamping effect) instead of scattering guards across every call site.
+
+Every interactive component must handle all input methods: mouse, trackpad, touch, keyboard. Don't ship a gesture that only works on one device. Clamp everything — bounds, scales, thresholds. Guard against ghost interactions: drags shouldn't trigger clicks, closing overlays shouldn't trigger navigation, releasing outside a boundary shouldn't dismiss. Test the edges: drag past bounds, resize mid-interaction, switch from two fingers to one.
+
+Keep CSS in Tailwind unless there's a specific reason not to. One hook for one interaction — don't split coupled state across multiple hooks to look clean. Expose the minimum API surface needed.
+
 ## Content Architecture
 
 All content lives in `content/` as `.md` or `.mdx` files. Three content types, determined by frontmatter + body length:
