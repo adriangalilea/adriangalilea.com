@@ -6,11 +6,9 @@ import { Lightbox } from "@/components/lightbox";
 import { slugToGradient } from "@/lib/gradient";
 import { isGif, isVideo } from "@/lib/media";
 
-function GrainOverlay({ className }: { className?: string }) {
+function GrainOverlay() {
   return (
-    <div
-      className={`cover-grain absolute inset-0 z-10 pointer-events-none ${className ?? ""}`}
-    />
+    <div className="cover-grain absolute inset-0 z-10 pointer-events-none" />
   );
 }
 
@@ -18,10 +16,9 @@ type CoverImageProps = {
   cover: string | null;
   slug: string;
   title: string;
-  size?: "large" | "small";
   sizes?: string;
   priority?: boolean;
-  /** Use intrinsic sizing (for feed cards) vs fill (for page headers) */
+  /** Use intrinsic sizing with object-cover (for feed cards) */
   intrinsic?: boolean;
   /** Actual image dimensions for proper aspect ratio (prevents layout shift) */
   width?: number | null;
@@ -47,7 +44,6 @@ function AnimatedCover({
   intrinsic,
   aspectRatio,
   hoverPlay,
-  size,
   loop,
 }: {
   src: string;
@@ -56,7 +52,6 @@ function AnimatedCover({
   intrinsic: boolean;
   aspectRatio: number;
   hoverPlay: boolean;
-  size: "large" | "small";
   loop: boolean;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -162,7 +157,7 @@ function AnimatedCover({
   return (
     <div
       ref={containerRef}
-      className={`relative ${intrinsic ? "" : "h-full w-full"} overflow-hidden ${size === "large" ? "bg-black" : ""} ${isClickable ? "cursor-pointer" : ""}`}
+      className={`relative ${intrinsic ? "" : "h-full w-full"} overflow-hidden bg-black ${isClickable ? "cursor-pointer" : ""}`}
       style={containerStyle}
       {...(isClickable
         ? {
@@ -210,7 +205,6 @@ export function CoverImage({
   cover,
   slug,
   title,
-  size = "large",
   sizes,
   priority,
   intrinsic,
@@ -346,7 +340,6 @@ export function CoverImage({
           intrinsic={intrinsic ?? false}
           aspectRatio={aspectRatio}
           hoverPlay={hoverPlay ?? false}
-          size={size}
           loop={loop}
         />
       );
@@ -447,54 +440,6 @@ export function CoverImage({
 
       return content;
     }
-
-    // Fill mode for page headers - requires parent with dimensions
-    const bgBlur =
-      size === "small"
-        ? "absolute inset-0 h-full w-full scale-[2] object-cover blur-2xl"
-        : "absolute inset-0 h-full w-full scale-150 object-cover blur-3xl opacity-60";
-
-    const fillContent = (
-      <div
-        className={`relative h-full w-full overflow-hidden ${size === "large" ? "bg-black" : ""}`}
-        style={
-          blurDataURL
-            ? {
-                backgroundImage: `url(${blurDataURL})`,
-                backgroundSize: "cover",
-              }
-            : undefined
-        }
-      >
-        <img
-          src={cover}
-          alt=""
-          aria-hidden
-          draggable={false}
-          className={bgBlur}
-        />
-        <Image
-          src={cover}
-          alt={title}
-          fill
-          draggable={false}
-          className="relative object-contain"
-          sizes={sizes ?? "100vw"}
-          priority={priority}
-        />
-        <GrainOverlay />
-      </div>
-    );
-
-    if (lightbox) {
-      return (
-        <Lightbox src={cover} alt={title}>
-          {fillContent}
-        </Lightbox>
-      );
-    }
-
-    return fillContent;
   }
 
   // Fallback gradient when no cover
