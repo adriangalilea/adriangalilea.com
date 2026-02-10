@@ -83,32 +83,110 @@ def get_wikipedia_image_url(title: str) -> str | None:
         return None
 
 
+def get_dimensions(path: Path) -> tuple[int, int]:
+    """Get image dimensions via sips."""
+    out = subprocess.run(
+        ["sips", "-g", "pixelWidth", "-g", "pixelHeight", str(path)],
+        capture_output=True, text=True,
+    ).stdout
+    w = int([l for l in out.splitlines() if "pixelWidth" in l][0].split()[-1])
+    h = int([l for l in out.splitlines() if "pixelHeight" in l][0].split()[-1])
+    return w, h
+
+
+def resize_and_crop_to_square(src: Path, dest: Path, size: int = 256) -> bool:
+    """Resize preserving aspect ratio so shortest side = size, then center-crop to square."""
+    w, h = get_dimensions(src)
+
+    if w >= h:
+        new_h = size
+        new_w = round(w * size / h)
+    else:
+        new_w = size
+        new_h = round(h * size / w)
+
+    # Resize preserving ratio
+    subprocess.run(
+        ["sips", "-z", str(new_h), str(new_w), str(src), "--out", str(dest)],
+        capture_output=True,
+    )
+
+    # Center-crop to square
+    offset_x = (new_w - size) // 2
+    offset_y = (new_h - size) // 2
+    if offset_x > 0 or offset_y > 0:
+        subprocess.run(
+            ["sips", "-c", str(size), str(size), str(dest), "--out", str(dest)],
+            capture_output=True,
+        )
+
+    # Convert to png
+    subprocess.run(
+        ["sips", "-s", "format", "png", str(dest), "--out", str(dest)],
+        capture_output=True,
+    )
+
+    return dest.exists()
+
+
 def download_as_png(url: str, dest: Path) -> bool:
-    """Download image and convert to 256x256 png via sips (macOS)."""
+    """Download image and convert to 256x256 center-cropped png."""
     req = urllib.request.Request(url, headers={"User-Agent": "quote-avatar-fetcher/1.0"})
     try:
         with urllib.request.urlopen(req) as resp:
             tmp = dest.with_suffix(".tmp")
             tmp.write_bytes(resp.read())
-        result = subprocess.run(
-            ["sips", "-s", "format", "png", "-z", "256", "256", str(tmp), "--out", str(dest)],
-            capture_output=True,
-        )
+        ok = resize_and_crop_to_square(tmp, dest)
         tmp.unlink(missing_ok=True)
-        return result.returncode == 0 and dest.exists()
+        return ok
     except Exception as e:
         print(f"  Download error: {e}")
         return False
 
 
+def migrate_to_png(author_dir: Path) -> str | None:
+    """Convert existing non-png avatar to png and remove the old file. Returns old ext or None."""
+    if (author_dir / "avatar.png").exists():
+        return None
+    for ext in [".webp", ".jpg", ".jpeg"]:
+        src = author_dir / f"avatar{ext}"
+        if src.exists():
+            dest = author_dir / "avatar.png"
+            subprocess.run(
+                ["sips", "-s", "format", "png", str(src), "--out", str(dest)],
+                capture_output=True,
+            )
+            if dest.exists():
+                src.unlink()
+                return ext
+    return None
+
+
 def main():
     assert QUOTES_DIR.is_dir(), f"Quotes directory not found: {QUOTES_DIR}"
 
+    # Phase 1: migrate existing non-png avatars to png
+    migrated = 0
+    for d in sorted(QUOTES_DIR.iterdir()):
+        if not d.is_dir():
+            continue
+        old_ext = migrate_to_png(d)
+        if old_ext:
+            print(f"  MIGRATE  {d.name} (avatar{old_ext} -> avatar.png)")
+            migrated += 1
+        # Also clean up stale original.* files
+        for f in d.glob("original.*"):
+            f.unlink()
+
+    if migrated:
+        print(f"\nMigrated {migrated} avatars to png.\n")
+
+    # Phase 2: fetch missing avatars
     missing = []
     for d in sorted(QUOTES_DIR.iterdir()):
         if not d.is_dir():
             continue
-        if any((d / f"avatar{ext}").exists() for ext in AVATAR_EXTENSIONS):
+        if (d / "avatar.png").exists():
             continue
         missing.append(d.name)
 
