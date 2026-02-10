@@ -37,8 +37,8 @@ function useLightbox() {
     panX: number;
     panY: number;
   } | null>(null);
-  const [swipeY, setSwipeY] = useState(0);
-  const [swipeStart, setSwipeStart] = useState<number | null>(null);
+  const swipeYRef = useRef(0);
+  const swipeStartRef = useRef<number | null>(null);
   const imgRef = useRef<HTMLImageElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const pinchRef = useRef<{
@@ -56,6 +56,21 @@ function useLightbox() {
 
   const zoomed = scale > 1;
 
+  const applySwipeY = useCallback((y: number) => {
+    swipeYRef.current = y;
+    const el = containerRef.current;
+    if (!el) return;
+    if (y > 0) {
+      el.style.transform = `translateY(${y}px)`;
+      el.style.opacity = `${1 - y / 300}`;
+      el.style.transition = "none";
+    } else {
+      el.style.transform = "";
+      el.style.opacity = "";
+      el.style.transition = "transform 0.2s, opacity 0.2s";
+    }
+  }, []);
+
   const [fittedSize, setFittedSize] = useState<{
     w: number;
     h: number;
@@ -64,8 +79,8 @@ function useLightbox() {
   const resetState = useCallback(() => {
     setScale(1);
     setPan({ x: 0, y: 0 });
-    setSwipeY(0);
-    setSwipeStart(null);
+    applySwipeY(0);
+    swipeStartRef.current = null;
     setDragStart(null);
     setFittedSize(null);
     pinchRef.current = null;
@@ -73,7 +88,7 @@ function useLightbox() {
     mouseDraggedRef.current = false;
     wheelingRef.current = false;
     clearTimeout(wheelTimeoutRef.current);
-  }, []);
+  }, [applySwipeY]);
 
   useEffect(() => {
     if (!open) resetState();
@@ -221,7 +236,7 @@ function useLightbox() {
         midY: mid.y,
       };
       setDragStart(null);
-      setSwipeStart(null);
+      swipeStartRef.current = null;
       return;
     }
 
@@ -234,7 +249,7 @@ function useLightbox() {
         panY: pan.y,
       });
     } else {
-      setSwipeStart(touch.clientY);
+      swipeStartRef.current = touch.clientY;
     }
   };
 
@@ -270,9 +285,9 @@ function useLightbox() {
         x: dragStart.panX + (touch.clientX - dragStart.x),
         y: dragStart.panY + (touch.clientY - dragStart.y),
       });
-    } else if (swipeStart !== null) {
-      const delta = touch.clientY - swipeStart;
-      if (delta > 0) setSwipeY(delta);
+    } else if (swipeStartRef.current !== null) {
+      const delta = touch.clientY - swipeStartRef.current;
+      if (delta > 0) applySwipeY(delta);
     }
   };
 
@@ -304,9 +319,9 @@ function useLightbox() {
       if (scale > 1) {
         setDragStart(null);
       } else {
-        if (swipeY > 120) setOpen(false);
-        else setSwipeY(0);
-        setSwipeStart(null);
+        if (swipeYRef.current > 120) setOpen(false);
+        else applySwipeY(0);
+        swipeStartRef.current = null;
       }
     }
   };
@@ -321,7 +336,6 @@ function useLightbox() {
     pinchRef,
     wheelingRef,
     mouseDraggedRef,
-    swipeY,
     fittedSize,
     imgRef,
     containerRef,
@@ -360,7 +374,7 @@ function LightboxDialog({
   return (
     <Dialog.Portal>
       <Dialog.Content
-        className="fixed inset-0 z-50 outline-none bg-(--glass-scrim)"
+        className="fixed inset-0 z-50 outline-none bg-(--glass-scrim) data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 duration-200"
         onPointerDown={(e) => e.stopPropagation()}
         onClick={(e) => e.stopPropagation()}
       >
@@ -380,13 +394,7 @@ function LightboxDialog({
         <div
           ref={lb.containerRef}
           className="flex flex-col items-center justify-center w-full h-full p-4 sm:p-8"
-          style={{
-            touchAction: "none",
-            transform: lb.swipeY > 0 ? `translateY(${lb.swipeY}px)` : undefined,
-            opacity: lb.swipeY > 0 ? 1 - lb.swipeY / 300 : undefined,
-            transition:
-              lb.swipeY === 0 ? "transform 0.2s, opacity 0.2s" : "none",
-          }}
+          style={{ touchAction: "none" }}
           onClick={handleBackdropClick}
           onMouseDown={lb.onMouseDown}
           onMouseMove={lb.onMouseMove}
