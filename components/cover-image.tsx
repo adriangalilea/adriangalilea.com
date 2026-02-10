@@ -6,9 +6,11 @@ import { Lightbox } from "@/components/lightbox";
 import { slugToGradient } from "@/lib/gradient";
 import { isGif, isVideo } from "@/lib/media";
 
-function GrainOverlay() {
+function GrainOverlay({ className }: { className?: string }) {
   return (
-    <div className="cover-grain absolute inset-0 z-10 pointer-events-none" />
+    <div
+      className={`cover-grain absolute inset-0 z-10 pointer-events-none ${className ?? ""}`}
+    />
   );
 }
 
@@ -34,6 +36,8 @@ type CoverImageProps = {
   loop?: boolean;
   /** Wrap static covers in a fullscreen lightbox on click */
   lightbox?: boolean;
+  /** Natural proportions with max-height constraint (for page headers) */
+  contained?: boolean;
 };
 
 function AnimatedCover({
@@ -217,6 +221,7 @@ export function CoverImage({
   hoverPlay,
   loop = true,
   lightbox,
+  contained,
 }: CoverImageProps) {
   // Default dimensions if not provided
   const imgWidth = width ?? 1200;
@@ -224,6 +229,113 @@ export function CoverImage({
   const aspectRatio = imgWidth && imgHeight ? imgWidth / imgHeight : 16 / 9;
 
   if (cover) {
+    // Contained mode: blurred bg + object-contain, self-sizing via aspect-ratio + max-height cap
+    if (contained) {
+      const bgBlurClass =
+        "absolute inset-0 h-full w-full scale-150 object-cover blur-3xl opacity-60";
+      const containerStyle: React.CSSProperties = {
+        aspectRatio,
+        ...(blurDataURL
+          ? {
+              backgroundImage: `url(${blurDataURL})`,
+              backgroundSize: "cover",
+            }
+          : undefined),
+      };
+
+      if (isVideo(cover)) {
+        return (
+          <div
+            className="relative w-full max-h-[32rem] overflow-hidden rounded-2xl"
+            style={containerStyle}
+          >
+            {poster && (
+              <img
+                src={poster}
+                alt=""
+                aria-hidden
+                draggable={false}
+                className={bgBlurClass}
+              />
+            )}
+            <video
+              src={cover}
+              autoPlay
+              loop={loop}
+              muted
+              playsInline
+              className="absolute inset-0 w-full h-full object-contain"
+            />
+            <GrainOverlay />
+          </div>
+        );
+      }
+
+      if (isGif(cover)) {
+        const content = (
+          <div
+            className="relative w-full max-h-[32rem] overflow-hidden rounded-2xl"
+            style={containerStyle}
+          >
+            <img
+              src={cover}
+              alt=""
+              aria-hidden
+              draggable={false}
+              className={bgBlurClass}
+            />
+            <img
+              src={cover}
+              alt={title}
+              draggable={false}
+              className="absolute inset-0 w-full h-full object-contain"
+            />
+            <GrainOverlay />
+          </div>
+        );
+        return lightbox ? (
+          <Lightbox src={cover} alt={title}>
+            {content}
+          </Lightbox>
+        ) : (
+          content
+        );
+      }
+
+      // Static image: blurred bg + object-contain via Next.js Image
+      const content = (
+        <div
+          className="relative w-full max-h-[32rem] overflow-hidden rounded-2xl"
+          style={containerStyle}
+        >
+          <img
+            src={cover}
+            alt=""
+            aria-hidden
+            draggable={false}
+            className={bgBlurClass}
+          />
+          <Image
+            src={cover}
+            alt={title}
+            fill
+            draggable={false}
+            className="object-contain"
+            sizes={sizes ?? "100vw"}
+            priority={priority}
+          />
+          <GrainOverlay />
+        </div>
+      );
+      return lightbox ? (
+        <Lightbox src={cover} alt={title}>
+          {content}
+        </Lightbox>
+      ) : (
+        content
+      );
+    }
+
     // Videos - use AnimatedCover for hover-play behavior
     if (isVideo(cover)) {
       return (
@@ -302,7 +414,7 @@ export function CoverImage({
 
     // Intrinsic mode for feed cards
     if (intrinsic) {
-      return (
+      const content = (
         <div
           className="relative overflow-hidden"
           style={{
@@ -324,6 +436,16 @@ export function CoverImage({
           <GrainOverlay />
         </div>
       );
+
+      if (lightbox) {
+        return (
+          <Lightbox src={cover} alt={title}>
+            {content}
+          </Lightbox>
+        );
+      }
+
+      return content;
     }
 
     // Fill mode for page headers - requires parent with dimensions

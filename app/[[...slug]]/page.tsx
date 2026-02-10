@@ -119,20 +119,21 @@ async function NoteView({ note }: { note: Note }) {
     <article className="pb-16">
       <div className="mx-auto max-w-[90rem] px-6">
         {note.cover && (
-          <figure className="pt-4 sm:pt-6 mb-8 max-w-2xl lg:ml-[248px]">
-            <div className="w-full overflow-hidden rounded-2xl aspect-[16/9]">
-              <CoverImage
-                cover={note.cover}
-                slug={note.slug.join("/")}
-                title=""
-                poster={note.poster}
-                blurDataURL={note.blurDataURL}
-                loop={note.coverLoop}
-                sizes="(max-width: 1024px) 100vw, 672px"
-                priority
-                lightbox
-              />
-            </div>
+          <figure className="pt-4 sm:pt-6 mb-8 max-w-2xl lg:ml-[248px] text-center">
+            <CoverImage
+              cover={note.cover}
+              slug={note.slug.join("/")}
+              title=""
+              width={note.coverWidth}
+              height={note.coverHeight}
+              poster={note.poster}
+              blurDataURL={note.blurDataURL}
+              loop={note.coverLoop}
+              sizes="(max-width: 1024px) 100vw, 672px"
+              priority
+              contained
+              lightbox
+            />
           </figure>
         )}
 
@@ -237,20 +238,21 @@ async function PageView({ page }: { page: Page }) {
     <article className="pb-16">
       <div className="mx-auto max-w-[90rem] px-6">
         {page.cover && (
-          <figure className="pt-4 sm:pt-6 mb-8 max-w-2xl lg:ml-[248px]">
-            <div className="w-full overflow-hidden rounded-2xl aspect-[16/9]">
-              <CoverImage
-                cover={page.cover}
-                slug={page.slug.join("/")}
-                title={page.title}
-                poster={page.poster}
-                blurDataURL={page.blurDataURL}
-                loop={page.coverLoop}
-                sizes="(max-width: 1024px) 100vw, 672px"
-                priority
-                lightbox
-              />
-            </div>
+          <figure className="pt-4 sm:pt-6 mb-8 max-w-2xl lg:ml-[248px] text-center">
+            <CoverImage
+              cover={page.cover}
+              slug={page.slug.join("/")}
+              title={page.title}
+              width={page.coverWidth}
+              height={page.coverHeight}
+              poster={page.poster}
+              blurDataURL={page.blurDataURL}
+              loop={page.coverLoop}
+              sizes="(max-width: 1024px) 100vw, 672px"
+              priority
+              contained
+              lightbox
+            />
           </figure>
         )}
 
