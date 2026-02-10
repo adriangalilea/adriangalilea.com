@@ -369,7 +369,7 @@ export async function generateMetadata({
   if (isNote(content)) {
     const clean = stripMarkdown(content.content);
     if (author) {
-      title = `${author.name} Quote`;
+      title = `${author.name} quote`;
     } else {
       title = clean.slice(0, 70);
       description = clean.length > 70 ? clean.slice(0, 160) : undefined;
