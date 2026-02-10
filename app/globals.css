@@ -506,7 +506,6 @@
     -webkit-backdrop-filter: none;
     box-shadow: none;
     border-radius: 0;
-    border-bottom: 1px solid var(--glass-l1-border);
   }
   .glass-card-feed-flat > .glass-card-shine {
     display: none;
@@ -516,6 +515,12 @@
     box-shadow: none;
     scale: none;
     translate: none;
+  }
+  .feed-divider {
+    border: none;
+    height: 1px;
+    background: var(--glass-l1-border);
+    margin: 0 16px 16px;
   }
 }
 

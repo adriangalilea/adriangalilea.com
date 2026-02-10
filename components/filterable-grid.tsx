@@ -47,8 +47,11 @@ export function Grid({ items }: { items: Item[] }) {
   return (
     <>
       <div className="grid grid-cols-1 gap-0 sm:hidden">
-        {items.map((item) => (
-          <div key={item.path}>{item.content}</div>
+        {items.map((item, i) => (
+          <div key={item.path}>
+            {i > 0 && <hr className="feed-divider" />}
+            {item.content}
+          </div>
         ))}
       </div>
       <div className="hidden sm:grid lg:hidden grid-cols-2 gap-6 items-start">
