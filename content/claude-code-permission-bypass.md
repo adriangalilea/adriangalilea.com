@@ -1,7 +1,7 @@
 ---
 title: "Claude Code's deny rules won't save you."
 publishedAt: 2026-02-12
-description: "Auto-approve git commands without losing control."
+description: "How to auto-approve git commands without losing control."
 tags:
   - ai
   - claude-code

@@ -239,6 +239,8 @@ These were copied into `content/` and adapted. The originals at source are stale
 - `~/Documents/writings/blog/blog/writings/posts/accesibility_is_all_you_need.md` - "We don't need new standards for AI" (CLAUDE.md/llm.txt/MCP are wrong, accessibility is the answer). Sub-essays in `atoms/` directory.
 - `~/Documents/writings/blog/blog/writings/posts/its_simpler.md` - "It's always simpler" (tiny stub)
 - `~/Documents/writings/notes/why_I_hate_taskwarrior.md` - Taskwarrior rant
+- Jordan B. Peterson zoom call (no source file yet)
+- Ramih Baiteh (Carrefour CEO) email — congratulated Adrian's ideas (no source file yet)
 
 #### Old project writeups (Obsidian Vault)
 - `~/Documents/writings/Obsidian Vault/site/blog/1ALPHA.md` - Gaming platform project (2013-2020)
@@ -270,7 +272,6 @@ These were copied into `content/` and adapted. The originals at source are stale
 - Date model is broken — frontmatter should have one single date field; `publishedAt` is the wrong concept for quotes (it was meant for notes/pages). Quotes need a different date semantic (original utterance/publication date). Ancient quotes (BC era) use `estimatedDate` string field as a workaround but the whole model needs rethinking.
 - Add Vercel Analytics for traffic analysis
 - Add comment section with GitHub and Telegram auth using Better Auth
-- Add email  ramih baiteh email
 - Add backstory page
 - Generate OG images for quotes (author avatar + quote text + author name)
 - Clean up stale duplicates at source locations after confirming site versions are canonical
