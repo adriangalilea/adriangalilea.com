@@ -253,4 +253,4 @@ allowed-tools: Bash(git add:*), Bash(git status:*), Bash(git commit:*), Bash(git
 
 It blends well with my setup, one ghostty split with lazygit and another one with claude code, so I just pick which files to stage and `/commit` it is more controlled and just as smooth.
 
-I opened a [feature request](https://github.com/anthropics/claude-code/issues/25270) for proper subcommand-level pattern matching.
+This is a [known issue](https://github.com/anthropics/claude-code/issues/13371). Deny rules are bypassable via flag reordering and nobody has shipped a fix yet. [This hook is my workaround](https://github.com/anthropics/claude-code/issues/13371#issuecomment-3891292002).
