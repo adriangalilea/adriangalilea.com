@@ -292,7 +292,7 @@ func main() {
 
 The hook fires on **every Bash tool call**. Not just git commands. Every `ls`, every `npm install`, every `python script.py`. It reads stdin, checks if it starts with `git`, and exits.
 
-- **Go binary**: <1ms cold start. JSON decode, string split, switch statement, exit.
+- **Go binary**: `<1ms` cold start. JSON decode, string split, switch statement, exit.
 - **Python**: ~30ms cold start. Fine for most things. Noticeable when it runs hundreds of times per session.
 - **Elixir**: ~300ms cold start (BEAM VM). Beautiful pattern matching. Unusable latency for a hot-path hook.
 - **Bash**: Zero startup cost but macOS BSD `sed`/`grep` compatibility is a minefield. The first version failed silently because `\s` isn't supported in BSD sed.
