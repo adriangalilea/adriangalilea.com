@@ -10,13 +10,14 @@ tags:
   - vibe-coding
 ---
 
-I want Claude to run `git commit`, `git status`, `git diff`, `git add <file>` without asking me every time. Zero friction. So committing an edit to this very post would feel like this:
+I want Claude to run `git commit`, `git status`, `git diff`, `git add <file>` without asking me every time. Zero friction:
 
 ```
-⏺ Bash(git -C /Users/adrian/Developer/adriangalilea.com add content/claude-code-permission-bypass.md &&
-       git -C /Users/adrian/Developer/adriangalilea.com commit -m "fix: rewrite post — lead with frictionless DX, show it in action")
-  ⎿  [main c30ace7] fix: rewrite post — lead with frictionless DX, show it in action
-      1 file changed, 80 insertions(+), 60 deletions(-)
+⏺ Bash(git add src/main.go lib/utils.go)
+  ⎿  (auto-approved)
+
+⏺ Bash(git -C /projects/app commit -m "feat: add user auth")
+  ⎿  (auto-approved)
 ```
 
 But I also want `git push --force` and `git add -A` Blocked. I'll do those manually if I want to, thanks. `git reset --hard`? Asks me first.
