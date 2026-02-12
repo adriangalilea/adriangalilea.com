@@ -1,7 +1,7 @@
 ---
 title: "Claude Code's deny rules won't save you."
 publishedAt: 2026-02-12
-description: "Here's the hook that fixes that."
+description: "Auto-approve git commands without losing control."
 tags:
   - ai
   - claude-code
@@ -10,22 +10,59 @@ tags:
   - vibe-coding
 ---
 
-Claude Code's [permission docs](https://code.claude.com/docs/en/permissions) say you can deny dangerous commands with wildcard patterns. `Bash(git * reset --hard)` should block `git -C /path reset --hard`. It doesn't. The ` *` syntax [doesn't work in `settings.json`](https://github.com/anthropics/claude-code/issues/24815).
+I want Claude to run `git commit`, `git status`, `git diff`, `git add <file>` without asking me every time. Zero friction. This is what that looks like:
 
-I tried:
-- `Bash(git commit:*)` — prefix only, misses `git -C /path commit`
-- `Bash(git -C:*)` — allows everything through, including what deny rules should block
-- `Bash(git * add -A)` — documented syntax, [doesn't work](https://github.com/anthropics/claude-code/issues/24815)
+```
+⏺ Bash(git add src/main.go lib/utils.go)
+  ⎿ (auto-approved)
 
-The core issue is prefix matching. `Bash(git reset --hard:*)` matches `git reset --hard` but not `git -C /path reset --hard`. You can broaden with `Bash(git -C:*)` but then your deny rules stop matching too. The ` *` syntax that would allow mid-pattern wildcards [doesn't work in `settings.json`](https://github.com/anthropics/claude-code/issues/24815). **The pattern system cannot express "deny this subcommand regardless of flags."**
+⏺ Bash(git commit -m "feat: add user auth")
+  ⎿ (auto-approved)
 
-## The parsing hook
+⏺ Bash(git -C /projects/app status)
+  ⎿ (auto-approved)
+```
+
+But `git push --force`? Blocked. `git add -A`? Blocked. `git reset --hard`? Asks me first.
+
+```
+⏺ Bash(git -C /projects/my-app push --force)
+  ⎿ Error: git push --force is blocked.
+
+⏺ Bash(git reset --hard)
+  ⎿ Do you want to proceed?
+  ⎿ git reset --hard — destroys uncommitted work
+  ⎿ 1. Yes  2. Yes, and don't ask again  3. No
+```
+
+Getting here is harder than it should be.
+
+## The problem
+
+Claude Code's [permission system](https://code.claude.com/docs/en/permissions) has allow and deny rules using prefix matching. You'd think you can allow safe commands and deny dangerous ones:
+
+```json
+"allow": ["Bash(git commit:*)", "Bash(git status:*)"],
+"deny": ["Bash(git reset --hard:*)", "Bash(git push --force:*)"]
+```
+
+Two problems.
+
+**Prefix matching breaks on flags.** `Bash(git reset --hard:*)` matches `git reset --hard` but not `git -C /path reset --hard`. Claude inserts `-C` when working across directories. Your deny rule silently stops matching.
+
+**Broadening breaks deny rules.** You can add `Bash(git -C:*)` to allow, but then your deny rules stop matching too because the allow rule auto-approves everything starting with `git -C`.
+
+The `*` wildcard syntax that should handle mid-pattern matching [doesn't work in `settings.json`](https://github.com/anthropics/claude-code/issues/24815). **The pattern system cannot express "deny this subcommand regardless of flags."**
+
+This is a [known issue](https://github.com/anthropics/claude-code/issues/13371).
+
+## The fix
 
 Claude Code has [hooks](https://code.claude.com/docs/en/hooks): shell commands that fire before/after tool calls. A `PreToolUse` hook receives the command as JSON on stdin and can return `permissionDecision: "deny"` or `"ask"`.
 
-The hook would fire on **every** Bash tool call, not just git. That is hundreds of times per session. You don't want to parse commands in bash. So I chose Go: static binary, `<1ms` cold start, no runtime.
+The hook fires on **every** Bash call, not just git. Hundreds of times per session. So I wrote it in Go: static binary, `<1ms` cold start, no runtime.
 
-The idea is to truncate at shell operators (Claude appends `2>&1; echo "EXIT: $?"` to commands), strips git global flags like `-C`, `--git-dir`, `--work-tree`, and checks what's left against a rule table:
+It truncates at shell operators (Claude appends `2>&1; echo "EXIT: $?"` to commands), strips git global flags like `-C`, `--git-dir`, `--work-tree`, and checks what's left against a rule table:
 
 | Command | Action | Reason |
 |---|---|---|
@@ -37,26 +74,45 @@ The idea is to truncate at shell operators (Claude appends `2>&1; echo "EXIT: $?
 | `git checkout .` | **ask** | Same |
 | `git branch -D` | **ask** | Same |
 
-The hook **never returns `permissionDecision: "allow"`**. It only denies or asks. Everything else exits silently, letting the normal permission system handle it.
+The hook **never returns `permissionDecision: "allow"`**. It only denies or asks. Everything else exits silently, letting the normal permission system handle it. Denied commands tell Claude to `pbcopy` the command for me to run manually.
 
-In practice it looks like this:
+## The setup
 
+Three layers working together:
+
+**1. `settings.json` allow rules** auto-approve common git commands globally:
+
+```json
+"allow": [
+  "Bash(git add:*)",
+  "Bash(git status:*)",
+  "Bash(git commit:*)",
+  "Bash(git diff:*)",
+  "Bash(git branch:*)",
+  "Bash(git log:*)",
+  "Bash(git -C:*)"
+]
 ```
-⏺ Bash(git reset --hard)
-  ⎿ Do you want to proceed?
-  ⎿ git reset --hard — destroys uncommitted work
-  ⎿ 1. Yes  2. Yes, and don't ask again  3. No
+
+**2. `git-guard` PreToolUse hook** (Go binary at `~/.claude/hooks/git-guard`) fires on every Bash call. Normalizes the command by stripping `-C` and shell operators, then checks the subcommand against the rule table above. Never returns "allow", so it can't bypass the permission system.
+
+```json
+"hooks": {
+  "PreToolUse": [{
+    "matcher": "Bash",
+    "hooks": [{
+      "type": "command",
+      "command": "~/.claude/hooks/git-guard"
+    }]
+  }]
+}
 ```
 
-```
-⏺ Bash(git -C /projects/my-app push --force)
-  ⎿ PreToolUse:Bash hook returned blocking error
-  ⎿ Error: git push --force is blocked.
-```
+**3. Claude Code's built-in permission system** handles everything else.
 
-Denied commands tell Claude to `pbcopy` the command for me to run manually.
+The allow rules give you friction-free git. The hook catches what the deny rules can't. The built-in system covers the rest.
 
-## The code:
+## The code
 
 ```go
 package main
@@ -206,40 +262,6 @@ func main() {
 }
 ```
 
-## The setup
-
-Three layers:
-
-**1. `settings.json` allow rules** auto-approve common git commands globally:
-
-```json
-"allow": [
-  "Bash(git add:*)",
-  "Bash(git status:*)",
-  "Bash(git commit:*)",
-  "Bash(git diff:*)",
-  "Bash(git branch:*)",
-  "Bash(git log:*)",
-  "Bash(git -C:*)"
-]
-```
-
-**2. `git-guard` PreToolUse hook** (Go binary at `~/.claude/hooks/git-guard`) fires on every Bash call. Normalizes the command by stripping `-C` and shell operators. Denies `add -A` and `push --force`. Asks for `push`, `reset --hard`, `clean -f`, `checkout .`, `branch -D`. Never returns "allow", so it can't bypass the permission system.
-
-```json
-"hooks": {
-  "PreToolUse": [{
-    "matcher": "Bash",
-    "hooks": [{
-      "type": "command",
-      "command": "~/.claude/hooks/git-guard"
-    }]
-  }]
-}
-```
-
-**3. Claude Code's built-in permission system** handles everything else. Shell operator awareness prevents chained command attacks. The hook is deny-only, so normal permission evaluation always runs.
-
 ## What I'll likely change
 
 I put the git allow rules in `settings.json` because I want them globally. But I think I will put them in my `/commit` slash command frontmatter instead:
@@ -251,6 +273,4 @@ allowed-tools: Bash(git add:*), Bash(git status:*), Bash(git commit:*), Bash(git
 ---
 ```
 
-It blends well with my setup, one ghostty split with lazygit and another one with claude code, so I just pick which files to stage and `/commit` it is more controlled and just as smooth.
-
-This is a [known issue](https://github.com/anthropics/claude-code/issues/13371). Deny rules are bypassable via flag reordering and nobody has shipped a fix yet. [This hook is my workaround](https://github.com/anthropics/claude-code/issues/13371#issuecomment-3891292002).
+One ghostty split with lazygit, one with Claude Code. Pick which files to stage in lazygit, `/commit` in Claude. More controlled and just as smooth.
