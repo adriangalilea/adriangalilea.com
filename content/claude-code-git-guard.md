@@ -1,7 +1,7 @@
 ---
-title: "Building a git guard for Claude Code in Go"
+title: "Claude Code's deny rules won't save you."
 publishedAt: 2026-02-12
-description: "Claude Code's permission system is fragile. A 160-line Go hook that actually parses git commands."
+description: "Here's the hook to fix that."
 tags:
   - ai
   - claude-code
