@@ -1,7 +1,7 @@
 ---
 title: "Building a git guard for Claude Code in Go"
 publishedAt: 2026-02-12
-description: "Claude Code's permission patterns can't handle git -C. So I wrote a 160-line Go hook that can."
+description: "Claude Code's permission system is fragile. A 160-line Go hook that actually parses git commands."
 tags:
   - ai
   - claude-code
@@ -14,38 +14,38 @@ tags:
 
 I type `/commit`. Claude reads the staged diff, writes a commit message, runs `git commit`. No permission prompts. No interruptions.
 
-If Claude tries `git add -A`, it gets blocked instantly:
+If Claude tries `git reset --hard`, it has to ask me first:
 
 ```
-⏺ Bash(git -C /tmp/repo add -A --dry-run)
-  ⎿ PreToolUse:Bash hook returned blocking error
-  ⎿ Error: git add -A/--all is blocked. Stage specific files instead.
-```
-
-Claude then offers to `pbcopy` the command so I can run it myself if I really want to.
-
-If Claude tries `git push`, I get a prompt:
-
-```
-⏺ Bash(git push origin main)
+⏺ Bash(git reset --hard)
   ⎿ Do you want to proceed?
-  ⎿ git push — confirm with the user before pushing
+  ⎿ git reset --hard — destroys uncommitted work
   ⎿ 1. Yes  2. Yes, and don't ask again  3. No
 ```
 
-That's the DX. Safe git commands flow without friction. Dangerous ones are either blocked or require my explicit approval. All of this works regardless of whether Claude uses `git commit` or `git -C /some/path commit`.
+If Claude tries `git push --force`, it gets blocked entirely:
 
-Getting here was harder than it should have been.
+```
+⏺ Bash(git -C /projects/my-app push --force)
+  ⎿ PreToolUse:Bash hook returned blocking error
+  ⎿ Error: git push --force is blocked.
+```
+
+Claude then `pbcopy`s the command so I can run it myself if I really want to.
+
+Safe git commands flow without friction. Dangerous ones are either blocked or require my explicit approval. This works regardless of whether Claude uses `git commit` or `git -C /some/path commit`. Getting here was harder than it should have been.
 
 ## The problem
 
-Claude Code has a permission system. You write patterns like `Bash(git commit:*)` in `settings.json` and it auto-approves matching commands. You write deny patterns and it blocks them. Simple.
+Claude Code has a permission system. You write patterns like `Bash(git commit:*)` in `settings.json` and it auto-approves matching commands. You write deny patterns and it blocks them.
 
-Until you use `git -C /some/path commit -m "message"`.
+The patterns are string prefix matches. That breaks in two ways:
 
-The `-C` flag changes git's working directory. Same command, different prefix. The pattern `Bash(git commit:*)` doesn't match `git -C /path commit` because the command doesn't start with `git commit`. It starts with `git -C`.
+**Allow patterns are too narrow.** `Bash(git commit:*)` doesn't match `git -C /path commit` because the command starts with `git -C`, not `git commit`. The `-C` flag just changes git's working directory. Same operation, different prefix, permission prompt every time.
 
-I have a `/commit` slash command. It should run `git add`, `git status`, `git commit`, `git diff`, `git log`, `git branch` without prompting. It should **never** run `git add -A`. It should **ask** before running `git push`, `git reset --hard`, and other destructive commands.
+**Deny patterns are too narrow.** `Bash(git reset --hard:*)` blocks `git reset --hard` but not `git -C /path reset --hard`. Same destructive command, sails through the deny rule.
+
+I have a `/commit` slash command. It should run `git add`, `git status`, `git commit`, `git diff`, `git log`, `git branch` without prompting. It should **never** run `git add -A` (stages everything, including secrets and binaries). It should **ask** before `git push`, `git reset --hard`, and other destructive commands. And this should work no matter what flags git gets.
 
 ## Attempt 1: Slash command frontmatter
 
