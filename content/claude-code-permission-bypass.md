@@ -10,51 +10,27 @@ tags:
   - vibe-coding
 ---
 
-I want Claude to run `git commit`, `git status`, `git diff`, `git add <file>` without asking me every time. Zero friction. This is what that looks like:
+I want Claude to run `git commit`, `git status`, `git diff`, `git add <file>` without asking me every time. Zero friction. So committing an edit to this very post would feel like this:
 
 ```
-⏺ Bash(git add src/main.go lib/utils.go)
-  ⎿ (auto-approved)
-
-⏺ Bash(git commit -m "feat: add user auth")
-  ⎿ (auto-approved)
-
-⏺ Bash(git -C /projects/app status)
-  ⎿ (auto-approved)
+⏺ Bash(git -C /Users/adrian/Developer/adriangalilea.com add content/claude-code-permission-bypass.md &&
+       git -C /Users/adrian/Developer/adriangalilea.com commit -m "fix: rewrite post — lead with frictionless DX, show it in action")
+  ⎿  [main c30ace7] fix: rewrite post — lead with frictionless DX, show it in action
+      1 file changed, 80 insertions(+), 60 deletions(-)
 ```
 
-But `git push --force`? Blocked. `git add -A`? Blocked. `git reset --hard`? Asks me first.
+But I also want `git push --force` and `git add -A` Blocked. I'll do those manually if I want to, thanks. `git reset --hard`? Asks me first.
+## Why this isn't straightforward
 
-```
-⏺ Bash(git -C /projects/my-app push --force)
-  ⎿ Error: git push --force is blocked.
+Claude Code's [permission system](https://code.claude.com/docs/en/permissions) uses prefix matching. I tried to configure it with allow rules alone:
 
-⏺ Bash(git reset --hard)
-  ⎿ Do you want to proceed?
-  ⎿ git reset --hard — destroys uncommitted work
-  ⎿ 1. Yes  2. Yes, and don't ask again  3. No
-```
+- `Bash(git commit:*)` — works, but misses `git -C /path commit`
+- `Bash(git -C:*)` — fixes that, but now auto-approves everything starting with `git -C`, including what you'd want to block
+- `Bash(git * reset --hard)` — the documented wildcard syntax that should handle mid-pattern matching. [Doesn't work in `settings.json`](https://github.com/anthropics/claude-code/issues/24815).
 
-Getting here is harder than it should be.
+The core issue: `Bash(git reset --hard:*)` matches `git reset --hard` but not `git -C /path reset --hard`. Claude inserts `-C` when working across directories. Your deny pattern silently stops matching. **The pattern system cannot express "block this subcommand regardless of flags."**
 
-## The problem
-
-Claude Code's [permission system](https://code.claude.com/docs/en/permissions) has allow and deny rules using prefix matching. You'd think you can allow safe commands and deny dangerous ones:
-
-```json
-"allow": ["Bash(git commit:*)", "Bash(git status:*)"],
-"deny": ["Bash(git reset --hard:*)", "Bash(git push --force:*)"]
-```
-
-Two problems.
-
-**Prefix matching breaks on flags.** `Bash(git reset --hard:*)` matches `git reset --hard` but not `git -C /path reset --hard`. Claude inserts `-C` when working across directories. Your deny rule silently stops matching.
-
-**Broadening breaks deny rules.** You can add `Bash(git -C:*)` to allow, but then your deny rules stop matching too because the allow rule auto-approves everything starting with `git -C`.
-
-The `*` wildcard syntax that should handle mid-pattern matching [doesn't work in `settings.json`](https://github.com/anthropics/claude-code/issues/24815). **The pattern system cannot express "deny this subcommand regardless of flags."**
-
-This is a [known issue](https://github.com/anthropics/claude-code/issues/13371).
+[Known issue](https://github.com/anthropics/claude-code/issues/13371). No fix shipped yet.
 
 ## The fix
 
@@ -75,6 +51,29 @@ It truncates at shell operators (Claude appends `2>&1; echo "EXIT: $?"` to comma
 | `git branch -D` | **ask** | Same |
 
 The hook **never returns `permissionDecision: "allow"`**. It only denies or asks. Everything else exits silently, letting the normal permission system handle it. Denied commands tell Claude to `pbcopy` the command for me to run manually.
+
+So now it finally
+
+```
+⏺ Bash(git -C /tmp/test-guard status)
+  ⎿  On branch main
+     nothing to commit, working tree clean
+
+⏺ Bash(git -C /tmp/test-guard push --force)
+  ⎿  PreToolUse:Bash hook returned blocking error
+  ⎿  Error: git push --force is blocked.
+
+⏺ Bash(git -C /tmp/test-guard add -A)
+  ⎿  PreToolUse:Bash hook returned blocking error
+  ⎿  Error: git add -A/--all is blocked. Stage specific files instead.
+
+⏺ Bash(git -C /tmp/test-guard reset --hard)
+  ⎿  Hook PreToolUse:Bash requires confirmation for this command:
+     git reset --hard — destroys uncommitted work
+  ⎿  Do you want to proceed?
+     ❯ 1. Yes
+       2. No
+```
 
 ## The setup
 
