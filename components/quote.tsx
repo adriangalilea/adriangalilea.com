@@ -97,11 +97,12 @@ export function Quote({
           )}
         >
           {estimatedDate ??
-            new Date(publishedAt!).toLocaleDateString("en-US", {
-              year: "numeric",
-              month: "short",
-              day: "numeric",
-            })}
+            (publishedAt &&
+              new Date(publishedAt).toLocaleDateString("en-US", {
+                year: "numeric",
+                month: "short",
+                day: "numeric",
+              }))}
         </time>
       )}
     </blockquote>

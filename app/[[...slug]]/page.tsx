@@ -158,11 +158,12 @@ async function NoteView({ note }: { note: Note }) {
               <div className="mt-6 flex items-center gap-2 font-mono text-xs text-foreground-lowest uppercase tracking-wider">
                 <time>
                   {note.estimatedDate ??
-                    new Date(note.publishedAt!).toLocaleDateString("en-US", {
-                      year: "numeric",
-                      month: "short",
-                      day: "numeric",
-                    })}
+                    (note.publishedAt &&
+                      new Date(note.publishedAt).toLocaleDateString("en-US", {
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                      }))}
                 </time>
                 <span className="text-muted-foreground">·</span>
                 <ViewCounter slug={note.slug.join("/")} />
