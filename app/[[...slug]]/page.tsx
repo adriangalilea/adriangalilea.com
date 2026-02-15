@@ -8,7 +8,6 @@ import { CoverImage } from "@/components/cover-image";
 import { Grid } from "@/components/filterable-grid";
 import { Quote } from "@/components/quote";
 import { RelatedSection } from "@/components/related-section";
-import { TagLink } from "@/components/tag-link";
 import { TOC } from "@/components/toc";
 import { TrackView } from "@/components/track-view";
 import { ViewCounter } from "@/components/view-counter";
@@ -117,9 +116,9 @@ async function NoteView({ note }: { note: Note }) {
 
   return (
     <article className="pb-16">
-      <div className="mx-auto max-w-[90rem] px-6">
+      <div className="mx-auto max-w-2xl px-6">
         {note.cover && (
-          <figure className="pt-4 sm:pt-6 mb-8 max-w-2xl lg:ml-[248px] text-center">
+          <figure className="pt-4 sm:pt-6 mb-8 text-center">
             <CoverImage
               cover={note.cover}
               slug={note.slug.join("/")}
@@ -137,29 +136,11 @@ async function NoteView({ note }: { note: Note }) {
           </figure>
         )}
 
-        <div
-          className={`${!note.cover ? "pt-4 sm:pt-6" : ""} lg:flex lg:gap-12`}
-        >
-          {/* Empty aside for alignment with PageView */}
-          <aside className="hidden lg:block lg:w-[200px] lg:shrink-0" />
-
-          <div className="min-w-0 max-w-2xl">
+        <div className={!note.cover ? "pt-4 sm:pt-6" : ""}>
+          <div className="min-w-0">
             {note.isDraft && (
               <div className="mb-6 rounded-lg border border-border/50 bg-muted/50 px-4 py-3 text-muted-foreground text-sm">
                 This is a draft — unfinished and subject to change.
-              </div>
-            )}
-
-            {note.tags.length > 0 && (
-              <div className="mb-4 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs uppercase tracking-wide">
-                {note.tags.map((tag, i) => (
-                  <span key={tag}>
-                    <TagLink tag={tag} />
-                    {i < note.tags.length - 1 && (
-                      <span className="text-muted-foreground">,</span>
-                    )}
-                  </span>
-                ))}
               </div>
             )}
 
@@ -174,12 +155,12 @@ async function NoteView({ note }: { note: Note }) {
             {(note.estimatedDate ||
               (note.publishedAt &&
                 new Date(note.publishedAt).getFullYear() >= 1000)) && (
-              <div className="mt-6 flex items-center gap-2 text-xs text-foreground-lowest tabular-nums">
+              <div className="mt-6 flex items-center gap-2 font-mono text-xs text-foreground-lowest uppercase tracking-wider">
                 <time>
                   {note.estimatedDate ??
                     new Date(note.publishedAt!).toLocaleDateString("en-US", {
                       year: "numeric",
-                      month: "long",
+                      month: "short",
                       day: "numeric",
                     })}
                 </time>
@@ -215,9 +196,7 @@ async function NoteView({ note }: { note: Note }) {
           </div>
         </div>
 
-        <div className="max-w-2xl lg:ml-[248px]">
-          <Comments slug={note.slug.join("/")} />
-        </div>
+        <Comments slug={note.slug.join("/")} />
       </div>
 
       {recs.length > 0 && (
@@ -241,7 +220,7 @@ async function PageView({ page }: { page: Page }) {
     <article className="pb-16">
       <div className="mx-auto max-w-[90rem] px-6">
         {page.cover && (
-          <figure className="pt-4 sm:pt-6 mb-8 max-w-2xl lg:ml-[248px] text-center">
+          <figure className="pt-4 sm:pt-6 mb-8 mx-auto max-w-2xl text-center">
             <CoverImage
               cover={page.cover}
               slug={page.slug.join("/")}
@@ -259,30 +238,16 @@ async function PageView({ page }: { page: Page }) {
           </figure>
         )}
 
-        <div
-          className={`${!page.cover ? "pt-4 sm:pt-6" : ""} lg:flex lg:gap-12`}
-        >
-          <aside className="hidden lg:block lg:w-[200px] lg:shrink-0">
+        <div className={`${!page.cover ? "pt-4 sm:pt-6" : ""} relative`}>
+          <aside className="hidden xl:block absolute left-0 top-0 bottom-0">
             <TOC items={page.toc} />
           </aside>
 
-          <div className="min-w-0 max-w-2xl">
+          <div className="min-w-0 mx-auto max-w-2xl">
             <header>
               {page.isDraft && (
                 <div className="mb-6 rounded-lg border border-border/50 bg-muted/50 px-4 py-3 text-muted-foreground text-sm">
                   This is a draft — unfinished and subject to change.
-                </div>
-              )}
-              {page.tags.length > 0 && (
-                <div className="mb-4 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs uppercase tracking-wide">
-                  {page.tags.map((tag, i) => (
-                    <span key={tag}>
-                      <TagLink tag={tag} />
-                      {i < page.tags.length - 1 && (
-                        <span className="text-muted-foreground">,</span>
-                      )}
-                    </span>
-                  ))}
                 </div>
               )}
               <h1 className="font-serif text-4xl font-normal tracking-tight leading-[1.15] sm:text-5xl">
@@ -294,11 +259,11 @@ async function PageView({ page }: { page: Page }) {
                 </p>
               )}
               {page.publishedAt && (
-                <div className="mt-4 text-muted-foreground text-xs tabular-nums">
+                <div className="mt-4 font-mono text-muted-foreground text-xs uppercase tracking-wider">
                   <time>
                     {new Date(page.publishedAt).toLocaleDateString("en-US", {
                       year: "numeric",
-                      month: "long",
+                      month: "short",
                       day: "numeric",
                     })}
                   </time>
@@ -312,7 +277,7 @@ async function PageView({ page }: { page: Page }) {
                       <time>
                         {new Date(page.updatedAt).toLocaleDateString("en-US", {
                           year: "numeric",
-                          month: "long",
+                          month: "short",
                           day: "numeric",
                         })}
                       </time>
@@ -329,7 +294,7 @@ async function PageView({ page }: { page: Page }) {
           </div>
         </div>
 
-        <div className="max-w-2xl lg:ml-[248px]">
+        <div className="mx-auto max-w-2xl">
           <Comments slug={page.slug.join("/")} />
         </div>
       </div>

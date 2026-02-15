@@ -50,10 +50,7 @@ export function TOC({ items }: { items: TOCItem[] }) {
   if (items.length === 0) return null;
 
   return (
-    <nav className="hidden lg:block sticky top-20 h-fit max-h-[calc(100vh-6rem)] w-[200px] shrink-0">
-      <p className="text-xs uppercase tracking-widest text-muted-foreground mb-3">
-        On this page
-      </p>
+    <nav className="sticky top-20 h-fit max-h-[calc(100vh-6rem)] w-[200px] shrink-0">
       <div
         ref={containerRef}
         className="overflow-y-auto max-h-[calc(100vh-8rem)] scrollbar-none"
