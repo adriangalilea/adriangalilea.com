@@ -1,3 +1,4 @@
+import { ExternalLink, Github } from "lucide-react";
 import { Suspense } from "react";
 import { Card } from "@/components/card";
 import { CommentsFeedProvider } from "@/components/comment-feed";
@@ -87,6 +88,12 @@ function sortByRelevancy(items: Content[]): Content[] {
   });
 }
 
+function LinkIcon({ linkKey }: { linkKey: string }) {
+  const k = linkKey.toLowerCase();
+  if (k === "github" || k === "gh") return <Github className="size-3.5" />;
+  return <ExternalLink className="size-3.5" />;
+}
+
 export async function CollectionView({ folder, slug }: Props) {
   const children = getChildrenForSlug(slug);
   const sortedChildren = sortByRelevancy(children);
@@ -151,36 +158,35 @@ export async function CollectionView({ folder, slug }: Props) {
             (folder.description ||
               Object.keys(folder.links).length > 0 ||
               folder.kpis.length > 0) && (
-              <header className="mb-6">
+              <header className="mb-8">
                 {folder.description && (
-                  <p className="text-xl text-foreground-low">
+                  <p className="font-serif text-2xl text-foreground-low tracking-tight">
                     {folder.description}
                   </p>
                 )}
-                {Object.keys(folder.links).length > 0 && (
-                  <div className="mt-4 flex flex-wrap gap-3">
+                {(Object.keys(folder.links).length > 0 ||
+                  folder.kpis.length > 0) && (
+                  <div className="mt-4 flex flex-wrap items-center gap-2">
                     {Object.entries(folder.links).map(([key, url]) => (
                       <a
                         key={key}
                         href={url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-sm text-accent-pop hover:underline"
+                        className="inline-flex items-center gap-1.5 rounded-full bg-accent-pop-bg border border-accent-pop-border px-3 py-1 font-mono text-xs text-accent-pop transition-colors hover:bg-accent-pop/15"
                       >
+                        <LinkIcon linkKey={key} />
                         {key}
                       </a>
                     ))}
-                  </div>
-                )}
-                {folder.kpis.length > 0 && (
-                  <div className="mt-6 flex flex-wrap gap-6">
                     {folder.kpis.map((kpi) => (
-                      <div key={kpi.label}>
-                        <div className="text-2xl font-bold">{kpi.value}</div>
-                        <div className="text-sm text-foreground-lowest">
-                          {kpi.label}
-                        </div>
-                      </div>
+                      <span
+                        key={kpi.label}
+                        className="inline-flex items-center gap-1.5 rounded-full bg-glass-l1 border border-glass-l1-border px-3 py-1 font-mono text-xs text-foreground-low"
+                      >
+                        <span className="font-semibold">{kpi.value}</span>
+                        {kpi.label}
+                      </span>
                     ))}
                   </div>
                 )}
