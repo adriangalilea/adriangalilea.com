@@ -1,10 +1,17 @@
-import type { MDXComponents } from "mdx/types";
 import rehypeShiki from "@shikijs/rehype";
+import type { MDXComponents } from "mdx/types";
 import { compileMDX } from "next-mdx-remote/rsc";
 import rehypeSlug from "rehype-slug";
 import remarkGfm from "remark-gfm";
+import type { ShikiTransformer } from "shiki";
 import type { Content } from "./content";
 import rehypeFigure from "./rehype-figure";
+
+const langAttr: ShikiTransformer = {
+  pre(node) {
+    node.properties["data-language"] = this.options.lang;
+  },
+};
 
 const shikiOptions = {
   themes: {
@@ -13,7 +20,8 @@ const shikiOptions = {
   },
   defaultColor: false,
   defaultLanguage: "text",
-} as const;
+  transformers: [langAttr],
+};
 
 export async function renderMDX(content: Content, components?: MDXComponents) {
   const { content: mdxContent, frontmatter } = await compileMDX({

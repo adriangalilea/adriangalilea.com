@@ -410,6 +410,61 @@
   background-color: var(--shiki-dark-bg, transparent);
 }
 
+/* Code block container */
+
+.code-block pre {
+  margin: 0;
+  border: none;
+  border-radius: 0;
+  padding: 0.75rem 0;
+  font-size: 0.8125rem;
+  line-height: 1.7;
+  overflow-x: auto;
+}
+
+.code-block code {
+  counter-reset: line;
+}
+
+.code-block .line {
+  display: inline-block;
+  min-width: 100%;
+  padding-right: 1.25rem;
+}
+
+/* Line numbers — skip for plain text and diff */
+.code-block:not([data-language="text"]):not([data-language="diff"])
+.line::before {
+  counter-increment: line;
+  content: counter(line);
+  display: inline-block;
+  width: 3.5rem;
+  padding-right: 1rem;
+  text-align: right;
+  color: var(--muted-foreground);
+  opacity: 0.35;
+  user-select: none;
+}
+
+/* Left padding for blocks without line numbers */
+.code-block[data-language="text"] .line,
+.code-block[data-language="diff"] .line {
+  padding-left: 1.25rem;
+}
+
+.code-block .line:hover {
+  background-color: color-mix(in oklch, var(--foreground) 4%, transparent);
+}
+
+/* Header matches code background */
+.code-header {
+  background-color: var(--shiki-light-bg, var(--muted));
+}
+
+.dark .code-header {
+  background-color: var(--shiki-dark-bg, var(--muted));
+}
+
 /* Lists */
 
 .prose :where(li):not(:where([class~="not-prose"] *)) {
