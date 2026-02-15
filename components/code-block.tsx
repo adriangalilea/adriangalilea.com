@@ -83,12 +83,12 @@ export function Pre({ children, style, ...props }: ComponentProps<"pre">) {
 
   return (
     <div
-      className="code-block not-prose group relative my-6 overflow-hidden rounded-xl border border-border"
+      className="code-block not-prose group relative my-6 overflow-hidden rounded-xl"
       data-language={lang}
       style={wrapperStyle}
     >
       {label ? (
-        <div className="code-header flex items-center justify-between border-b border-border px-4 py-2">
+        <div className="code-header flex items-center justify-between px-4 py-2">
           <span className="text-xs font-medium text-muted-foreground select-none">
             {label}
           </span>
