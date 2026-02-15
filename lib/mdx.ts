@@ -1,9 +1,19 @@
 import type { MDXComponents } from "mdx/types";
+import rehypeShiki from "@shikijs/rehype";
 import { compileMDX } from "next-mdx-remote/rsc";
 import rehypeSlug from "rehype-slug";
 import remarkGfm from "remark-gfm";
 import type { Content } from "./content";
 import rehypeFigure from "./rehype-figure";
+
+const shikiOptions = {
+  themes: {
+    light: "catppuccin-latte",
+    dark: "catppuccin-mocha",
+  },
+  defaultColor: false,
+  defaultLanguage: "text",
+} as const;
 
 export async function renderMDX(content: Content, components?: MDXComponents) {
   const { content: mdxContent, frontmatter } = await compileMDX({
@@ -13,7 +23,7 @@ export async function renderMDX(content: Content, components?: MDXComponents) {
       parseFrontmatter: true,
       mdxOptions: {
         remarkPlugins: [remarkGfm],
-        rehypePlugins: [rehypeFigure, rehypeSlug],
+        rehypePlugins: [rehypeFigure, rehypeSlug, [rehypeShiki, shikiOptions]],
       },
     },
   });
@@ -32,7 +42,7 @@ export async function renderMDXString(
       parseFrontmatter: true,
       mdxOptions: {
         remarkPlugins: [remarkGfm],
-        rehypePlugins: [rehypeFigure, rehypeSlug],
+        rehypePlugins: [rehypeFigure, rehypeSlug, [rehypeShiki, shikiOptions]],
       },
     },
   });

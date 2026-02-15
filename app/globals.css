@@ -396,6 +396,20 @@
   padding: 1rem 1.25rem;
 }
 
+/* Shiki dual-theme: wire CSS variables to class-based dark mode */
+
+.shiki,
+.shiki span {
+  color: var(--shiki-light, var(--foreground));
+  background-color: var(--shiki-light-bg, transparent);
+}
+
+.dark .shiki,
+.dark .shiki span {
+  color: var(--shiki-dark, var(--foreground));
+  background-color: var(--shiki-dark-bg, transparent);
+}
+
 /* Lists */
 
 .prose :where(li):not(:where([class~="not-prose"] *)) {
