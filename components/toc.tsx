@@ -49,23 +49,33 @@ export function TOC({ items }: { items: TOCItem[] }) {
 
   if (items.length === 0) return null;
 
+  const activeIndex = activeId
+    ? items.findIndex((item) => item.id === activeId)
+    : -1;
+
   return (
     <nav className="sticky top-20 h-fit max-h-[calc(100vh-6rem)] w-[200px] shrink-0">
       <div
         ref={containerRef}
         className="overflow-y-auto max-h-[calc(100vh-8rem)] scrollbar-none"
       >
-        {items.map((item) => (
-          <a
-            key={item.id}
-            href={`#${item.id}`}
-            data-active={activeId === item.id}
-            className="block py-1 text-sm text-muted-foreground/70 transition-colors hover:text-foreground data-[active=true]:text-foreground"
-            style={{ paddingLeft: `${(item.depth - 2) * 12}px` }}
-          >
-            {item.title}
-          </a>
-        ))}
+        {items.map((item, i) => {
+          const isPast = activeIndex >= 0 && i <= activeIndex;
+          return (
+            <a
+              key={item.id}
+              href={`#${item.id}`}
+              className={`block py-1 text-sm transition-colors hover:text-foreground ${
+                isPast
+                  ? "text-foreground"
+                  : "text-muted-foreground/70"
+              }`}
+              style={{ paddingLeft: `${(item.depth - 2) * 12}px` }}
+            >
+              {item.title}
+            </a>
+          );
+        })}
       </div>
     </nav>
   );
