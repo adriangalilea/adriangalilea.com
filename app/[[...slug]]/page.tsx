@@ -118,7 +118,7 @@ async function NoteView({ note }: { note: Note }) {
     <article className="pb-16">
       <div className="mx-auto max-w-2xl px-6">
         {note.cover && (
-          <figure className="pt-4 sm:pt-6 mb-8 text-center">
+          <figure className="mb-8 text-center">
             <CoverImage
               cover={note.cover}
               slug={note.slug.join("/")}
@@ -136,7 +136,7 @@ async function NoteView({ note }: { note: Note }) {
           </figure>
         )}
 
-        <div className={!note.cover ? "pt-4 sm:pt-6" : ""}>
+        <div>
           <div className="min-w-0">
             {note.isDraft && (
               <div className="mb-6 rounded-lg border border-border/50 bg-muted/50 px-4 py-3 text-muted-foreground text-sm">
@@ -221,7 +221,7 @@ async function PageView({ page }: { page: Page }) {
     <article className="pb-16">
       <div className="mx-auto max-w-[90rem] px-6">
         {page.cover && (
-          <figure className="pt-4 sm:pt-6 mb-8 mx-auto max-w-2xl text-center">
+          <figure className="mb-8 mx-auto max-w-2xl text-center">
             <CoverImage
               cover={page.cover}
               slug={page.slug.join("/")}
@@ -239,7 +239,7 @@ async function PageView({ page }: { page: Page }) {
           </figure>
         )}
 
-        <div className={`${!page.cover ? "pt-4 sm:pt-6" : ""} relative`}>
+        <div className="relative">
           <aside className="hidden xl:block absolute left-0 top-0 bottom-0">
             <TOC items={page.toc} />
           </aside>

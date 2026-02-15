@@ -82,7 +82,7 @@ export default function RootLayout({
                 <NavbarBreadcrumb folderPaths={folderPaths} />
               </GlassSurface>
             </HideOnScroll>
-            <div className="flex-1">{children}</div>
+            <div className="flex-1 pt-4 sm:pt-6">{children}</div>
             <GlassSurface as="footer" layer="l0" distortion>
               <div className="mx-auto flex h-12 max-w-7xl items-center justify-center gap-3 px-6">
                 {socialLinks.map((l) => (
