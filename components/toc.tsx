@@ -66,9 +66,7 @@ export function TOC({ items }: { items: TOCItem[] }) {
               key={item.id}
               href={`#${item.id}`}
               className={`block py-1 text-sm transition-colors hover:text-foreground ${
-                isPast
-                  ? "text-foreground"
-                  : "text-muted-foreground/70"
+                isPast ? "text-foreground" : "text-muted-foreground/70"
               }`}
               style={{ paddingLeft: `${(item.depth - 2) * 12}px` }}
             >
