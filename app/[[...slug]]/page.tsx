@@ -285,7 +285,7 @@ async function PageView({ page }: { page: Page }) {
                   ))}
                 </div>
               )}
-              <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
+              <h1 className="font-serif text-4xl font-normal tracking-tight leading-[1.15] sm:text-5xl">
                 {page.title}
               </h1>
               {page.description && (
