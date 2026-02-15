@@ -94,6 +94,8 @@ export default function RootLayout({
                 ))}
               </div>
             </GlassSurface>
+            {/* Bottom fade-out blur mask */}
+            <div className="fade-out-mask fixed bottom-0 right-0 w-full h-24 z-10 pointer-events-none backdrop-blur-sm" />
           </NuqsAdapter>
         </ThemeProvider>
         <Analytics />
