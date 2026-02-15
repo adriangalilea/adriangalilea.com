@@ -594,6 +594,23 @@ function LightboxDialog({
   );
 }
 
+function useIdlePreload(src: string) {
+  useEffect(() => {
+    if (typeof requestIdleCallback !== "undefined") {
+      const id = requestIdleCallback(() => {
+        const img = new Image();
+        img.src = src;
+      });
+      return () => cancelIdleCallback(id);
+    }
+    const t = setTimeout(() => {
+      const img = new Image();
+      img.src = src;
+    }, 2000);
+    return () => clearTimeout(t);
+  }, [src]);
+}
+
 type LightboxProps = {
   src: string;
   alt?: string;
@@ -603,6 +620,7 @@ type LightboxProps = {
 
 export function Lightbox({ src, alt = "", caption, children }: LightboxProps) {
   const lb = useLightbox();
+  useIdlePreload(src);
 
   return (
     <Dialog.Root open={lb.open} onOpenChange={lb.setOpen}>
@@ -629,6 +647,7 @@ export function LightboxExpandButton({
   alt = "",
 }: LightboxExpandButtonProps) {
   const lb = useLightbox();
+  useIdlePreload(src);
 
   // Try to find sibling image for source rect animation
   useEffect(() => {
