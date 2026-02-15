@@ -36,7 +36,7 @@ export function NavbarBreadcrumb({ folderPaths }: Props) {
     return (
       <Link
         href="/"
-        className="font-bold text-2xl sm:text-2xl tracking-tight transition-colors hover:text-foreground-low"
+        className="font-serif text-2xl sm:text-3xl tracking-tight transition-colors hover:text-foreground-low"
       >
         Adrian Galilea
       </Link>
@@ -50,7 +50,7 @@ export function NavbarBreadcrumb({ folderPaths }: Props) {
         <BreadcrumbItem className="shrink-0">
           <BreadcrumbLink
             asChild
-            className="font-bold text-base sm:text-2xl tracking-tight text-foreground hover:text-foreground-low"
+            className="font-serif text-xl sm:text-3xl tracking-tight text-foreground hover:text-foreground-low"
           >
             <Link href="/">
               <span className="sm:hidden">AG</span>
@@ -66,7 +66,7 @@ export function NavbarBreadcrumb({ folderPaths }: Props) {
             <BreadcrumbItem className="min-w-0">
               <BreadcrumbLink
                 asChild
-                className="text-base sm:text-lg hover:text-foreground-low truncate"
+                className="font-mono text-sm sm:text-base hover:text-foreground-low truncate"
               >
                 <Link href={item.href} className="flex items-center gap-1.5">
                   <Folder className="size-4 sm:size-5 shrink-0 text-foreground-low" />

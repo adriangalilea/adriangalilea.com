@@ -261,7 +261,7 @@ function FolderCard({ folder }: { folder: Folder }) {
       <div className="p-4">
         <div className="flex items-center gap-1.5">
           <FolderIcon className="size-4 text-foreground-lowest" />
-          <span className="font-semibold">{folder.title}</span>
+          <span className="font-mono text-sm">{folder.title}</span>
         </div>
         {folder.description && (
           <p className="text-sm text-foreground-low mt-1">
@@ -303,7 +303,7 @@ function XrayFolderCard({ folder }: { folder: Folder }) {
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1.5">
               <FolderIcon className="size-4 text-foreground-lowest" />
-              <span className="font-semibold">{folder.title}</span>
+              <span className="font-mono text-sm">{folder.title}</span>
             </div>
             {folder.description && (
               <p className="text-sm text-foreground-low mt-1">
