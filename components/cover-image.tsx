@@ -240,7 +240,7 @@ export function CoverImage({
       if (isVideo(cover)) {
         return (
           <div
-            className="relative w-full max-h-[32rem] overflow-hidden rounded-2xl"
+            className="cover-contained relative w-full max-h-[32rem] overflow-hidden rounded-2xl"
             style={containerStyle}
           >
             {poster && (
@@ -268,7 +268,7 @@ export function CoverImage({
       if (isGif(cover)) {
         const content = (
           <div
-            className="relative w-full max-h-[32rem] overflow-hidden rounded-2xl"
+            className="cover-contained relative w-full max-h-[32rem] overflow-hidden rounded-2xl"
             style={containerStyle}
           >
             <img
@@ -299,7 +299,7 @@ export function CoverImage({
       // Static image: blurred bg + object-contain via Next.js Image
       const content = (
         <div
-          className="relative w-full max-h-[32rem] overflow-hidden rounded-2xl"
+          className="cover-contained relative w-full max-h-[32rem] overflow-hidden rounded-2xl"
           style={containerStyle}
         >
           <img

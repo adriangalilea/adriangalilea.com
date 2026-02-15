@@ -483,10 +483,23 @@
 
 /* Images & figures */
 
-.prose :where(img):not(:where([class~="not-prose"] *)) {
+.prose :where(img):not(:where([class~="not-prose"] *, .badge)) {
   border-radius: 0.75rem;
   width: 100%;
   height: auto;
+  transition: transform 0.3s ease-out;
+}
+
+.prose :where(img):not(:where([class~="not-prose"] *, .badge)):hover {
+  transform: scale(1.02);
+}
+
+.cover-contained {
+  transition: transform 0.3s ease-out;
+}
+
+.cover-contained:hover {
+  transform: scale(1.02);
 }
 
 .prose img.badge {
