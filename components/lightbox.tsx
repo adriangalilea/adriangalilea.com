@@ -27,8 +27,28 @@ function clampScale(s: number): number {
   return Math.min(4, Math.max(1, s));
 }
 
+function calcSourceTransform(
+  sourceRect: DOMRect,
+  fittedW: number,
+): { transform: string; borderRadius: string } {
+  const fcx = window.innerWidth / 2;
+  const fcy = window.innerHeight / 2;
+  const scx = sourceRect.left + sourceRect.width / 2;
+  const scy = sourceRect.top + sourceRect.height / 2;
+  const s = sourceRect.width / fittedW;
+  return {
+    transform: `translate(${scx - fcx}px, ${scy - fcy}px) scale(${s})`,
+    borderRadius: `${12 / s}px`,
+  };
+}
+
+type AnimPhase = "idle" | "entering" | "open" | "exiting";
+
+const ANIM_MS = 300;
+const ANIM_EASE = "cubic-bezier(0.4, 0, 0.2, 1)";
+
 function useLightbox() {
-  const [open, setOpen] = useState(false);
+  const [open, setOpenRaw] = useState(false);
   const [scale, setScale] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [dragStart, setDragStart] = useState<{
@@ -41,6 +61,7 @@ function useLightbox() {
   const swipeStartRef = useRef<number | null>(null);
   const imgRef = useRef<HTMLImageElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLElement>(null);
   const pinchRef = useRef<{
     dist: number;
     scale: number;
@@ -53,6 +74,14 @@ function useLightbox() {
   const mouseDraggedRef = useRef(false);
   const wheelingRef = useRef(false);
   const wheelTimeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const exitTimeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+  const [animPhase, setAnimPhase] = useState<AnimPhase>("idle");
+  const [sourceRect, setSourceRect] = useState<DOMRect | null>(null);
+  const [fittedSize, setFittedSize] = useState<{
+    w: number;
+    h: number;
+  } | null>(null);
 
   const zoomed = scale > 1;
 
@@ -71,11 +100,6 @@ function useLightbox() {
     }
   }, []);
 
-  const [fittedSize, setFittedSize] = useState<{
-    w: number;
-    h: number;
-  } | null>(null);
-
   const resetState = useCallback(() => {
     setScale(1);
     setPan({ x: 0, y: 0 });
@@ -88,11 +112,99 @@ function useLightbox() {
     mouseDraggedRef.current = false;
     wheelingRef.current = false;
     clearTimeout(wheelTimeoutRef.current);
+    setSourceRect(null);
+    setAnimPhase("idle");
   }, [applySwipeY]);
 
   useEffect(() => {
     if (!open) resetState();
   }, [open, resetState]);
+
+  // Find the real source image, skipping blur placeholders and hidden elements
+  const findSourceImg = useCallback((): HTMLImageElement | null => {
+    const el = triggerRef.current;
+    if (!el) return null;
+    const stashed = (el as HTMLElement & { __lbSourceImg?: HTMLImageElement })
+      .__lbSourceImg;
+    if (stashed) return stashed;
+    const candidates = el.querySelectorAll("img");
+    for (const c of candidates) {
+      if (c.src.startsWith("data:")) continue;
+      if (c.getAttribute("aria-hidden") === "true") continue;
+      return c;
+    }
+    // Fallback: any img with real dimensions
+    for (const c of candidates) {
+      if (c.naturalWidth > 100) return c;
+    }
+    return null;
+  }, []);
+
+  // Hide trigger image while lightbox is open to prevent ghosting
+  useEffect(() => {
+    if (!open) return;
+    const target = findSourceImg() ?? triggerRef.current;
+    if (!target) return;
+    target.style.visibility = "hidden";
+    return () => {
+      target.style.visibility = "";
+    };
+  }, [open, findSourceImg]);
+
+  // Capture source element rect + pre-calc fitted size from trigger
+  const captureSource = useCallback(() => {
+    const el = triggerRef.current;
+    if (!el) return null;
+    const img = findSourceImg();
+    const rect = (img ?? el).getBoundingClientRect();
+    setSourceRect(rect);
+    if (img?.naturalWidth) {
+      const padding = window.innerWidth >= 640 ? 32 : 16;
+      const maxW = window.innerWidth - padding * 2;
+      const maxH = window.innerHeight - padding * 2 - 48;
+      const s = Math.min(maxW / img.naturalWidth, maxH / img.naturalHeight);
+      setFittedSize({ w: img.naturalWidth * s, h: img.naturalHeight * s });
+    }
+    return rect;
+  }, [findSourceImg]);
+
+  const requestOpen = useCallback(() => {
+    clearTimeout(exitTimeoutRef.current);
+    captureSource();
+    setAnimPhase("entering");
+    setOpenRaw(true);
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        setAnimPhase("open");
+      });
+    });
+  }, [captureSource]);
+
+  const requestClose = useCallback(() => {
+    if (animPhase === "exiting") {
+      clearTimeout(exitTimeoutRef.current);
+      setOpenRaw(false);
+      return;
+    }
+    if (scale > 1) {
+      setOpenRaw(false);
+      return;
+    }
+    // Re-capture source rect (page may have scrolled)
+    captureSource();
+    setAnimPhase("exiting");
+    exitTimeoutRef.current = setTimeout(() => {
+      setOpenRaw(false);
+    }, ANIM_MS + 16);
+  }, [animPhase, scale, captureSource]);
+
+  const handleOpenChange = useCallback(
+    (nextOpen: boolean) => {
+      if (nextOpen) requestOpen();
+      else requestClose();
+    },
+    [requestOpen, requestClose],
+  );
 
   useEffect(() => {
     const el = containerRef.current;
@@ -153,7 +265,7 @@ function useLightbox() {
       container.clientHeight -
       parseFloat(cs.paddingTop) -
       parseFloat(cs.paddingBottom) -
-      48; // reserve space for caption
+      48;
     const fitScale = Math.min(maxW / naturalWidth, maxH / naturalHeight);
     setFittedSize({ w: naturalWidth * fitScale, h: naturalHeight * fitScale });
   }, []);
@@ -293,7 +405,6 @@ function useLightbox() {
 
   const onTouchEnd = (e: React.TouchEvent) => {
     if (e.touches.length === 1 && pinchRef.current) {
-      // Dropped from 2 fingers to 1: transition pinch → drag
       pinchRef.current = null;
       const touch = e.touches[0];
       setDragStart({
@@ -308,7 +419,6 @@ function useLightbox() {
     if (e.touches.length === 0) {
       if (pinchRef.current) {
         pinchRef.current = null;
-        // Snap to 1x if barely zoomed
         if (scale < 1.15) {
           setScale(1);
           setPan({ x: 0, y: 0 });
@@ -319,7 +429,8 @@ function useLightbox() {
       if (scale > 1) {
         setDragStart(null);
       } else {
-        if (swipeYRef.current > 120) setOpen(false);
+        // Swipe dismiss bypasses animation
+        if (swipeYRef.current > 120) setOpenRaw(false);
         else applySwipeY(0);
         swipeStartRef.current = null;
       }
@@ -328,7 +439,9 @@ function useLightbox() {
 
   return {
     open,
-    setOpen,
+    setOpen: handleOpenChange,
+    animPhase,
+    sourceRect,
     zoomed,
     scale,
     pan,
@@ -339,6 +452,7 @@ function useLightbox() {
     fittedSize,
     imgRef,
     containerRef,
+    triggerRef,
     toggleZoom,
     toggleZoomKeyboard,
     recalcFittedSize,
@@ -371,10 +485,60 @@ function LightboxDialog({
     lb.setOpen(false);
   };
 
+  const isAnimating = lb.animPhase === "entering" || lb.animPhase === "exiting";
+
+  const getImageStyle = (): React.CSSProperties => {
+    const base: React.CSSProperties = {
+      width: lb.fittedSize ? lb.fittedSize.w : "auto",
+      height: lb.fittedSize ? lb.fittedSize.h : "auto",
+      cursor: lb.zoomed ? (lb.dragStart ? "grabbing" : "zoom-out") : "zoom-in",
+    };
+
+    if (lb.animPhase === "entering" && lb.sourceRect && lb.fittedSize) {
+      const t = calcSourceTransform(lb.sourceRect, lb.fittedSize.w);
+      return {
+        ...base,
+        transform: t.transform,
+        borderRadius: t.borderRadius,
+        transition: "none",
+      };
+    }
+
+    if (lb.animPhase === "exiting" && lb.sourceRect && lb.fittedSize) {
+      const t = calcSourceTransform(lb.sourceRect, lb.fittedSize.w);
+      return {
+        ...base,
+        transform: t.transform,
+        borderRadius: t.borderRadius,
+        transition: `transform ${ANIM_MS}ms ${ANIM_EASE}, border-radius ${ANIM_MS}ms ${ANIM_EASE}`,
+      };
+    }
+
+    // open or idle — normal zoom/pan behavior
+    return {
+      ...base,
+      transform: lb.zoomed
+        ? `scale(${lb.scale}) translate(${lb.pan.x / lb.scale}px, ${lb.pan.y / lb.scale}px)`
+        : "none",
+      borderRadius: 0,
+      transition:
+        lb.dragStart || lb.pinchRef.current || lb.wheelingRef.current
+          ? "none"
+          : `transform ${ANIM_MS}ms ${ANIM_EASE}, border-radius ${ANIM_MS}ms ${ANIM_EASE}`,
+    };
+  };
+
+  const scrimVisible =
+    lb.animPhase !== "entering" && lb.animPhase !== "exiting";
+
   return (
     <Dialog.Portal>
       <Dialog.Content
-        className="fixed inset-0 z-50 outline-none bg-(--glass-scrim) data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 duration-200"
+        className="fixed inset-0 z-50 outline-none"
+        style={{
+          backgroundColor: scrimVisible ? "var(--glass-scrim)" : "transparent",
+          transition: `background-color ${ANIM_MS}ms ${ANIM_EASE}`,
+        }}
         onPointerDown={(e) => e.stopPropagation()}
         onClick={(e) => e.stopPropagation()}
       >
@@ -385,6 +549,10 @@ function LightboxDialog({
           <button
             type="button"
             className="fixed top-4 right-4 z-[60] rounded-full bg-white/10 p-2 text-white/70 hover:text-white hover:bg-white/20 transition-colors"
+            style={{
+              opacity: scrimVisible ? 1 : 0,
+              transition: `opacity ${ANIM_MS}ms ${ANIM_EASE}`,
+            }}
             aria-label="Close"
           >
             <X className="size-5" />
@@ -413,24 +581,9 @@ function LightboxDialog({
             onClick={lb.toggleZoom}
             onKeyDown={lb.toggleZoomKeyboard}
             className="select-none"
-            style={{
-              width: lb.fittedSize ? lb.fittedSize.w : "auto",
-              height: lb.fittedSize ? lb.fittedSize.h : "auto",
-              cursor: lb.zoomed
-                ? lb.dragStart
-                  ? "grabbing"
-                  : "zoom-out"
-                : "zoom-in",
-              transform: lb.zoomed
-                ? `scale(${lb.scale}) translate(${lb.pan.x / lb.scale}px, ${lb.pan.y / lb.scale}px)`
-                : "scale(1)",
-              transition:
-                lb.dragStart || lb.pinchRef.current || lb.wheelingRef.current
-                  ? "none"
-                  : "transform 0.3s cubic-bezier(0.25, 0.1, 0.25, 1)",
-            }}
+            style={getImageStyle()}
           />
-          {caption && !lb.zoomed && (
+          {caption && !lb.zoomed && !isAnimating && (
             <div className="mt-4 text-sm text-white/60 text-center max-w-xl [&_em]:italic [&_del]:line-through">
               {caption}
             </div>
@@ -454,7 +607,12 @@ export function Lightbox({ src, alt = "", caption, children }: LightboxProps) {
   return (
     <Dialog.Root open={lb.open} onOpenChange={lb.setOpen}>
       <Dialog.Trigger asChild>
-        <span className="cursor-zoom-in">{children}</span>
+        <span
+          ref={lb.triggerRef as React.RefObject<HTMLSpanElement>}
+          className="cursor-zoom-in"
+        >
+          {children}
+        </span>
       </Dialog.Trigger>
       <LightboxDialog src={src} alt={alt} caption={caption} lb={lb} />
     </Dialog.Root>
@@ -472,10 +630,24 @@ export function LightboxExpandButton({
 }: LightboxExpandButtonProps) {
   const lb = useLightbox();
 
+  // Try to find sibling image for source rect animation
+  useEffect(() => {
+    const btn = lb.triggerRef.current;
+    if (!btn) return;
+    const parent = btn.closest(".group") as HTMLElement | null;
+    const img = parent?.querySelector("img") as HTMLElement | null;
+    if (img) {
+      // Stash the parent image ref so captureSource can find it
+      (btn as HTMLElement & { __lbSourceImg?: HTMLElement }).__lbSourceImg =
+        img;
+    }
+  }, [lb.triggerRef]);
+
   return (
     <Dialog.Root open={lb.open} onOpenChange={lb.setOpen}>
       <Dialog.Trigger asChild>
         <button
+          ref={lb.triggerRef as React.RefObject<HTMLButtonElement>}
           type="button"
           className="absolute bottom-2 right-2 z-10 rounded-full bg-black/40 p-1.5 text-white/80 hover:text-white hover:bg-black/60 transition-all opacity-0 group-hover:opacity-100 sm:opacity-0 max-sm:opacity-70"
           aria-label="Expand image"
