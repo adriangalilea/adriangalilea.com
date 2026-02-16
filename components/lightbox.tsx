@@ -118,6 +118,7 @@ function useLightbox(src: string) {
     mouseDraggedRef.current = false;
     wheelingRef.current = false;
     clearTimeout(wheelTimeoutRef.current);
+    clearTimeout(exitTimeoutRef.current);
     setSourceRect(null);
     setAnimPhase("idle");
   }, [applySwipeY, setAnimPhase]);
@@ -707,7 +708,7 @@ export function LightboxExpandButton({
     const parent = btn.closest(".group") as HTMLElement | null;
     const img = parent?.querySelector("img") as HTMLElement | null;
     if (img) {
-      // Stash the parent image ref so captureSource can find it
+      // Stash the parent image ref so findSourceImg can find it
       (btn as HTMLElement & { __lbSourceImg?: HTMLElement }).__lbSourceImg =
         img;
     }
