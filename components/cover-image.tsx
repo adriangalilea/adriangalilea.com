@@ -288,7 +288,7 @@ export function CoverImage({
           </div>
         );
         return lightbox ? (
-          <Lightbox src={cover} alt={title}>
+          <Lightbox src={cover} alt={title} eager>
             {content}
           </Lightbox>
         ) : (
@@ -322,7 +322,7 @@ export function CoverImage({
         </div>
       );
       return lightbox ? (
-        <Lightbox src={cover} alt={title}>
+        <Lightbox src={cover} alt={title} eager>
           {content}
         </Lightbox>
       ) : (
@@ -432,7 +432,7 @@ export function CoverImage({
 
       if (lightbox) {
         return (
-          <Lightbox src={cover} alt={title}>
+          <Lightbox src={cover} alt={title} eager>
             {content}
           </Lightbox>
         );

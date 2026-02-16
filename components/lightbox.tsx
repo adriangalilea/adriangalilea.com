@@ -140,16 +140,16 @@ function useLightbox() {
     return null;
   }, []);
 
-  // Hide trigger image while lightbox is open to prevent ghosting
+  // Hide trigger only when scrim is opaque (avoids flash on first click)
   useEffect(() => {
-    if (!open) return;
+    if (animPhase !== "open") return;
     const target = findSourceImg() ?? triggerRef.current;
     if (!target) return;
     target.style.visibility = "hidden";
     return () => {
       target.style.visibility = "";
     };
-  }, [open, findSourceImg]);
+  }, [animPhase, findSourceImg]);
 
   // Capture source element rect + pre-calc fitted size from trigger
   const captureSource = useCallback(() => {
@@ -594,8 +594,13 @@ function LightboxDialog({
   );
 }
 
-function useIdlePreload(src: string) {
+function usePreloadImage(src: string, eager = false) {
   useEffect(() => {
+    if (eager) {
+      const img = new Image();
+      img.src = src;
+      return;
+    }
     if (typeof requestIdleCallback !== "undefined") {
       const id = requestIdleCallback(() => {
         const img = new Image();
@@ -608,7 +613,7 @@ function useIdlePreload(src: string) {
       img.src = src;
     }, 2000);
     return () => clearTimeout(t);
-  }, [src]);
+  }, [src, eager]);
 }
 
 type LightboxProps = {
@@ -616,11 +621,18 @@ type LightboxProps = {
   alt?: string;
   caption?: ReactNode;
   children: ReactNode;
+  eager?: boolean;
 };
 
-export function Lightbox({ src, alt = "", caption, children }: LightboxProps) {
+export function Lightbox({
+  src,
+  alt = "",
+  caption,
+  children,
+  eager,
+}: LightboxProps) {
   const lb = useLightbox();
-  useIdlePreload(src);
+  usePreloadImage(src, eager);
 
   return (
     <Dialog.Root open={lb.open} onOpenChange={lb.setOpen}>
@@ -647,7 +659,7 @@ export function LightboxExpandButton({
   alt = "",
 }: LightboxExpandButtonProps) {
   const lb = useLightbox();
-  useIdlePreload(src);
+  usePreloadImage(src);
 
   // Try to find sibling image for source rect animation
   useEffect(() => {
