@@ -6,6 +6,7 @@ import {
   type ReactNode,
   useCallback,
   useEffect,
+  useLayoutEffect,
   useRef,
   useState,
 } from "react";
@@ -47,7 +48,7 @@ type AnimPhase = "idle" | "entering" | "open" | "exiting";
 const ANIM_MS = 300;
 const ANIM_EASE = "cubic-bezier(0.4, 0, 0.2, 1)";
 
-function useLightbox() {
+function useLightbox(src: string) {
   const [open, setOpenRaw] = useState(false);
   const [scale, setScale] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
@@ -76,7 +77,12 @@ function useLightbox() {
   const wheelTimeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const exitTimeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
-  const [animPhase, setAnimPhase] = useState<AnimPhase>("idle");
+  const [animPhase, setAnimPhaseRaw] = useState<AnimPhase>("idle");
+  const animPhaseRef = useRef<AnimPhase>("idle");
+  const setAnimPhase = useCallback((phase: AnimPhase) => {
+    animPhaseRef.current = phase;
+    setAnimPhaseRaw(phase);
+  }, []);
   const [sourceRect, setSourceRect] = useState<DOMRect | null>(null);
   const [fittedSize, setFittedSize] = useState<{
     w: number;
@@ -114,9 +120,13 @@ function useLightbox() {
     clearTimeout(wheelTimeoutRef.current);
     setSourceRect(null);
     setAnimPhase("idle");
-  }, [applySwipeY]);
+  }, [applySwipeY, setAnimPhase]);
 
-  useEffect(() => {
+  // useLayoutEffect so resetState (which sets animPhase="idle") triggers a
+  // synchronous re-render before paint — the visibility cleanup then runs in
+  // the same paint frame, preventing a one-frame gap where neither dialog nor
+  // source is visible
+  useLayoutEffect(() => {
     if (!open) resetState();
   }, [open, resetState]);
 
@@ -140,9 +150,13 @@ function useLightbox() {
     return null;
   }, []);
 
-  // Hide trigger only when scrim is opaque (avoids flash on first click)
-  useEffect(() => {
-    if (animPhase !== "open") return;
+  // Hide trigger for the entire lifetime of the lightbox (entering → open →
+  // exiting). useLayoutEffect ensures the source is hidden before the browser
+  // paints — critical during "entering" because the dialog overlay deactivates
+  // CSS :hover on the source, which would otherwise snap it from its hovered
+  // scale to rest position for one visible frame.
+  useLayoutEffect(() => {
+    if (animPhase === "idle") return;
     const target = findSourceImg() ?? triggerRef.current;
     if (!target) return;
     target.style.visibility = "hidden";
@@ -151,34 +165,44 @@ function useLightbox() {
     };
   }, [animPhase, findSourceImg]);
 
-  // Capture source element rect + pre-calc fitted size from trigger
-  const captureSource = useCallback(() => {
-    const el = triggerRef.current;
-    if (!el) return null;
-    const img = findSourceImg();
-    const rect = (img ?? el).getBoundingClientRect();
-    setSourceRect(rect);
-    if (img?.naturalWidth) {
-      const padding = window.innerWidth >= 640 ? 32 : 16;
-      const maxW = window.innerWidth - padding * 2;
-      const maxH = window.innerHeight - padding * 2 - 48;
-      const s = Math.min(maxW / img.naturalWidth, maxH / img.naturalHeight);
-      setFittedSize({ w: img.naturalWidth * s, h: img.naturalHeight * s });
-    }
-    return rect;
-  }, [findSourceImg]);
-
   const requestOpen = useCallback(() => {
     clearTimeout(exitTimeoutRef.current);
-    captureSource();
-    setAnimPhase("entering");
-    setOpenRaw(true);
-    requestAnimationFrame(() => {
+    const el = triggerRef.current;
+    if (el) {
+      const img = findSourceImg();
+      const rect = (img ?? el).getBoundingClientRect();
+      setSourceRect(rect);
+      if (img?.naturalWidth) {
+        const padding = window.innerWidth >= 640 ? 32 : 16;
+        const maxW = window.innerWidth - padding * 2;
+        const maxH = window.innerHeight - padding * 2 - 48;
+        const s = Math.min(maxW / img.naturalWidth, maxH / img.naturalHeight);
+        setFittedSize({ w: img.naturalWidth * s, h: img.naturalHeight * s });
+      }
+    }
+
+    const beginEnter = () => {
+      setAnimPhase("entering");
+      setOpenRaw(true);
       requestAnimationFrame(() => {
-        setAnimPhase("open");
+        requestAnimationFrame(() => {
+          setAnimPhase("open");
+        });
       });
-    });
-  }, [captureSource]);
+    };
+
+    // Ensure image is cached before animating — the in-page <Image> uses a
+    // Next.js-optimized URL so the original src may not be in the browser
+    // cache yet, causing a flash of dark scrim with no visible image
+    const probe = new Image();
+    probe.src = src;
+    if (probe.complete) {
+      beginEnter();
+    } else {
+      probe.onload = beginEnter;
+      probe.onerror = beginEnter;
+    }
+  }, [findSourceImg, src, setAnimPhase]);
 
   const requestClose = useCallback(() => {
     if (animPhase === "exiting") {
@@ -190,13 +214,17 @@ function useLightbox() {
       setOpenRaw(false);
       return;
     }
-    // Re-capture source rect (page may have scrolled)
-    captureSource();
+    // Re-capture source rect at rest position — hover transforms are inactive
+    // while the dialog overlay blocks pointer events on the page beneath
+    const target = findSourceImg() ?? triggerRef.current;
+    if (target) {
+      setSourceRect(target.getBoundingClientRect());
+    }
     setAnimPhase("exiting");
     exitTimeoutRef.current = setTimeout(() => {
       setOpenRaw(false);
     }, ANIM_MS + 16);
-  }, [animPhase, scale, captureSource]);
+  }, [animPhase, scale, findSourceImg, setAnimPhase]);
 
   const handleOpenChange = useCallback(
     (nextOpen: boolean) => {
@@ -252,6 +280,9 @@ function useLightbox() {
   }, [pan, scale, fittedSize]);
 
   const recalcFittedSize = useCallback(() => {
+    // Don't override pre-calc during enter/exit animation
+    const phase = animPhaseRef.current;
+    if (phase === "entering" || phase === "exiting") return;
     const img = imgRef.current;
     const container = containerRef.current;
     if (!img || !container || !img.naturalWidth) return;
@@ -267,7 +298,13 @@ function useLightbox() {
       parseFloat(cs.paddingBottom) -
       48;
     const fitScale = Math.min(maxW / naturalWidth, maxH / naturalHeight);
-    setFittedSize({ w: naturalWidth * fitScale, h: naturalHeight * fitScale });
+    const newW = naturalWidth * fitScale;
+    const newH = naturalHeight * fitScale;
+    setFittedSize((prev) => {
+      if (prev && Math.abs(prev.w - newW) < 2 && Math.abs(prev.h - newH) < 2)
+        return prev;
+      return { w: newW, h: newH };
+    });
   }, []);
 
   useEffect(() => {
@@ -494,6 +531,8 @@ function LightboxDialog({
       cursor: lb.zoomed ? (lb.dragStart ? "grabbing" : "zoom-out") : "zoom-in",
     };
 
+    const animTransition = `transform ${ANIM_MS}ms ${ANIM_EASE}, border-radius ${ANIM_MS}ms ${ANIM_EASE}`;
+
     if (lb.animPhase === "entering" && lb.sourceRect && lb.fittedSize) {
       const t = calcSourceTransform(lb.sourceRect, lb.fittedSize.w);
       return {
@@ -510,7 +549,7 @@ function LightboxDialog({
         ...base,
         transform: t.transform,
         borderRadius: t.borderRadius,
-        transition: `transform ${ANIM_MS}ms ${ANIM_EASE}, border-radius ${ANIM_MS}ms ${ANIM_EASE}`,
+        transition: animTransition,
       };
     }
 
@@ -520,11 +559,11 @@ function LightboxDialog({
       transform: lb.zoomed
         ? `scale(${lb.scale}) translate(${lb.pan.x / lb.scale}px, ${lb.pan.y / lb.scale}px)`
         : "none",
-      borderRadius: 0,
+      borderRadius: "0px",
       transition:
         lb.dragStart || lb.pinchRef.current || lb.wheelingRef.current
           ? "none"
-          : `transform ${ANIM_MS}ms ${ANIM_EASE}, border-radius ${ANIM_MS}ms ${ANIM_EASE}`,
+          : animTransition,
     };
   };
 
@@ -561,7 +600,7 @@ function LightboxDialog({
 
         <div
           ref={lb.containerRef}
-          className="flex flex-col items-center justify-center w-full h-full p-4 sm:p-8"
+          className="flex items-center justify-center w-full h-full p-4 sm:p-8"
           style={{ touchAction: "none" }}
           onClick={handleBackdropClick}
           onMouseDown={lb.onMouseDown}
@@ -583,12 +622,12 @@ function LightboxDialog({
             className="select-none"
             style={getImageStyle()}
           />
-          {caption && !lb.zoomed && !isAnimating && (
-            <div className="mt-4 text-sm text-white/60 text-center max-w-xl [&_em]:italic [&_del]:line-through">
-              {caption}
-            </div>
-          )}
         </div>
+        {caption && !lb.zoomed && !isAnimating && (
+          <div className="fixed bottom-8 left-0 right-0 z-[55] pointer-events-none text-sm text-white/60 text-center max-w-xl mx-auto px-4 [&_em]:italic [&_del]:line-through">
+            {caption}
+          </div>
+        )}
       </Dialog.Content>
     </Dialog.Portal>
   );
@@ -631,7 +670,7 @@ export function Lightbox({
   children,
   eager,
 }: LightboxProps) {
-  const lb = useLightbox();
+  const lb = useLightbox(src);
   usePreloadImage(src, eager);
 
   return (
@@ -658,7 +697,7 @@ export function LightboxExpandButton({
   src,
   alt = "",
 }: LightboxExpandButtonProps) {
-  const lb = useLightbox();
+  const lb = useLightbox(src);
   usePreloadImage(src);
 
   // Try to find sibling image for source rect animation
