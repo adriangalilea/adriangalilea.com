@@ -525,6 +525,18 @@ function LightboxDialog({
 
   const isAnimating = lb.animPhase === "entering" || lb.animPhase === "exiting";
 
+  // Keep the lightbox below the navbar and bottom fade for the entire FLIP
+  // transition (not just the entering frame). Raise z only after the image
+  // has settled at center so page overlays naturally occlude the moving image.
+  const [zRaised, setZRaised] = useState(false);
+  useEffect(() => {
+    if (lb.animPhase === "open") {
+      const t = setTimeout(() => setZRaised(true), ANIM_MS - 50);
+      return () => clearTimeout(t);
+    }
+    setZRaised(false);
+  }, [lb.animPhase]);
+
   const getImageStyle = (): React.CSSProperties => {
     const base: React.CSSProperties = {
       width: lb.fittedSize ? lb.fittedSize.w : "auto",
@@ -574,10 +586,10 @@ function LightboxDialog({
   return (
     <Dialog.Portal>
       <Dialog.Content
-        className="fixed inset-0 z-50 outline-none"
+        className={`fixed inset-0 ${zRaised ? "z-50" : "z-[5]"} outline-none`}
         style={{
           backgroundColor: scrimVisible ? "var(--glass-scrim)" : "transparent",
-          transition: `background-color ${ANIM_MS}ms ${ANIM_EASE}`,
+          transition: `background-color ${scrimVisible ? ANIM_MS : ANIM_MS / 2}ms ${ANIM_EASE}`,
         }}
         onPointerDown={(e) => e.stopPropagation()}
         onClick={(e) => e.stopPropagation()}
@@ -591,7 +603,7 @@ function LightboxDialog({
             className="fixed top-4 right-4 z-[60] rounded-full bg-white/10 p-2 text-white/70 hover:text-white hover:bg-white/20 transition-colors"
             style={{
               opacity: scrimVisible ? 1 : 0,
-              transition: `opacity ${ANIM_MS}ms ${ANIM_EASE}`,
+              transition: `opacity ${scrimVisible ? ANIM_MS : ANIM_MS / 2}ms ${ANIM_EASE}`,
             }}
             aria-label="Close"
           >
