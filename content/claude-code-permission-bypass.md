@@ -2,6 +2,7 @@
 title: "Claude Code's deny rules won't save you."
 publishedAt: 2026-02-12
 description: "How to auto-approve git commands without losing control."
+updatedAt: 2026-02-20
 tags:
   - ai
   - claude-code
@@ -274,3 +275,37 @@ allowed-tools: Bash(git add:*), Bash(git status:*), Bash(git commit:*), Bash(git
 ```
 
 One ghostty split with lazygit, one with Claude Code. Pick which files to stage in lazygit, `/commit` in Claude. More controlled and just as smooth.
+
+## Update: cmd-guard
+
+I expanded `git-guard` into `cmd-guard`. Same idea, broader scope. Inspired by [claude-code-safety-net](https://github.com/kenryu42/claude-code-safety-net) which does similar analysis in TypeScript across ~2500 lines. I kept the compiled Go binary approach for zero-dep `<1ms` execution.
+
+The hook now covers four command families, all deny-only (no more `ask` — if a command isn't in the allow list, Claude Code already prompts by default):
+
+**git** — everything from before, plus:
+- `git restore` without `--staged` (discards working tree)
+- `git checkout --` (overwrites files from index/ref)
+- `git stash drop` / `git stash clear` (permanent)
+- `git reset --merge` (can lose work)
+- `git worktree remove --force`
+- `git branch -D` (promoted from ask to deny)
+- `git clean -f` (promoted from ask to deny, respects `-n`/`--dry-run`)
+- Proper compound flag decomposition (`-fd` → `-f` + `-d`)
+
+**find:**
+- `-delete` flag (skips false positives where `-delete` is an argument to `-name`, `-iname`, etc.)
+- `-exec rm -rf` pattern
+
+**container** (Apple's native container tool):
+- `delete --all`, `delete --force`
+- `kill --all`
+- `prune`, `volume prune`, `volume delete`
+- `image prune --all`
+- `system stop`
+
+**psql:**
+- `DROP DATABASE`, `DROP TABLE`, `DROP SCHEMA`
+- `TRUNCATE`
+- `DELETE FROM` without `WHERE`
+
+The allow list in `settings.json` is now comprehensive — every git subcommand, build tools (pnpm, go, cargo, uv, deno), CLI tools (gh, curl, find, container, psql). The hook is the real guard. The allow list just removes friction for safe operations.
