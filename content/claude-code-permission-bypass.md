@@ -280,32 +280,83 @@ One ghostty split with lazygit, one with Claude Code. Pick which files to stage 
 
 I expanded `git-guard` into `cmd-guard`. Same idea, broader scope. Inspired by [claude-code-safety-net](https://github.com/kenryu42/claude-code-safety-net) which does similar analysis in TypeScript across ~2500 lines. I kept the compiled Go binary approach for zero-dep `<1ms` execution.
 
-The hook now covers four command families, all deny-only (no more `ask` — if a command isn't in the allow list, Claude Code already prompts by default):
+### What git-guard missed
 
-**git** — everything from before, plus:
-- `git restore` without `--staged` (discards working tree)
-- `git checkout --` (overwrites files from index/ref)
-- `git stash drop` / `git stash clear` (permanent)
-- `git reset --merge` (can lose work)
-- `git worktree remove --force`
-- `git branch -D` (promoted from ask to deny)
-- `git clean -f` (promoted from ask to deny, respects `-n`/`--dry-run`)
-- Proper compound flag decomposition (`-fd` → `-f` + `-d`)
+The original only analyzed the **first** command in a chain:
 
-**find:**
-- `-delete` flag (skips false positives where `-delete` is an argument to `-name`, `-iname`, etc.)
-- `-exec rm -rf` pattern
+```bash
+echo hello && git reset --hard    # hook saw "echo hello", ignored the rest
+true ; git push --force            # same
+cat foo | git reset --hard         # same
+```
 
-**container** (Apple's native container tool):
-- `delete --all`, `delete --force`
-- `kill --all`
-- `prune`, `volume prune`, `volume delete`
-- `image prune --all`
-- `system stop`
+Shell wrappers bypassed everything:
 
-**psql:**
-- `DROP DATABASE`, `DROP TABLE`, `DROP SCHEMA`
-- `TRUNCATE`
-- `DELETE FROM` without `WHERE`
+```bash
+bash -c "git reset --hard"         # hook saw "bash", not "git"
+sh -c "git push --force"           # same
+```
 
-The allow list in `settings.json` is now comprehensive — every git subcommand, build tools (pnpm, go, cargo, uv, deno), CLI tools (gh, curl, find, container, psql). The hook is the real guard. The allow list just removes friction for safe operations.
+And `xargs` could run destructive commands undetected:
+
+```bash
+find . -name "*.tmp" | xargs rm -rf
+```
+
+### What cmd-guard does
+
+**Shell segment splitting.** Splits on `&&`, `||`, `;`, `|` and analyzes every segment independently. No more hiding dangerous commands behind `echo hello &&`.
+
+**Shell wrapper detection.** Recognizes `bash`/`sh`/`zsh`/`fish`/`dash`/`ksh` with `-c`, extracts the inner command, and recursively analyzes it.
+
+**xargs child command detection.** Extracts the command after xargs flags and checks it. Catches `xargs rm -rf`, `xargs git push --force`, etc.
+
+**Broader command coverage.** Beyond git, it now guards find, container (Apple's native container tool), and psql.
+
+**deny + ask split.** `deny` for truly irreversible operations (pbcopy for user to run manually). `ask` for destructive-but-recoverable operations (user confirms in-line).
+
+### deny vs ask
+
+**deny** (pbcopy for user) = truly irreversible, no recovery mechanism:
+
+| Command | Why |
+|---|---|
+| `git push --force` | Rewrites remote history |
+| `git add -A/--all` | Policy: be explicit about what you stage |
+| `git stash clear` | All stashes gone permanently |
+| `git clean -f` | Untracked files gone forever |
+| `find -delete` | Permanent filesystem deletion |
+| `find -exec rm -rf` | Same |
+| `xargs rm -rf` | Same |
+| `psql DROP DATABASE` | Database gone |
+| `psql DROP SCHEMA` | Schema gone |
+| `container delete --all` | All containers nuked |
+| `container volume delete/rm` | Volume data gone |
+
+**ask** (confirm with user) = destructive but recoverable, or user-intentional:
+
+| Command | Recovery |
+|---|---|
+| `git reset --hard/--merge` | `git reflog` |
+| `git checkout --` / `git checkout .` | reflog if committed |
+| `git restore` (without `--staged`) | Same |
+| `git stash drop` | reflog |
+| `git branch -D` | reflog |
+| `git worktree remove --force` | reflog if committed |
+| `git push --force-with-lease` | Safer force push, still confirm |
+| `container delete --force` | Single container, recreatable |
+| `container kill --all` | Can restart |
+| `container prune` | Can recreate |
+| `container volume/image prune` | Can recreate / re-pull |
+| `container system stop` | Can restart |
+| `psql DROP TABLE` / `TRUNCATE` | Often intentional in dev |
+| `psql DELETE FROM` (no WHERE) | Same |
+| `psql -f` | Can't verify file, flag the risk |
+
+### Known limitations
+
+**git aliases.** `git config alias.yolo "push --force"` then `git yolo` bypasses the hook. Not fixable without running `git config --get alias.X` for every unknown subcommand. Claude is unlikely to set up aliases to bypass its own guard.
+
+**Environment variable expansion.** `cmd="reset --hard"; git $cmd` sees `$cmd` literally. Claude sends the literal command string, and is unlikely to use variable indirection.
+
+**Container exec.** `container exec <id> rm -rf /` runs inside a container. Intentional. Don't guard this.
