@@ -66,8 +66,8 @@
   /* L0: canvas */
   --background: oklch(0.95 0.006 260);
   --foreground: oklch(0.14 0.01 260);
-  --foreground-low: oklch(0.14 0.01 260 / 70%);
-  --foreground-lowest: oklch(0.14 0.01 260 / 40%);
+  --foreground-low: oklch(0.14 0.01 260 / 78%);
+  --foreground-lowest: oklch(0.14 0.01 260 / 48%);
   /* L1: elevated surfaces (cards, nav) */
   --card: oklch(1 0 260);
   --card-foreground: oklch(0.14 0.01 260);
@@ -121,8 +121,8 @@
   /* L0: canvas */
   --background: oklch(0.17 0.01 260);
   --foreground: oklch(0.93 0.006 260);
-  --foreground-low: oklch(0.93 0.006 260 / 70%);
-  --foreground-lowest: oklch(0.93 0.006 260 / 40%);
+  --foreground-low: oklch(0.93 0.006 260 / 80%);
+  --foreground-lowest: oklch(0.93 0.006 260 / 50%);
   /* L1: elevated surfaces */
   --card: oklch(0.16 0.01 260);
   --card-foreground: oklch(0.93 0.006 260);
