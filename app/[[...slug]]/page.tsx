@@ -149,7 +149,7 @@ async function NoteView({ note }: { note: Note }) {
                 {mdxContent}
               </Quote>
             ) : (
-              <div className="prose prose-p:leading-[1.8]">{mdxContent}</div>
+              <div className="prose prose-p:leading-[1.8] prose-p:my-6">{mdxContent}</div>
             )}
 
             {(note.estimatedDate ||

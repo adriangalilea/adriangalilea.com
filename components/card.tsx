@@ -109,7 +109,7 @@ function NoteCard({
           </>
         ) : (
           <>
-            <div className="prose prose-sm max-w-none prose-p:my-0 prose-p:leading-relaxed">
+            <div className="prose prose-sm max-w-none prose-p:my-3 prose-p:leading-relaxed">
               {body}
             </div>
             <div className="mt-3 flex items-center gap-1.5 text-xs text-foreground-lowest">
