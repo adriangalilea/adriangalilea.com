@@ -7,9 +7,12 @@ tags:
   - open-source
 source: https://github.com/adriangalilea/share
 ---
-Cooked a file sharing + link shortener on Cloudflare's free tier.
+🧑‍🍳 Cooked a file sharing + link shortener on Cloudflare's free tier.
 
-`share upload file.mov` → [icecube.to/U8ek](https://icecube.to/U8ek)
-`share link https://long-url.com` → [icecube.to/gh](https://icecube.to/gh)
+`share upload file.mov` → icecube.to/U8ek
 
-Zero cost, full ownership. [🧊.to](https://🧊.to)
+`share link https://long-url.com` → icecube.to/gh
+
+Zero cost, full ownership.
+
+[icecube.to](https://icecube.to) · [🧊.to](https://🧊.to)
