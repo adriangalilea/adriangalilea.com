@@ -5,6 +5,7 @@ import { Children, isValidElement, type ReactElement } from "react";
 import { Card } from "@/components/card";
 import { Pre } from "@/components/code-block";
 import { Lightbox } from "@/components/lightbox";
+import { YouTube } from "@/components/youtube";
 import { getContentByPath, isNote } from "@/lib/content";
 import { renderMDXString } from "@/lib/mdx";
 
@@ -43,6 +44,7 @@ function findImgSrc(children: React.ReactNode): string | null {
 export function getMDXComponents(): MDXComponents {
   return {
     ContentQuote,
+    YouTube,
     pre: Pre,
     a: ({ href, children, ...props }) => {
       if (href?.startsWith("/") || href?.startsWith("#")) {
