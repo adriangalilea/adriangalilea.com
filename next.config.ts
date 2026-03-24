@@ -13,6 +13,11 @@ const nextConfig: NextConfig = {
         destination: "/rss.xml",
         permanent: true,
       },
+      {
+        source: "/blog/funda-magnetica",
+        destination: "/magic-sleeve",
+        permanent: true,
+      },
     ];
   },
 };
