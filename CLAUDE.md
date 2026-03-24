@@ -232,6 +232,7 @@ These were copied into `content/` and adapted. The originals at source are stale
 | `why-i-hate-apple.md` | `~/self/writing/notes/xdg-over-apple.md` + `~/Documents/writings/notes/why_I_hate_apple.md` |
 | `backstory.md` | `~/Documents/writings/Obsidian Vault/site/Adrian Galilea.md` |
 | `quotes/` (Carmack, Ango, Peterson) | `~/self/writing/references/{carmack-constraints,ango-style-constraint,peterson-rules-freedom}.md` |
+| `magic-sleeve/` | `~/Documents/writings/Obsidian Vault/site/blog/Magic Sleeve.md` + `~/Documents/quests/main/_adriangalilea/MagicSleeve/IMG_0247.jpeg` + Squarespace export |
 
 ### Not yet imported
 
@@ -242,9 +243,11 @@ These were copied into `content/` and adapted. The originals at source are stale
 - Jordan B. Peterson zoom call (no source file yet)
 - Ramih Baiteh (Carrefour CEO) email — congratulated Adrian's ideas (no source file yet)
 
+#### Squarespace export (HTML versions of old posts)
+- `~/Documents/media/hemeroteca/Squarespace-Wordpress-Export-03-04-2024.xml` — contains HTML versions of: 1ALPHA, Vvalue, Optimal auto-compounding on DeFi, Non-Fungible Thoughts (NFT's), Magic Sleeve (imported). Cross-reference with Obsidian Vault versions below.
+
 #### Old project writeups (Obsidian Vault)
 - `~/Documents/writings/Obsidian Vault/site/blog/1ALPHA.md` - Gaming platform project (2013-2020)
-- `~/Documents/writings/Obsidian Vault/site/blog/Magic Sleeve.md` - DIY magnetic laptop sleeve
 - `~/Documents/writings/Obsidian Vault/site/blog/Non-Fungible Thoughts (NFT's).md` - NFT opinion piece (Spanish/English mix)
 - `~/Documents/writings/Obsidian Vault/site/blog/Optimal auto-compounding on DeFi.md` - DeFi auto-compounding tool
 - `~/Documents/writings/Obsidian Vault/site/blog/Vvalue.md` - Portfolio valuation widget
