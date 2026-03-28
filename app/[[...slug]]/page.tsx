@@ -10,6 +10,7 @@ import { Quote } from "@/components/quote";
 import { RelatedSection } from "@/components/related-section";
 import { TOC } from "@/components/toc";
 import { TrackView } from "@/components/track-view";
+import { VerdictInline } from "@/components/verdict-badge";
 import { ViewCounter } from "@/components/view-counter";
 import {
   type Content,
@@ -149,7 +150,9 @@ async function NoteView({ note }: { note: Note }) {
                 {mdxContent}
               </Quote>
             ) : (
-              <div className="prose prose-p:leading-[1.8] prose-p:my-6">{mdxContent}</div>
+              <div className="prose prose-p:leading-[1.8] prose-p:my-6">
+                {mdxContent}
+              </div>
             )}
 
             {(note.estimatedDate ||
@@ -168,6 +171,17 @@ async function NoteView({ note }: { note: Note }) {
                 <span className="text-muted-foreground">·</span>
                 <ViewCounter slug={note.slug.join("/")} />
                 <TrackView slug={note.slug.join("/")} />
+              </div>
+            )}
+
+            {(note.verdict || note.deadline) && (
+              <div className="mt-3 flex items-center gap-3 font-mono text-xs uppercase tracking-wider">
+                {note.verdict && <VerdictInline verdict={note.verdict} />}
+                {note.deadline && (
+                  <span className="text-muted-foreground">
+                    deadline: {note.deadline}
+                  </span>
+                )}
               </div>
             )}
 
@@ -287,6 +301,16 @@ async function PageView({ page }: { page: Page }) {
                   <span className="mx-2">·</span>
                   <ViewCounter slug={page.slug.join("/")} />
                   <TrackView slug={page.slug.join("/")} />
+                </div>
+              )}
+              {(page.verdict || page.deadline) && (
+                <div className="mt-3 flex items-center gap-3 font-mono text-xs uppercase tracking-wider">
+                  {page.verdict && <VerdictInline verdict={page.verdict} />}
+                  {page.deadline && (
+                    <span className="text-muted-foreground">
+                      deadline: {page.deadline}
+                    </span>
+                  )}
                 </div>
               )}
             </header>

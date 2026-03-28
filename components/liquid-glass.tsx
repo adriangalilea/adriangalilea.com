@@ -119,6 +119,16 @@ const HOVER_CLASSES = {
     label_expand_right:
       "group-hover/status:max-w-24 group-hover/status:opacity-100 group-hover/status:pl-1.5",
   },
+  "group/verdict": {
+    group: "group/verdict",
+    surface_expand_left:
+      "group-hover/verdict:gap-1.5 group-hover/verdict:pl-3 group-hover/verdict:pr-2",
+    surface_expand_right: "group-hover/verdict:pr-3",
+    label_expand_left:
+      "group-hover/verdict:max-w-24 group-hover/verdict:opacity-100",
+    label_expand_right:
+      "group-hover/verdict:max-w-24 group-hover/verdict:opacity-100 group-hover/verdict:pl-1.5",
+  },
 } as const;
 
 type GroupName = keyof typeof HOVER_CLASSES;

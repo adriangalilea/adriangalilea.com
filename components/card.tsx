@@ -11,6 +11,7 @@ import { CoverImage } from "@/components/cover-image";
 import { LightboxExpandButton } from "@/components/lightbox";
 import { Quote } from "@/components/quote";
 import { STATUS_CONFIG, StatusBadge } from "@/components/status-badge";
+import { VerdictBadge } from "@/components/verdict-badge";
 import { FeedViewCount } from "@/components/view-counter";
 import type { Content, Folder, Note, Page } from "@/lib/content";
 import {
@@ -65,13 +66,14 @@ function NoteCard({
     <ClickableWrapper
       href={note.path}
       className={cn(
-        "group cursor-pointer",
+        "group cursor-pointer relative",
         cardBase,
         cardHover,
         feedFlat,
         note.isDraft && cardDraft,
       )}
     >
+      {note.verdict && <VerdictBadge verdict={note.verdict} absolute />}
       {note.cover && (
         <div className="relative">
           <CoverImage
@@ -153,6 +155,7 @@ function PageCard({ page }: { page: Page }) {
         page.isDraft && cardDraft,
       )}
     >
+      {page.verdict && <VerdictBadge verdict={page.verdict} absolute />}
       {page.cover && (
         <div className="relative">
           <CoverImage

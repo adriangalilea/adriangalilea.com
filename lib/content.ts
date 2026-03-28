@@ -47,6 +47,7 @@ const warnedCovers = new Set<string>();
 // ============================================================================
 
 export type Status = "soon" | "shipped" | "lab" | "sunset";
+export type Verdict = "pending" | "partial" | "confirmed" | "missed";
 
 export type TOCItem = {
   depth: number;
@@ -84,6 +85,8 @@ export type Note = PostBase & {
   type: "note";
   source: string | null;
   estimatedDate: string | null;
+  verdict: Verdict | null;
+  deadline: string | null;
 };
 
 // Page: long-form with title
@@ -94,6 +97,9 @@ export type Page = PostBase & {
   toc: TOCItem[];
   updatedAt: Date | null;
   pinned: boolean;
+  verdict: Verdict | null;
+  deadline: string | null;
+  source: string | null;
 };
 
 export type Post = Note | Page;
@@ -460,8 +466,8 @@ function parseContent(filePath: string, slug: string[]): Content | null {
 
     if (!data.title) {
       const textLength = textContent.trim().length;
-      const isQuote = slug[0] === "quotes";
-      if (!isQuote && textLength > NOTE_MAX_CHARS) {
+      const isExempt = slug[0] === "quotes" || slug[0] === "predictions";
+      if (!isExempt && textLength > NOTE_MAX_CHARS) {
         throw new Error(
           `Note exceeds ${NOTE_MAX_CHARS} chars: ${filePath} (${textLength} chars). Add a title to make it a page.`,
         );
@@ -477,6 +483,8 @@ function parseContent(filePath: string, slug: string[]): Content | null {
         tags,
         source: data.source ?? null,
         estimatedDate: data.estimatedDate ?? null,
+        verdict: data.verdict ?? null,
+        deadline: data.deadline ?? null,
       };
     }
 
@@ -489,6 +497,9 @@ function parseContent(filePath: string, slug: string[]): Content | null {
       tags,
       updatedAt: data.updatedAt ?? null,
       pinned: data.pinned ?? false,
+      verdict: data.verdict ?? null,
+      deadline: data.deadline ?? null,
+      source: data.source ?? null,
     };
   } catch (e) {
     console.error(`Error parsing ${filePath}:`, e);

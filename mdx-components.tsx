@@ -9,6 +9,16 @@ import { YouTube } from "@/components/youtube";
 import { getContentByPath, isNote } from "@/lib/content";
 import { renderMDXString } from "@/lib/mdx";
 
+function Prediction({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="not-prose my-6 rounded-xl glass-card overflow-hidden p-4">
+      <div className="prose prose-sm max-w-none prose-p:my-3 prose-p:leading-relaxed">
+        {children}
+      </div>
+    </div>
+  );
+}
+
 async function ContentQuote({ slug }: { slug: string }) {
   const parts = slug.split("/");
   const note = getContentByPath(parts);
@@ -44,6 +54,7 @@ function findImgSrc(children: React.ReactNode): string | null {
 export function getMDXComponents(): MDXComponents {
   return {
     ContentQuote,
+    Prediction,
     YouTube,
     pre: Pre,
     a: ({ href, children, ...props }) => {
