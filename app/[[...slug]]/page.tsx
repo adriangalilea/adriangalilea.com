@@ -365,6 +365,7 @@ export async function generateMetadata({
       title = `${author.name} quote`;
       description = clean.slice(0, 160);
     } else {
+      title = "Adrian said";
       description = clean.slice(0, 160);
     }
   } else {
