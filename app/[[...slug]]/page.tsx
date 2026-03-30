@@ -363,9 +363,9 @@ export async function generateMetadata({
     const clean = stripMarkdown(content.content);
     if (author) {
       title = `${author.name} quote`;
+      description = clean.slice(0, 160);
     } else {
-      title = clean.slice(0, 70);
-      description = clean.length > 70 ? clean.slice(0, 160) : undefined;
+      description = clean.slice(0, 160);
     }
   } else {
     title = (content as Page | Folder).title;
