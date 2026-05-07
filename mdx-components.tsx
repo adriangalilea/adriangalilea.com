@@ -7,7 +7,7 @@ import { Pre } from "@/components/code-block";
 import { Lightbox } from "@/components/lightbox";
 import { YouTube } from "@/components/youtube";
 import { getContentByPath, isNote } from "@/lib/content";
-import { renderMDXString } from "@/lib/mdx";
+import { renderMDX } from "@/lib/mdx";
 
 function Prediction({ children }: { children: React.ReactNode }) {
   return (
@@ -23,10 +23,7 @@ async function ContentQuote({ slug }: { slug: string }) {
   const parts = slug.split("/");
   const note = getContentByPath(parts);
   if (!note || !isNote(note)) return null;
-  const { mdxContent } = await renderMDXString(
-    note.content,
-    getMDXComponents(),
-  );
+  const mdxContent = await renderMDX(note.content, getMDXComponents());
   return (
     <div className="not-prose my-6">
       <Card content={note} renderedNoteContent={mdxContent} />

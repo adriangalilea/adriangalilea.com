@@ -17,7 +17,7 @@ import {
   isPage,
   isPost,
 } from "@/lib/content";
-import { renderMDX, renderMDXString } from "@/lib/mdx";
+import { renderMDX } from "@/lib/mdx";
 import { getMDXComponents } from "@/mdx-components";
 
 // Height calculation for masonry distribution
@@ -121,8 +121,7 @@ export async function CollectionView({ folder, slug }: Props) {
   const items = await Promise.all(
     sortedChildren.map(async (content) => {
       const renderedNoteContent = isNote(content)
-        ? (await renderMDXString(content.content, getMDXComponents()))
-            .mdxContent
+        ? await renderMDX(content.content, getMDXComponents())
         : undefined;
 
       return {
@@ -143,7 +142,7 @@ export async function CollectionView({ folder, slug }: Props) {
   const noteSlugs = sortedChildren.filter(isNote).map((n) => n.slug.join("/"));
 
   const mdxContent = folder?.content.trim()
-    ? (await renderMDX(folder, getMDXComponents())).mdxContent
+    ? await renderMDX(folder.content, getMDXComponents())
     : null;
 
   return (

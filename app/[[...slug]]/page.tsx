@@ -28,7 +28,7 @@ import {
   type Note,
   type Page,
 } from "@/lib/content";
-import { renderMDX, renderMDXString } from "@/lib/mdx";
+import { renderMDX } from "@/lib/mdx";
 import { stripMarkdown } from "@/lib/utils";
 import { getMDXComponents } from "@/mdx-components";
 
@@ -65,8 +65,7 @@ async function prepareGridItems(items: Content[]) {
           content={c}
           renderedNoteContent={
             isNote(c)
-              ? (await renderMDXString(c.content, getMDXComponents()))
-                  .mdxContent
+              ? await renderMDX(c.content, getMDXComponents())
               : undefined
           }
         />
@@ -110,7 +109,7 @@ export default async function ContentPage({ params }: Props) {
 // ============================================================================
 
 async function NoteView({ note }: { note: Note }) {
-  const { mdxContent } = await renderMDX(note, getMDXComponents());
+  const mdxContent = await renderMDX(note.content, getMDXComponents());
   const recs = getRecommendations(note, 6);
   const author = getAuthorForContent(note);
   const backlinks = getBacklinks(note);
@@ -228,7 +227,7 @@ async function NoteView({ note }: { note: Note }) {
 // ============================================================================
 
 async function PageView({ page }: { page: Page }) {
-  const { mdxContent } = await renderMDX(page, getMDXComponents());
+  const mdxContent = await renderMDX(page.content, getMDXComponents());
   const recs = getRecommendations(page, 6);
 
   return (

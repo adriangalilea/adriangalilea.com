@@ -558,6 +558,29 @@ function scanDirectory(dir: string, basePath: string[] = []): Content[] {
 // ============================================================================
 
 let _cachedContent: Content[] | null = null;
+let _backlinksMap: Map<string, Content[]> | null = null;
+
+const BACKLINK_RE = /slug=["']([^"']+)["']/g;
+
+function buildBacklinksMap(all: Content[]): Map<string, Content[]> {
+  const map = new Map<string, Content[]>();
+  for (const c of all) {
+    BACKLINK_RE.lastIndex = 0;
+    const seen = new Set<string>();
+    let m: RegExpExecArray | null = BACKLINK_RE.exec(c.content);
+    while (m !== null) {
+      const target = m[1];
+      if (!seen.has(target)) {
+        seen.add(target);
+        const list = map.get(target);
+        if (list) list.push(c);
+        else map.set(target, [c]);
+      }
+      m = BACKLINK_RE.exec(c.content);
+    }
+  }
+  return map;
+}
 
 export function getAllContent(): Content[] {
   if (_cachedContent) return _cachedContent;
@@ -581,6 +604,7 @@ export function getAllContent(): Content[] {
   }
 
   _cachedContent = [...seen.values()];
+  _backlinksMap = buildBacklinksMap(_cachedContent);
   return _cachedContent;
 }
 
@@ -676,11 +700,10 @@ export function getAuthorForContent(c: Content): AuthorInfo | null {
 }
 
 export function getBacklinks(target: Content): Content[] {
-  const targetSlug = target.slug.join("/");
-  return getAllContent().filter((c) => {
-    if (c.path === target.path) return false;
-    return c.content.includes(`slug="${targetSlug}"`);
-  });
+  if (!_backlinksMap) getAllContent();
+  const list = _backlinksMap?.get(target.slug.join("/"));
+  if (!list) return [];
+  return list.filter((c) => c.path !== target.path);
 }
 
 export function getTagsFromContent(items: Content[]): string[] {
