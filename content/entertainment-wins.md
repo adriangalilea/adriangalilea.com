@@ -1,6 +1,6 @@
 ---
 publishedAt: 2026-05-07
-estimatedDate: "since GPT 3.5"
+estimatedDate: "~2022"
 tags:
   - ai
   - predictions
