@@ -50,6 +50,11 @@
     "unified": "^11.0.5",
     "zod": "^4.3.6"
   },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
+  },
   "devDependencies": {
     "@biomejs/biome": "2.4.0",
     "@tailwindcss/postcss": "^4.1.18",
