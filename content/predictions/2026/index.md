@@ -5,7 +5,7 @@ description: January 25, 2026
 links:
   source: https://t.me/jardindigital/574
 publishedAt: 2026-01-25
-updatedAt: 2026-03-28
+updatedAt: 2026-05-18
 ---
 
 Having AI autonomously work for you in the background will be the dominant trend, think of "digital twins" meet promises of Her/Jarvis.

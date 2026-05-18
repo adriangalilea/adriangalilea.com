@@ -1,7 +1,7 @@
 ---
 title: "Opus 5 geopolitical freak-out"
 publishedAt: 2026-01-25
-updatedAt: 2026-03-28
+updatedAt: 2026-05-18
 tags:
   - predictions
   - ai
@@ -56,3 +56,17 @@ Leaked documents reveal a planned private summit for European business leaders a
 The market is pricing in the structural risk. Foundation model providers can compete directly with the software layer. Heavy users realizing their workflows depend on whether Anthropic decides to let them have access. Anthropic plays gatekeeper — deciding which organizations qualify, charging more for the privilege.
 
 Prediction said "Opus 5." Reality delivered a tier *above* Opus that's too dangerous to release, too expensive to serve, and controlled by a company courting governments at private retreats.
+
+### 2026-05-12 — Mythos becomes a geopolitical weapon
+
+Anthropic restricts Mythos access to a handpicked set of US companies (Amazon, Apple, JPMorganChase) and US government agencies. The EU is shut out entirely. The Commission held four or five meetings with Anthropic. Nothing. OpenAI, in contrast, ships ChatGPT 5.5-Cyber to the EU AI Office through an EU Cyber Action Plan with engineer briefings.
+
+White House is reportedly weighing an executive order requiring government vetting of models before release. Washington opposed Anthropic expanding access.
+
+MEP Stéphanie Yon-Courtin: "Europe cannot claim strategic autonomy if Washington decides which AI models we are allowed to see."
+
+European banks — running on aging software, deeply interconnected — cannot test their defenses against the tool most likely to be used against them. Top US banks already can.
+
+Dependency fragility is no longer a forecast. It's foreign policy. A private company in California, gated by the White House, decides which jurisdictions get to defend themselves.
+
+Source: [The Parliament Magazine](https://www.theparliamentmagazine.eu/news/article/anthropic-shuts-the-eu-out-of-its-most-advanced-cyber-ai-model)
