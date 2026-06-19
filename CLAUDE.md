@@ -8,6 +8,11 @@ Next.js personal site.
 `pnpm format`
 `pnpm build`
 
+## Design references
+
+- https://wsocial.news/ — style/visual reference
+- https://read.cv/ — style/visual reference (defunct)
+
 ## Quality standard
 
 Fix root causes, not symptoms. When something breaks, trace it to the actual mechanism (e.g., React portal event bubbling, not "add another stopPropagation"). Understand framework internals — surface-level API knowledge isn't enough.
