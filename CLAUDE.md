@@ -2,6 +2,8 @@
 
 Next.js personal site.
 
+**Drafts live in `~/Documents/drafts/` (iCloud), NEVER in this repo** — it's public, so unpublished writing must not be committed here. Draft there; move a piece into the repo only when it ships.
+
 `pnpm dev` to run
 `pnpm check`
 `pnpm lint`
