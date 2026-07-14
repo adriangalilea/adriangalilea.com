@@ -2,7 +2,7 @@
 
 Next.js personal site.
 
-**Drafts live in `~/Documents/drafts/` (iCloud), NEVER in this repo** — it's public, so unpublished writing must not be committed here. Draft there; move a piece into the repo only when it ships.
+**Drafts: the split is confidentiality, not draft-ness.** The repo is public but the site keeps drafts unpublished, so WIP that's fine being publicly visible can be committed here as we see fit. **Private drafts go to `~/Documents/drafts/` (iCloud) and never touch this repo.**
 
 `pnpm dev` to run
 `pnpm check`
