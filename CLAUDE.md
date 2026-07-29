@@ -285,3 +285,4 @@ These were copied into `content/` and adapted. The originals at source are stale
 - Add backstory page
 - Generate OG images for quotes (author avatar + quote text + author name)
 - Clean up stale duplicates at source locations after confirming site versions are canonical
+- Run `vercel link` — the Vercel project exists and is live (`adriangalilea-com`, team adriangalileas-projects) but this local repo is unlinked, so `vercel env pull` / CLI ops won't work until linked
