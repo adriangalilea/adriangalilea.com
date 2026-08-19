@@ -5,8 +5,8 @@ import sharp from "sharp";
 const W = 1200, H = 630;
 const P = { l: 110, r: 130, t: 110, b: 110 };
 const labels = ["8k", "32k", "64k", "128k"];
-const before = [571, 490, 392, 390];
-const after = [584, 530, 475, 485];
+const before = [571, 490, 392, 390.5];
+const after = [584, 530, 475, 484.9];
 const deltas = ["+2.3%", "+8.2%", "+21.2%", "+24.2%"];
 
 const BG = "#17181c";

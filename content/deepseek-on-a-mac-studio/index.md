@@ -42,7 +42,7 @@ Cold prefill on the production box:
     { label: "8k", before: 571, after: 584 },
     { label: "32k", before: 490, after: 530 },
     { label: "64k", before: 392, after: 475 },
-    { label: "128k", before: 390, after: 485 },
+    { label: "128k", before: 390.5, after: 484.9 },
   ]}
 />
 
