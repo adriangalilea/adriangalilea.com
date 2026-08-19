@@ -33,7 +33,7 @@ DeepSeek V4 uses sparse attention: a "lightning indexer" scores compressed KV an
 
 Cold prefill on the production box:
 
-<CompareBars
+<CompareLines
   unit="t/s"
   beforeName="before"
   afterName="after"

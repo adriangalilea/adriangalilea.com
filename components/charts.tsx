@@ -1,6 +1,6 @@
 "use client";
 
-import { Bar, BarChart, CartesianGrid, LabelList, XAxis, YAxis } from "recharts";
+import { Bar, BarChart, CartesianGrid, LabelList, Line, LineChart, XAxis, YAxis } from "recharts";
 import {
   type ChartConfig,
   ChartContainer,
@@ -85,6 +85,63 @@ export function CompareBars({
             <LabelList position="top" offset={6} className="fill-foreground tabular-nums" fontSize={11} />
           </Bar>
         </BarChart>
+      </ChartContainer>
+      {caption ? <Caption>{caption}{unit ? ` (${unit})` : ""}</Caption> : null}
+    </figure>
+  );
+}
+
+
+/** Two lines over an ordered axis — divergence/decay stories. Same data shape as CompareBars. */
+export function CompareLines({
+  data,
+  beforeName = "before",
+  afterName = "after",
+  unit = "",
+  caption,
+}: {
+  data: ComparePoint[];
+  beforeName?: string;
+  afterName?: string;
+  unit?: string;
+  caption?: string;
+}) {
+  const config = {
+    before: { label: beforeName, color: BEFORE },
+    after: { label: afterName, color: AFTER },
+  } satisfies ChartConfig;
+
+  const deltas = new Map(
+    data.map((d) => [d.label, `${d.after >= d.before ? "+" : ""}${(((d.after - d.before) / d.before) * 100).toFixed(1)}%`]),
+  );
+
+  const Tick = ({ x, y, payload }: { x?: number; y?: number; payload?: { value?: string } }) => (
+    <g transform={`translate(${x},${y})`}>
+      <text dy={12} textAnchor="middle" className="fill-foreground text-xs">
+        {payload?.value}
+      </text>
+      <text dy={28} textAnchor="middle" className="text-xs font-medium tabular-nums" style={{ fill: AFTER }}>
+        {deltas.get(payload?.value ?? "")}
+      </text>
+    </g>
+  );
+
+  return (
+    <figure className="not-prose my-8">
+      <Legend beforeName={beforeName} afterName={afterName} />
+      <ChartContainer config={config} className="aspect-[2/1] w-full">
+        <LineChart data={data} margin={{ top: 20, left: 24, right: 24 }}>
+          <CartesianGrid vertical={false} stroke="var(--border)" />
+          <XAxis dataKey="label" tickLine={false} axisLine={false} interval={0} height={40} tick={<Tick />} padding={{ left: 12, right: 12 }} />
+          <YAxis hide domain={["dataMin - 40", "dataMax + 20"]} />
+          <ChartTooltip cursor={{ stroke: "var(--border)" }} content={<ChartTooltipContent />} />
+          <Line dataKey="before" stroke={BEFORE} strokeOpacity={0.5} strokeWidth={2} dot={{ fill: BEFORE, strokeWidth: 0, r: 3, fillOpacity: 0.5 }} isAnimationActive={false}>
+            <LabelList position="bottom" offset={10} className="fill-muted-foreground tabular-nums" fontSize={11} />
+          </Line>
+          <Line dataKey="after" stroke={AFTER} strokeWidth={2.5} dot={{ fill: AFTER, strokeWidth: 0, r: 3.5 }} isAnimationActive={false}>
+            <LabelList position="top" offset={10} className="fill-foreground tabular-nums" fontSize={11} />
+          </Line>
+        </LineChart>
       </ChartContainer>
       {caption ? <Caption>{caption}{unit ? ` (${unit})` : ""}</Caption> : null}
     </figure>
