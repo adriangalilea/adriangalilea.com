@@ -39,6 +39,7 @@
     "react-dom": "19.2.4",
     "react-masonry-css": "^1.0.16",
     "reading-time": "^1.5.0",
+    "recharts": "^3.10.1",
     "rehype-slug": "^6.0.0",
     "remark-breaks": "^4.0.0",
     "remark-gfm": "^4.0.1",

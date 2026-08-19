@@ -13,6 +13,16 @@ I have access to a Mac Studio M3 Ultra, 512GB of unified memory, running [antire
 
 When I started measuring, a chat turn took between 6 and 20 seconds. A few hours of work later it takes **1.6s**.
 
+<Bars
+  unit="s"
+  caption="Chat turn latency, same box, same model"
+  data={[
+    { label: "before, worst case", value: 20 },
+    { label: "before, typical", value: 6 },
+    { label: "after", value: 1.6, accent: true },
+  ]}
+/>
+
 ## 1: the kernels
 
 DeepSeek V4 uses sparse attention: a "lightning indexer" scores compressed KV and picks the top 512 rows per token. At long context that indexer dominates. Three PRs, each stacked on the last:
@@ -23,12 +33,18 @@ DeepSeek V4 uses sparse attention: a "lightning indexer" scores compressed KV an
 
 Cold prefill on the production box:
 
-| context | before | after | Δ |
-|---|---|---|---|
-| 8k | ~571 t/s | 584 | +2.3% |
-| 32k | ~490 | 530 | +8% |
-| 64k | 392 | 475 | +21.2% |
-| **128k** | **390** | **485** | **+24.2%** |
+<CompareBars
+  unit="t/s"
+  beforeName="before"
+  afterName="after"
+  caption="Cold prefill throughput on the production box"
+  data={[
+    { label: "8k", before: 571, after: 584 },
+    { label: "32k", before: 490, after: 530 },
+    { label: "64k", before: 392, after: 475 },
+    { label: "128k", before: 390, after: 485 },
+  ]}
+/>
 
 All of it bit-exact: every candidate ran behind a rollback env, ABBA'd against the incumbent, logits compared byte for byte at 32 context frontiers. One ULP different is a different model. All three PRs are in production and offered upstream.
 

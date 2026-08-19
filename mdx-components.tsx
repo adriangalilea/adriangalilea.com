@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Children, isValidElement, type ReactElement } from "react";
 import { Card } from "@/components/card";
+import { Bars, CompareBars } from "@/components/charts";
 import { Pre } from "@/components/code-block";
 import { Lightbox } from "@/components/lightbox";
 import { YouTube } from "@/components/youtube";
@@ -50,6 +51,8 @@ function findImgSrc(children: React.ReactNode): string | null {
 
 export function getMDXComponents(): MDXComponents {
   return {
+    Bars,
+    CompareBars,
     ContentQuote,
     Prediction,
     YouTube,
