@@ -47,8 +47,8 @@ ${dots(after, TEAL, 6)}
 ${valueLabels(before, MUTED, 34, 400)}
 ${valueLabels(after, FG, -18, 600)}
 ${ticks}
-<text x="${W - P.r + 26}" y="${y(after[3]) + 7}" fill="${TEAL}" font-size="21" font-weight="600" font-family="ui-sans-serif, -apple-system, 'Helvetica Neue', Arial">ds4+</text>
-<text x="${W - P.r + 26}" y="${y(before[3]) + 7}" fill="${MUTED}" font-size="21" font-family="ui-sans-serif, -apple-system, 'Helvetica Neue', Arial">main</text>
+<text x="${W - P.r + 26}" y="${y(after[3]) + 7}" fill="${TEAL}" font-size="21" font-weight="600" font-family="ui-sans-serif, -apple-system, 'Helvetica Neue', Arial">ours</text>
+<text x="${W - P.r + 26}" y="${y(before[3]) + 7}" fill="${MUTED}" font-size="21" font-family="ui-sans-serif, -apple-system, 'Helvetica Neue', Arial">upstream</text>
 <text x="${P.l - 20}" y="52" fill="${MUTED}" font-size="20" font-family="ui-sans-serif, -apple-system, 'Helvetica Neue', Arial">cold prefill, tokens/s · DeepSeek V4 Flash · M3 Ultra</text>
 </svg>`;
 

@@ -35,8 +35,8 @@ Cold prefill on the production box:
 
 <CompareLines
   unit="t/s"
-  beforeName="before"
-  afterName="after"
+  beforeName="upstream"
+  afterName="ours"
   caption="Cold prefill throughput on the production box"
   data={[
     { label: "8k", before: 571, after: 584 },
