@@ -27,7 +27,8 @@ Cold prefill on the production box:
 |---|---|---|---|
 | 8k | ~571 t/s | 584 | +2.3% |
 | 32k | ~490 | 530 | +8% |
-| **64k** | **392** | **475** | **+21.2%** |
+| 64k | 392 | 475 | +21.2% |
+| **128k** | **390** | **485** | **+24.2%** |
 
 All of it bit-exact: every candidate ran behind a rollback env, ABBA'd against the incumbent, logits compared byte for byte at 32 context frontiers. One ULP different is a different model. All three PRs are in production and offered upstream.
 
