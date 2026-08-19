@@ -1,4 +1,5 @@
 import {
+  getAllContent,
   getAuthorForContent,
   getContentByPath,
   isFolder,
@@ -6,6 +7,20 @@ import {
   isPage,
 } from "@/lib/content";
 import { generateCoverOG, generateQuoteOG } from "@/lib/og";
+
+// Prerendered at build: the serverless runtime has neither content/ nor
+// public/ in its bundle, so a dynamic render can only 404.
+export const dynamic = "force-static";
+
+export function generateStaticParams() {
+  return getAllContent()
+    .filter(
+      (c) =>
+        (isNote(c) && getAuthorForContent(c) !== null) ||
+        ((isPage(c) || isFolder(c)) && c.cover !== null),
+    )
+    .map((c) => ({ slug: c.slug }));
+}
 
 const CACHE_HEADERS = {
   "Cache-Control":
