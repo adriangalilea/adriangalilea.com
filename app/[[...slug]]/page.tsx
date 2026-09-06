@@ -29,6 +29,7 @@ import {
   noteDate,
   type Page,
 } from "@/lib/content";
+import { SERIF_CH } from "@/lib/faces";
 import { renderMDX } from "@/lib/mdx";
 import { stripMarkdown } from "@/lib/utils";
 import { getMDXComponents } from "@/mdx-components";
@@ -158,6 +159,7 @@ async function NoteView({ note }: { note: Note }) {
                 date={noteDate(note)}
                 tone={author.portrait?.tone}
                 focus={author.portrait?.focus}
+                ch={SERIF_CH}
               >
                 {mdxContent}
               </Quote>

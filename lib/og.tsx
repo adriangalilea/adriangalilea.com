@@ -3,6 +3,7 @@ import { join } from "node:path";
 import { Resvg } from "@resvg/resvg-js";
 import { ImageResponse } from "next/og";
 import { type Content, getAuthorForContent, isNote } from "@/lib/content";
+import { SERIF_CH } from "@/lib/faces";
 import { renderQuoteSvg } from "@/lib/quote-card";
 import { stripMarkdown } from "@/lib/utils";
 
@@ -137,6 +138,7 @@ export async function generateQuoteOG(content: Content): Promise<Response> {
       accent: portrait?.tone.accent,
       focus: portrait?.focus,
       fontFamily: "Instrument Serif",
+      ch: SERIF_CH,
       nameFamily: "Geist",
       dateFamily: "Geist Mono",
       fonts: Object.keys(STILL_FONTS),

@@ -22,6 +22,7 @@ import {
   isPage,
   noteDate,
 } from "@/lib/content";
+import { SERIF_CH } from "@/lib/faces";
 import { isStaticCover } from "@/lib/media";
 import { cn } from "@/lib/utils";
 
@@ -109,6 +110,7 @@ function NoteCard({
               date={noteDate(note)}
               tone={author.portrait?.tone}
               focus={author.portrait?.focus}
+              ch={SERIF_CH}
             >
               {body}
             </Quote>

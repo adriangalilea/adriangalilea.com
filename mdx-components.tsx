@@ -6,8 +6,10 @@ import { Card } from "@/components/card";
 import { Bars, CompareBars, CompareLines } from "@/components/charts";
 import { Pre } from "@/components/code-block";
 import { Lightbox } from "@/components/lightbox";
+import { Quote } from "@/components/ui/quote";
 import { YouTube } from "@/components/youtube";
 import { getContentByPath, isNote } from "@/lib/content";
+import { SERIF_CH } from "@/lib/faces";
 import { renderMDX } from "@/lib/mdx";
 
 function Prediction({ children }: { children: React.ReactNode }) {
@@ -30,6 +32,17 @@ async function ContentQuote({ slug }: { slug: string }) {
       <Card content={note} renderedNoteContent={mdxContent} />
     </div>
   );
+}
+
+/** The plain words inside a rendered node tree - what a blockquote says, without its
+ *  markup - for the card's measure. */
+function textOf(node: React.ReactNode): string {
+  if (node == null || typeof node === "boolean") return "";
+  if (typeof node === "string" || typeof node === "number") return String(node);
+  if (Array.isArray(node)) return node.map(textOf).join("");
+  if (isValidElement(node))
+    return textOf((node.props as { children?: React.ReactNode }).children);
+  return "";
 }
 
 function findImgSrc(children: React.ReactNode): string | null {
@@ -58,6 +71,28 @@ export function getMDXComponents(): MDXComponents {
     Prediction,
     YouTube,
     pre: Pre,
+    // A MARKDOWN BLOCKQUOTE IS A QUOTATION, so it is the same object as every other quote
+    // on the site: the prose weight of @ag/quote, not a bespoke italic box. The site's
+    // convention writes the attribution as a last line starting with an em dash - it is
+    // lifted into the <cite> so the card carries it the way it carries an author.
+    blockquote: ({ children }) => {
+      const nodes = Children.toArray(children).filter(isValidElement);
+      const last = nodes[nodes.length - 1];
+      const by = last ? textOf(last).trim() : "";
+      const cited = /^[—–-]\s*/.test(by);
+      const body = cited ? nodes.slice(0, -1) : nodes;
+      return (
+        <Quote
+          variant="prose"
+          text={body.map(textOf).join(" ")}
+          author={cited ? { name: by.replace(/^[—–-]\s*/, "") } : undefined}
+          ch={SERIF_CH}
+          className="not-prose my-6"
+        >
+          {body}
+        </Quote>
+      );
+    },
     a: ({ href, children, ...props }) => {
       if (href?.startsWith("/") || href?.startsWith("#")) {
         return (
