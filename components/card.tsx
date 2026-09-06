@@ -106,6 +106,14 @@ function NoteCard({
                 name: author.name,
                 href: author.path,
                 avatar: author.avatar,
+                full:
+                  author.avatar && author.portrait
+                    ? {
+                        src: author.avatar,
+                        width: author.portrait.size[0],
+                        height: author.portrait.size[1],
+                      }
+                    : null,
               }}
               date={noteDate(note)}
               tone={author.portrait?.tone}

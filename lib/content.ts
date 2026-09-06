@@ -121,7 +121,12 @@ export type Folder = ContentBase & {
    *  and where its subject sits. Asset preparation, done once on the Mac — the build
    *  reads two numbers and never touches a pixel. Null when the sidecar is missing,
    *  which is a portrait half-prepared and is said so at build. */
-  portrait: { tone: QuoteTone; focus: number } | null;
+  portrait: {
+    tone: QuoteTone;
+    focus: number;
+    /** Natural pixels of the avatar file - what the lightbox needs to fly it home. */
+    size: [number, number];
+  } | null;
 };
 
 export type Content = Post | Folder;
@@ -389,8 +394,9 @@ function readPortrait(dir: string, slug: string[]): Folder["portrait"] {
   const raw = JSON.parse(readFileSync(side, "utf-8")) as {
     focus: number;
     average: [number, number, number];
+    size: [number, number];
   };
-  return { tone: toneFrom(...raw.average), focus: raw.focus };
+  return { tone: toneFrom(...raw.average), focus: raw.focus, size: raw.size };
 }
 
 function resolveAvatar(dir: string, slug: string[]): string | null {

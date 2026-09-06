@@ -154,6 +154,14 @@ async function NoteView({ note }: { note: Note }) {
                   name: author.name,
                   href: author.path,
                   avatar: author.avatar,
+                  full:
+                    author.avatar && author.portrait
+                      ? {
+                          src: author.avatar,
+                          width: author.portrait.size[0],
+                          height: author.portrait.size[1],
+                        }
+                      : null,
                 }}
                 source={note.source}
                 date={noteDate(note)}
