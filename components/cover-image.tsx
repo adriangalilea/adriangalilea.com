@@ -298,7 +298,9 @@ export function CoverImage({
           </div>
         );
         return lightbox ? (
-          <Zoomable picture={picture}>{content}</Zoomable>
+          <Zoomable picture={picture} radius="rounded-2xl">
+            {content}
+          </Zoomable>
         ) : (
           content
         );
@@ -330,7 +332,9 @@ export function CoverImage({
         </div>
       );
       return lightbox ? (
-        <Zoomable picture={picture}>{content}</Zoomable>
+        <Zoomable picture={picture} radius="rounded-2xl">
+          {content}
+        </Zoomable>
       ) : (
         content
       );
@@ -437,7 +441,11 @@ export function CoverImage({
       );
 
       if (lightbox) {
-        return <Zoomable picture={picture}>{content}</Zoomable>;
+        return (
+          <Zoomable picture={picture} radius="rounded-2xl">
+            {content}
+          </Zoomable>
+        );
       }
 
       return content;
