@@ -1,0 +1,20 @@
+{
+  "_": "Slug -> Wikipedia article, for the authors whose slug is not the title. Read by `mise portraits` in the ui repo. null = no encyclopaedia has a usable picture and a person has to choose one.",
+
+  "bible": "Bible",
+  "felipe-ii": "Philip_II_of_Spain",
+  "george-clemenceau": "Georges_Clemenceau",
+  "h-g-wells": "H._G._Wells",
+  "john-f-kennedy": "John_F._Kennedy",
+  "nicolas-gomez-davila": "Nicolás_Gómez_Dávila",
+  "pyotr-tchaikovsky": "Pyotr_Ilyich_Tchaikovsky",
+  "terence": "Terence_(playwright)",
+
+  "allen-steble": null,
+  "bullric-wall": null,
+  "david-mccullough-jr": null,
+  "guillermo-rauch": null,
+  "kyle-clark": null,
+  "satoshi-nakamoto": null,
+  "steph-ango": null
+}
