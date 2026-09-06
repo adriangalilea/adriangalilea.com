@@ -50,6 +50,13 @@ overwrites one, so a value set by hand stays. `lib/content.ts` reads it into
 `Folder.portrait` → `AuthorInfo.portrait`, and warns at build for a portrait without
 one. The build decodes NO pixels: no sharp, no Vision, no fontconfig.
 
+The author's face in an attribution is `components/ui/avatar.tsx` (`@ag/avatar`),
+positioned on the sidecar's `focus` and ringed in the tone; with the sidecar's `size` it
+is a lightbox trigger. **The `@ag/lightbox` provider is mounted ONCE in `app/layout.tsx`
+around `children`** — every avatar with a `full` portrait opens into it, on a quote's page
+and in every feed card. The site's own `components/lightbox.tsx` still handles covers and
+article figures; folding those onto `@ag/lightbox` is the rest of that adoption.
+
 What the site supplies beyond that: the words with markdown stripped, the formatted date
 (`noteDate` in `lib/content.ts`), and a rasterizer. `lib/og.tsx` renders the still with
 **resvg**, not satori: it takes font FILES, so the three voices resolve to the faces they
