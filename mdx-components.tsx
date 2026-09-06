@@ -73,19 +73,25 @@ export function getMDXComponents(): MDXComponents {
     pre: Pre,
     // A MARKDOWN BLOCKQUOTE IS A QUOTATION, so it is the same object as every other quote
     // on the site: the prose weight of @ag/quote, not a bespoke italic box. The site's
-    // convention writes the attribution as a last line starting with an em dash - it is
-    // lifted into the <cite> so the card carries it the way it carries an author.
+    // convention writes the attribution as the blockquote's last line, `- Plato`, which
+    // markdown parses as a one-item LIST (the old CSS drew the dash as its marker); a
+    // trailing paragraph opening with a dash is the same convention spelled out. Either
+    // is lifted into the <cite> so the card carries it the way it carries an author.
     blockquote: ({ children }) => {
       const nodes = Children.toArray(children).filter(isValidElement);
       const last = nodes[nodes.length - 1];
-      const by = last ? textOf(last).trim() : "";
-      const cited = /^[—–-]\s*/.test(by);
-      const body = cited ? nodes.slice(0, -1) : nodes;
+      const tag = last ? (last.type as string) : "";
+      const text = last ? textOf(last).trim() : "";
+      const cited =
+        tag === "ul" || tag === "ol" || /^[—–-]\s+/.test(text)
+          ? text.replace(/^[—–-]\s+/, "")
+          : null;
+      const body = cited !== null ? nodes.slice(0, -1) : nodes;
       return (
         <Quote
           variant="prose"
           text={body.map(textOf).join(" ")}
-          author={cited ? { name: by.replace(/^[—–-]\s*/, "") } : undefined}
+          author={cited !== null ? { name: cited } : undefined}
           ch={SERIF_CH}
           className="not-prose my-6"
         >
