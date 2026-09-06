@@ -686,6 +686,20 @@ export function getChildrenForSlug(slug: string[]): Content[] {
 
 export type AuthorInfo = { name: string; avatar: string | null; path: string };
 
+/** The date a note shows, already formatted - the quote card takes a string because it
+ *  does not own a locale. An estimate wins over a stamp, and a stamp before the year
+ *  1000 is the placeholder for "nobody wrote one down", not a date. */
+export function noteDate(note: Note): string | null {
+  if (note.estimatedDate) return note.estimatedDate;
+  if (note.publishedAt && new Date(note.publishedAt).getFullYear() >= 1000)
+    return new Date(note.publishedAt).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  return null;
+}
+
 export function getAuthorForContent(c: Content): AuthorInfo | null {
   const all = getAllContent();
   for (let i = c.slug.length - 1; i >= 1; i--) {

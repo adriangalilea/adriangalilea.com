@@ -6,10 +6,10 @@ import { CollectionView } from "@/components/collection-view";
 import { Comments } from "@/components/comments";
 import { CoverImage } from "@/components/cover-image";
 import { Grid } from "@/components/filterable-grid";
-import { Quote } from "@/components/quote";
 import { RelatedSection } from "@/components/related-section";
 import { TOC } from "@/components/toc";
 import { TrackView } from "@/components/track-view";
+import { Quote } from "@/components/ui/quote";
 import { VerdictInline } from "@/components/verdict-badge";
 import { ViewCounter } from "@/components/view-counter";
 import {
@@ -26,9 +26,11 @@ import {
   isPage,
   isPost,
   type Note,
+  noteDate,
   type Page,
 } from "@/lib/content";
 import { renderMDX } from "@/lib/mdx";
+import { toneOf } from "@/lib/tone";
 import { stripMarkdown } from "@/lib/utils";
 import { getMDXComponents } from "@/mdx-components";
 
@@ -113,6 +115,7 @@ async function NoteView({ note }: { note: Note }) {
   const recs = getRecommendations(note, 6);
   const author = getAuthorForContent(note);
   const backlinks = getBacklinks(note);
+  const tone = await toneOf(author?.avatar ?? null);
 
   return (
     <article className="pb-16">
@@ -145,7 +148,18 @@ async function NoteView({ note }: { note: Note }) {
             )}
 
             {author ? (
-              <Quote author={author} source={note.source} size="lg">
+              <Quote
+                variant="feature"
+                text={stripMarkdown(note.content)}
+                author={{
+                  name: author.name,
+                  href: author.path,
+                  avatar: author.avatar,
+                }}
+                source={note.source}
+                date={noteDate(note)}
+                tone={tone ?? undefined}
+              >
                 {mdxContent}
               </Quote>
             ) : (
@@ -373,8 +387,9 @@ export async function generateMetadata({
   }
 
   const slugStr = slug.join("/");
+  // Every note has a card now, Adrian's own included; pages and folders need a cover.
   const hasOG =
-    (isNote(content) && !!author) ||
+    isNote(content) ||
     ((isPage(content) || isFolder(content)) && !!content.cover);
 
   const ogImage = hasOG

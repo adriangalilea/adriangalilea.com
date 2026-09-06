@@ -1,21 +1,14 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
+import { Resvg } from "@resvg/resvg-js";
 import { ImageResponse } from "next/og";
 import { type Content, getAuthorForContent, isNote } from "@/lib/content";
+import { renderQuoteSvg } from "@/lib/quote-card";
+import { toneOf } from "@/lib/tone";
 import { stripMarkdown } from "@/lib/utils";
 
 const W = 1200;
 const H = 630;
-const PAD = 60;
-
-function slugToHue(slug: string): number {
-  let hash = 0;
-  for (let i = 0; i < slug.length; i++) {
-    hash = (hash << 5) - hash + slug.charCodeAt(i);
-    hash |= 0;
-  }
-  return Math.abs(hash % 360);
-}
 
 function loadFont(name: string): ArrayBuffer {
   const path = join(
@@ -79,12 +72,6 @@ function findCoverData(slugPath: string): CoverData | null {
   return null;
 }
 
-function loadAvatarBase64(content: Content): string | null {
-  const author = getAuthorForContent(content);
-  if (!author?.avatar) return null;
-  return readImageAsDataURI(join(process.cwd(), "public", author.avatar));
-}
-
 function getFonts() {
   const geistRegular = loadFont("Geist-Regular.ttf");
   const geistBold = loadFont("Geist-Bold.ttf");
@@ -94,129 +81,78 @@ function getFonts() {
   ];
 }
 
-export function generateQuoteOG(content: Content): ImageResponse {
+// THE QUOTE CARD IS NOT DRAWN HERE. `renderQuoteSvg` in `lib/quote-card` is the layout -
+// the same module the page's <Quote> reads its numbers from, so a shared link and the
+// page it opens are one card, not two that drifted. This file only supplies what the
+// still cannot get for itself: the words, the portrait as bytes, the portrait's tone, and
+// a rasterizer.
+//
+// resvg, not satori: satori draws JSX and this is already an SVG, and resvg is handed the
+// font FILES outright, so the three voices resolve to the faces they name instead of to
+// whatever a build machine's fontconfig has lying around. Instrument Serif is the site's
+// own serif (app/layout.tsx), shipped here under the OFL (lib/fonts/OFL-InstrumentSerif.txt).
+const STILL_FONTS = {
+  "Instrument Serif": join(
+    process.cwd(),
+    "lib/fonts/InstrumentSerif-Regular.ttf",
+  ),
+  Geist: join(
+    process.cwd(),
+    "node_modules/geist/dist/fonts/geist-sans/Geist-Regular.ttf",
+  ),
+  "Geist Mono": join(
+    process.cwd(),
+    "node_modules/geist/dist/fonts/geist-mono/GeistMono-Regular.ttf",
+  ),
+};
+
+/** The card for a note. With an author, their words under their portrait in their
+ *  colour; without one, Adrian's own words on the neutral ground - every note gets a
+ *  preview, which is the gap the old route left open. */
+export async function generateQuoteOG(content: Content): Promise<Response> {
   if (!isNote(content)) throw new Error("generateQuoteOG requires a Note");
   const author = getAuthorForContent(content);
-  if (!author) throw new Error("generateQuoteOG requires a Note with author");
+  const avatar = author?.avatar
+    ? readImageAsDataURI(join(process.cwd(), "public", author.avatar))
+    : null;
+  const tone = await toneOf(author?.avatar ?? null);
+  const year =
+    content.estimatedDate ??
+    (content.publishedAt && new Date(content.publishedAt).getFullYear() >= 1000
+      ? String(new Date(content.publishedAt).getFullYear())
+      : null);
 
-  const slugStr = content.slug.join("/");
-  const hue = slugToHue(slugStr);
-  const accent = `hsl(${hue}, 70%, 65%)`;
-  const text = stripMarkdown(content.content).slice(0, 240);
-  const avatarData = loadAvatarBase64(content);
-
-  const fontSize =
-    text.length < 60
-      ? 52
-      : text.length < 100
-        ? 46
-        : text.length < 140
-          ? 40
-          : text.length < 180
-            ? 36
-            : 34;
-
-  return new ImageResponse(
-    <div
-      style={{
-        width: "100%",
-        height: "100%",
-        display: "flex",
-        backgroundColor: "#0a0a0a",
-        fontFamily: "Geist",
-        position: "relative",
-        overflow: "hidden",
-      }}
-    >
-      {avatarData && (
-        <img
-          src={avatarData}
-          style={{
-            position: "absolute",
-            top: 0,
-            right: 0,
-            width: 600,
-            height: H,
-            objectFit: "cover",
-            objectPosition: "center top",
-            opacity: 0.55,
-          }}
-        />
-      )}
-      {avatarData && (
-        <div
-          style={{
-            position: "absolute",
-            top: 0,
-            right: 0,
-            width: 720,
-            height: H,
-            background:
-              "linear-gradient(to right, #0a0a0a 25%, rgba(10,10,10,0.5) 55%, rgba(10,10,10,0.2) 100%)",
-          }}
-        />
-      )}
-      <span
-        style={{
-          position: "absolute",
-          top: "35%",
-          left: PAD - 20,
-          transform: "translateY(-50%)",
-          fontSize: 360,
-          color: accent,
-          opacity: 0.2,
-          lineHeight: 1,
-        }}
-      >
-        {"\u201C"}
-      </span>
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          padding: PAD,
-          width: "100%",
-          height: "100%",
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "center",
-            flex: 1,
-            maxWidth: 700,
-            paddingLeft: 50,
-          }}
-        >
-          <span
-            style={{
-              fontSize,
-              color: "#e5e5e5",
-              fontStyle: "italic",
-              lineHeight: 1.5,
-            }}
-          >
-            {text}
-          </span>
-        </div>
-        <span
-          style={{
-            fontSize: 28,
-            letterSpacing: "0.18em",
-            textTransform: "uppercase",
-            fontWeight: 700,
-            color: accent,
-            opacity: 0.9,
-            paddingLeft: 50,
-          }}
-        >
-          {author.name}
-        </span>
-      </div>
-    </div>,
-    { width: W, height: H, fonts: getFonts() },
+  const svg = renderQuoteSvg(
+    {
+      text: stripMarkdown(content.content),
+      author: { name: author?.name ?? "Adrian Galilea" },
+      date: year,
+    },
+    {
+      width: W,
+      height: H,
+      avatar,
+      background: tone?.ground,
+      accent: tone?.accent,
+      fontFamily: "Instrument Serif",
+      nameFamily: "Geist",
+      dateFamily: "Geist Mono",
+      fonts: Object.keys(STILL_FONTS),
+    },
   );
+  const png = new Resvg(svg, {
+    fitTo: { mode: "width", value: W },
+    font: {
+      loadSystemFonts: false,
+      fontFiles: Object.values(STILL_FONTS),
+      defaultFontFamily: "Instrument Serif",
+    },
+  })
+    .render()
+    .asPng();
+  return new Response(new Uint8Array(png), {
+    headers: { "Content-Type": "image/png" },
+  });
 }
 
 export function generateCoverOG(slugPath: string): ImageResponse {

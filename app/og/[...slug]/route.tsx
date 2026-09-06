@@ -1,6 +1,5 @@
 import {
   getAllContent,
-  getAuthorForContent,
   getContentByPath,
   isFolder,
   isNote,
@@ -12,12 +11,12 @@ import { generateCoverOG, generateQuoteOG } from "@/lib/og";
 // public/ in its bundle, so a dynamic render can only 404.
 export const dynamic = "force-static";
 
+// EVERY note gets a card, not only the ones with an author: Adrian's own notes shared a
+// bare link for as long as the quote card needed a portrait to exist, and it does not.
 export function generateStaticParams() {
   return getAllContent()
     .filter(
-      (c) =>
-        (isNote(c) && getAuthorForContent(c) !== null) ||
-        ((isPage(c) || isFolder(c)) && c.cover !== null),
+      (c) => isNote(c) || ((isPage(c) || isFolder(c)) && c.cover !== null),
     )
     .map((c) => ({ slug: c.slug }));
 }
@@ -34,23 +33,22 @@ function withCacheHeaders(res: Response): Response {
   return res;
 }
 
-export function GET(
+export async function GET(
   _request: Request,
   { params }: { params: Promise<{ slug: string[] }> },
 ) {
-  return params.then(({ slug }) => {
-    const slugStr = slug.join("/");
-    const content = getContentByPath(slug);
-    if (!content) return new Response(null, { status: 404 });
+  const { slug } = await params;
+  const slugStr = slug.join("/");
+  const content = getContentByPath(slug);
+  if (!content) return new Response(null, { status: 404 });
 
-    if (isNote(content) && getAuthorForContent(content)) {
-      return withCacheHeaders(generateQuoteOG(content));
-    }
+  if (isNote(content)) {
+    return withCacheHeaders(await generateQuoteOG(content));
+  }
 
-    if ((isPage(content) || isFolder(content)) && content.cover) {
-      return withCacheHeaders(generateCoverOG(slugStr));
-    }
+  if ((isPage(content) || isFolder(content)) && content.cover) {
+    return withCacheHeaders(generateCoverOG(slugStr));
+  }
 
-    return new Response(null, { status: 404 });
-  });
+  return new Response(null, { status: 404 });
 }

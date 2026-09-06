@@ -9,8 +9,8 @@ import { ClickableWrapper } from "@/components/clickable-wrapper";
 import { FeedComments } from "@/components/comment-feed";
 import { CoverImage } from "@/components/cover-image";
 import { LightboxExpandButton } from "@/components/lightbox";
-import { Quote } from "@/components/quote";
 import { STATUS_CONFIG, StatusBadge } from "@/components/status-badge";
+import { Quote } from "@/components/ui/quote";
 import { VerdictBadge } from "@/components/verdict-badge";
 import { FeedViewCount } from "@/components/view-counter";
 import type { Content, Folder, Note, Page } from "@/lib/content";
@@ -20,8 +20,10 @@ import {
   isFolder,
   isNote,
   isPage,
+  noteDate,
 } from "@/lib/content";
 import { isStaticCover } from "@/lib/media";
+import { toneOf } from "@/lib/tone";
 import { cn } from "@/lib/utils";
 
 // ============================================================================
@@ -48,7 +50,7 @@ const statusHoverClasses: Record<string, string> = {
 // NOTE CARD
 // ============================================================================
 
-function NoteCard({
+async function NoteCard({
   note,
   renderedContent,
 }: {
@@ -56,6 +58,7 @@ function NoteCard({
   renderedContent?: ReactNode;
 }) {
   const author = getAuthorForContent(note);
+  const tone = await toneOf(author?.avatar ?? null);
   const body = renderedContent ? (
     renderedContent
   ) : (
@@ -98,10 +101,15 @@ function NoteCard({
         {author ? (
           <>
             <Quote
-              author={author}
-              publishedAt={note.publishedAt}
-              estimatedDate={note.estimatedDate}
-              size="sm"
+              variant="prose"
+              text={note.content}
+              author={{
+                name: author.name,
+                href: author.path,
+                avatar: author.avatar,
+              }}
+              date={noteDate(note)}
+              tone={tone ?? undefined}
             >
               {body}
             </Quote>

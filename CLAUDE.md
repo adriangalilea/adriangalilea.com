@@ -25,6 +25,27 @@ Every interactive component must handle all input methods: mouse, trackpad, touc
 
 Keep CSS in Tailwind unless there's a specific reason not to. One hook for one interaction — don't split coupled state across multiple hooks to look clean. Expose the minimum API surface needed.
 
+## Quotes are the `@ag/quote` pair, not a local component
+
+A quote is drawn by ONE module at three weights and as a link preview, and all of it
+comes from the registry at ui.adriangalilea.com (`components.json` maps `@ag`):
+`components/ui/quote.tsx` + `quote.css` (the web card: `feature` on a quote's own page,
+`prose` inside `Card` in the feed and in `ContentQuote` embeds) and `lib/quote-card.ts`
+(the rules and `renderQuoteSvg`, the 1200×630 still the OG route rasterizes). Refresh a
+copy with `npx shadcn@latest add @ag/quote --overwrite`; never edit the copies, fix the
+registry and re-add. `app/tokens.css` is the `@ag/tokens` copy, imported from globals.
+
+What the site supplies, because the module has no runtime: the portrait's TONE
+(`lib/tone.ts`, sharp averages the avatar to one pixel → `toneFrom`), the words with
+markdown stripped, the formatted date (`noteDate` in `lib/content.ts`), and a
+rasterizer. `lib/og.tsx` renders the still with **resvg**, not satori: it takes font
+FILES, so the three voices resolve to the faces they name — Instrument Serif
+(`lib/fonts/`, OFL, the same face `--font-serif` loads for the page), Geist and Geist
+Mono from the `geist` package. resvg is a native addon and is listed in
+`serverExternalPackages`. EVERY note gets an OG card, Adrian's own included, on the
+neutral ground. Focus (where the subject sits in the portrait) is the default centre
+here — Vision is macOS tooling, not a build step.
+
 ## Content Architecture
 
 All content lives in `content/` as `.md` or `.mdx` files. Three content types, determined by frontmatter + body length:
