@@ -35,16 +35,22 @@ comes from the registry at ui.adriangalilea.com (`components.json` maps `@ag`):
 copy with `npx shadcn@latest add @ag/quote --overwrite`; never edit the copies, fix the
 registry and re-add. `app/tokens.css` is the `@ag/tokens` copy, imported from globals.
 
-What the site supplies, because the module has no runtime: the portrait's TONE
-(`lib/tone.ts`, sharp averages the avatar to one pixel → `toneFrom`), the words with
-markdown stripped, the formatted date (`noteDate` in `lib/content.ts`), and a
-rasterizer. `lib/og.tsx` renders the still with **resvg**, not satori: it takes font
-FILES, so the three voices resolve to the faces they name — Instrument Serif
-(`lib/fonts/`, OFL, the same face `--font-serif` loads for the page), Geist and Geist
-Mono from the `geist` package. resvg is a native addon and is listed in
-`serverExternalPackages`. EVERY note gets an OG card, Adrian's own included, on the
-neutral ground. Focus (where the subject sits in the portrait) is the default centre
-here — Vision is macOS tooling, not a build step.
+**Everything the card needs from a portrait's pixels is ASSET PREPARATION, not a build
+step.** `content/quotes/<author>/avatar.json` sits beside each `avatar.png` and holds
+the two numbers the card takes — `focus` (where the subject sits, from Vision) and
+`tone` (ground + ink, from the average colour). `mise portrait` (ui repo) writes it when
+it crops; `mise portraits content/quotes` writes any that are missing and never
+overwrites one, so a value set by hand stays. `lib/content.ts` reads it into
+`Folder.portrait` → `AuthorInfo.portrait`, and warns at build for a portrait without
+one. The build decodes NO pixels: no sharp, no Vision, no fontconfig.
+
+What the site supplies beyond that: the words with markdown stripped, the formatted date
+(`noteDate` in `lib/content.ts`), and a rasterizer. `lib/og.tsx` renders the still with
+**resvg**, not satori: it takes font FILES, so the three voices resolve to the faces they
+name — Instrument Serif (`lib/fonts/`, OFL, the same face `--font-serif` loads for the
+page), Geist and Geist Mono from the `geist` package. resvg is a native addon and is
+listed in `serverExternalPackages`. EVERY note gets an OG card, Adrian's own included,
+on the neutral ground.
 
 ## Content Architecture
 

@@ -30,7 +30,6 @@ import {
   type Page,
 } from "@/lib/content";
 import { renderMDX } from "@/lib/mdx";
-import { toneOf } from "@/lib/tone";
 import { stripMarkdown } from "@/lib/utils";
 import { getMDXComponents } from "@/mdx-components";
 
@@ -115,7 +114,6 @@ async function NoteView({ note }: { note: Note }) {
   const recs = getRecommendations(note, 6);
   const author = getAuthorForContent(note);
   const backlinks = getBacklinks(note);
-  const tone = await toneOf(author?.avatar ?? null);
 
   return (
     <article className="pb-16">
@@ -158,7 +156,8 @@ async function NoteView({ note }: { note: Note }) {
                 }}
                 source={note.source}
                 date={noteDate(note)}
-                tone={tone ?? undefined}
+                tone={author.portrait?.tone}
+                focus={author.portrait?.focus}
               >
                 {mdxContent}
               </Quote>

@@ -23,7 +23,6 @@ import {
   noteDate,
 } from "@/lib/content";
 import { isStaticCover } from "@/lib/media";
-import { toneOf } from "@/lib/tone";
 import { cn } from "@/lib/utils";
 
 // ============================================================================
@@ -50,7 +49,7 @@ const statusHoverClasses: Record<string, string> = {
 // NOTE CARD
 // ============================================================================
 
-async function NoteCard({
+function NoteCard({
   note,
   renderedContent,
 }: {
@@ -58,7 +57,6 @@ async function NoteCard({
   renderedContent?: ReactNode;
 }) {
   const author = getAuthorForContent(note);
-  const tone = await toneOf(author?.avatar ?? null);
   const body = renderedContent ? (
     renderedContent
   ) : (
@@ -109,7 +107,8 @@ async function NoteCard({
                 avatar: author.avatar,
               }}
               date={noteDate(note)}
-              tone={tone ?? undefined}
+              tone={author.portrait?.tone}
+              focus={author.portrait?.focus}
             >
               {body}
             </Quote>

@@ -25,6 +25,7 @@ import {
   NON_WEBM_ANIMATED,
   POSTER_EXTENSIONS,
 } from "@/lib/media";
+import type { QuoteTone } from "@/lib/quote-card";
 
 const CONTENT_DIR = join(process.cwd(), "content");
 const PUBLIC_DIR = join(process.cwd(), "public");
@@ -115,6 +116,12 @@ export type Folder = ContentBase & {
   techs: string[];
   feedThrough: boolean;
   avatar: string | null;
+  /** What the quote card needs to know about the portrait, read from the sidecar
+   *  `avatar.json` that `mise portrait` (ui repo) writes beside it: the picture's tone
+   *  and where its subject sits. Asset preparation, done once on the Mac — the build
+   *  reads two numbers and never touches a pixel. Null when the sidecar is missing,
+   *  which is a portrait half-prepared and is said so at build. */
+  portrait: { tone: QuoteTone; focus: number } | null;
 };
 
 export type Content = Post | Folder;
@@ -361,6 +368,28 @@ function ensureOGCopy(
   // Blur generation happens in scripts/generate-blur.mjs (async, runs before next build)
 }
 
+/** The portrait's sidecar, written by `mise portrait` beside the avatar. A portrait
+ *  without one renders neutral and centred, and says so once at build - the fix is
+ *  `mise portraits content/quotes` in the ui repo, not a decoder here. */
+function readPortrait(dir: string, slug: string[]): Folder["portrait"] {
+  const side = join(dir, "avatar.json");
+  const hasAvatar = AVATAR_EXTENSIONS.some((ext) =>
+    existsSync(join(dir, `avatar${ext}`)),
+  );
+  if (!existsSync(side)) {
+    if (hasAvatar)
+      console.warn(
+        `[content] ${slug.join("/")}: avatar has no avatar.json - run \`mise portraits\` (ui repo)`,
+      );
+    return null;
+  }
+  const raw = JSON.parse(readFileSync(side, "utf-8")) as {
+    focus: number;
+    tone: QuoteTone;
+  };
+  return { tone: raw.tone, focus: raw.focus };
+}
+
 function resolveAvatar(dir: string, slug: string[]): string | null {
   for (const ext of AVATAR_EXTENSIONS) {
     const src = join(dir, `avatar${ext}`);
@@ -459,6 +488,7 @@ function parseContent(filePath: string, slug: string[]): Content | null {
         techs: data.techs ?? [],
         feedThrough: data.feedThrough ?? false,
         avatar: resolveAvatar(dir, slug),
+        portrait: readPortrait(dir, slug),
       };
     }
 
@@ -684,7 +714,12 @@ export function getChildrenForSlug(slug: string[]): Content[] {
   return result;
 }
 
-export type AuthorInfo = { name: string; avatar: string | null; path: string };
+export type AuthorInfo = {
+  name: string;
+  avatar: string | null;
+  path: string;
+  portrait: Folder["portrait"];
+};
 
 /** The date a note shows, already formatted - the quote card takes a string because it
  *  does not own a locale. An estimate wins over a stamp, and a stamp before the year
@@ -708,7 +743,12 @@ export function getAuthorForContent(c: Content): AuthorInfo | null {
       (x) => x.slug.join("/") === ancestorPath && isFolder(x),
     ) as Folder | undefined;
     if (!folder?.feedThrough) continue;
-    return { name: folder.title, avatar: folder.avatar, path: folder.path };
+    return {
+      name: folder.title,
+      avatar: folder.avatar,
+      path: folder.path,
+      portrait: folder.portrait,
+    };
   }
   return null;
 }

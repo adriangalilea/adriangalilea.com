@@ -4,7 +4,6 @@ import { Resvg } from "@resvg/resvg-js";
 import { ImageResponse } from "next/og";
 import { type Content, getAuthorForContent, isNote } from "@/lib/content";
 import { renderQuoteSvg } from "@/lib/quote-card";
-import { toneOf } from "@/lib/tone";
 import { stripMarkdown } from "@/lib/utils";
 
 const W = 1200;
@@ -115,7 +114,9 @@ export async function generateQuoteOG(content: Content): Promise<Response> {
   const avatar = author?.avatar
     ? readImageAsDataURI(join(process.cwd(), "public", author.avatar))
     : null;
-  const tone = await toneOf(author?.avatar ?? null);
+  // Tone and focus come off the sidecar `mise portrait` wrote beside the avatar. Asset
+  // preparation, not a build step: no pixel is decoded here.
+  const portrait = author?.portrait ?? null;
   const year =
     content.estimatedDate ??
     (content.publishedAt && new Date(content.publishedAt).getFullYear() >= 1000
@@ -132,8 +133,9 @@ export async function generateQuoteOG(content: Content): Promise<Response> {
       width: W,
       height: H,
       avatar,
-      background: tone?.ground,
-      accent: tone?.accent,
+      background: portrait?.tone.ground,
+      accent: portrait?.tone.accent,
+      focus: portrait?.focus,
       fontFamily: "Instrument Serif",
       nameFamily: "Geist",
       dateFamily: "Geist Mono",
