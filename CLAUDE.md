@@ -42,8 +42,9 @@ registry and re-add. `app/tokens.css` is the `@ag/tokens` copy, imported from gl
 
 **Everything the card needs from a portrait's pixels is ASSET PREPARATION, not a build
 step.** `content/quotes/<author>/avatar.json` sits beside each `avatar.png` and holds
-the two numbers the card takes — `focus` (where the subject sits, from Vision) and
-`tone` (ground + ink, from the average colour). `mise portrait` (ui repo) writes it when
+the two FACTS the card needs — `focus` (where the subject sits, from Vision) and
+`average` (the picture's mean colour, RGB). The tone is derived at build by `toneFrom`,
+pure arithmetic, so a rule change in the registry needs no re-annotation. `mise portrait` (ui repo) writes it when
 it crops; `mise portraits content/quotes` writes any that are missing and never
 overwrites one, so a value set by hand stays. `lib/content.ts` reads it into
 `Folder.portrait` → `AuthorInfo.portrait`, and warns at build for a portrait without

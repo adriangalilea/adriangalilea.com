@@ -25,7 +25,7 @@ import {
   NON_WEBM_ANIMATED,
   POSTER_EXTENSIONS,
 } from "@/lib/media";
-import type { QuoteTone } from "@/lib/quote-card";
+import { type QuoteTone, toneFrom } from "@/lib/quote-card";
 
 const CONTENT_DIR = join(process.cwd(), "content");
 const PUBLIC_DIR = join(process.cwd(), "public");
@@ -383,11 +383,14 @@ function readPortrait(dir: string, slug: string[]): Folder["portrait"] {
       );
     return null;
   }
+  // The sidecar holds FACTS - where the subject is, the average colour - and the tone is
+  // derived here by the rule (pure arithmetic, no pixel), so a change to the rule in the
+  // registry needs no re-annotation of forty files.
   const raw = JSON.parse(readFileSync(side, "utf-8")) as {
     focus: number;
-    tone: QuoteTone;
+    average: [number, number, number];
   };
-  return { tone: raw.tone, focus: raw.focus };
+  return { tone: toneFrom(...raw.average), focus: raw.focus };
 }
 
 function resolveAvatar(dir: string, slug: string[]): string | null {
