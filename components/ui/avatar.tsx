@@ -1,3 +1,26 @@
+"use client";
+
+// A CLIENT COMPONENT, because it hands `LightboxTrigger` a `render` element. An element
+// created in a server component and passed as a prop across the boundary arrives without
+// its props during prerender — `element.props` is undefined and the trigger's own assert
+// throws — so the element has to be made on the same side as the trigger that clones it.
+//
+// A PERSON'S FACE, the same object everywhere it appears: beside a quotation, at the head
+// of their page, in a feed card, on a comment. One round crop, sized on the studio's
+// scale, positioned on the subject rather than on the middle of the file, ringed in the
+// picture's own colour — and, when the full portrait is worth a look, a lightbox trigger
+// rather than a dead thumbnail.
+//
+// It reads the same two facts the quote card reads from a portrait's sidecar: `focus`,
+// where the subject sits across the picture, and the tone the average colour gives. A
+// face cropped on the centre of a file that had its subject to one side is how a
+// thumbnail ends up showing an ear; `object-position` from the focus is how it does not.
+//
+// The lightbox is a dependency and that is deliberate: a face that invites a closer look
+// and cannot be looked at closer is the failure this exists to remove. Pass `full` and the
+// avatar is a trigger, which needs a `<Lightbox>` provider above it — one per page, the
+// way the lightbox is meant to be mounted. Pass nothing and it is a picture.
+
 import { type Entry, LightboxTrigger } from "@/components/ui/lightbox";
 import "./avatar.css";
 
