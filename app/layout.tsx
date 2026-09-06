@@ -8,7 +8,6 @@ import { HideOnScroll } from "@/components/hide-on-scroll";
 import { GlassSurface, LiquidGlassFilter } from "@/components/liquid-glass";
 import { NavbarBreadcrumb } from "@/components/navbar-breadcrumb";
 import { ThemeProvider } from "@/components/theme-provider";
-import { Lightbox } from "@/components/ui/lightbox";
 import { socials } from "@/data/site";
 import { getAllFolders } from "@/lib/content";
 import "./globals.css";
@@ -83,12 +82,7 @@ export default function RootLayout({
                 <NavbarBreadcrumb folderPaths={folderPaths} />
               </GlassSurface>
             </HideOnScroll>
-            {/* ONE lightbox provider for the whole site, the way @ag/lightbox is meant
-                to be mounted: every avatar with a `full` portrait is a trigger into it,
-                on a quote's page and in every feed card alike. */}
-            <div className="flex-1 pt-4 sm:pt-6">
-              <Lightbox>{children}</Lightbox>
-            </div>
+            <div className="flex-1 pt-4 sm:pt-6">{children}</div>
             <GlassSurface as="footer" layer="l0" distortion>
               <div className="mx-auto flex h-12 max-w-7xl items-center justify-center gap-3 px-6">
                 {socialLinks.map((l) => (

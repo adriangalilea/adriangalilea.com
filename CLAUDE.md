@@ -52,10 +52,12 @@ one. The build decodes NO pixels: no sharp, no Vision, no fontconfig.
 
 The author's face in an attribution is `components/ui/avatar.tsx` (`@ag/avatar`),
 positioned on the sidecar's `focus` and ringed in the tone; with the sidecar's `size` it
-is a lightbox trigger. **The `@ag/lightbox` provider is mounted ONCE in `app/layout.tsx`
-around `children`** — every avatar with a `full` portrait opens into it, on a quote's page
-and in every feed card. The site's own `components/lightbox.tsx` still handles covers and
-article figures; folding those onto `@ag/lightbox` is the rest of that adoption.
+opens the portrait ALONE, captioned with the name (`LightboxSolo` inside the item: its
+own provider, so a feed of faces is never one reel). Nothing is mounted in the layout
+for it. The site's own `components/lightbox.tsx` still handles covers and article
+figures; folding those onto `@ag/lightbox` is the rest of that adoption. Refresh order
+when pulling from the local ui checkout: `add avatar` resolves its `lightbox` dependency
+from the REMOTE registry, which lags, so run `mise run add lightbox <site>` AFTER it.
 
 What the site supplies beyond that: the words with markdown stripped, the formatted date
 (`noteDate` in `lib/content.ts`), and a rasterizer. `lib/og.tsx` renders the still with
