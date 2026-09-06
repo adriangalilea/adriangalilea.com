@@ -1,3 +1,4 @@
+import { Avatar } from "@/components/ui/avatar";
 import {
   assert,
   BLOCK_AT,
@@ -103,7 +104,14 @@ export function Quote({
       >
         <Mark />
         <blockquote className="ag-quote-body">{body}</blockquote>
-        <By author={author} date={date} source={source} face />
+        <By
+          author={author}
+          date={date}
+          source={source}
+          tone={tone}
+          focus={focus}
+          face="sm"
+        />
       </figure>
     );
 
@@ -137,7 +145,14 @@ export function Quote({
       >
         <Mark />
         <blockquote className="ag-quote-body">{body}</blockquote>
-        <By author={author} date={date} source={source} face />
+        <By
+          author={author}
+          date={date}
+          source={source}
+          tone={tone}
+          focus={focus}
+          face="md"
+        />
       </figure>
     );
   }
@@ -251,19 +266,29 @@ function By({
   author,
   date,
   source,
-  face = false,
-}: Pick<QuoteData, "author" | "date" | "source"> & { face?: boolean }) {
+  tone,
+  focus,
+  face,
+}: Pick<QuoteData, "author" | "date" | "source"> & {
+  tone?: QuoteTone;
+  focus?: number;
+  /** Which rung the face is drawn at; none, and there is no face. */
+  face?: "sm" | "md";
+}) {
   if (!author && !date && !source) return null;
   return (
     <figcaption className="ag-quote-by">
       {face && author?.avatar && (
-        // biome-ignore lint/performance/noImgElement: an item cannot assume next/image
-        <img
-          className="ag-quote-face"
+        // The same face as everywhere else on a page, from the same two facts the card
+        // reads: positioned on the subject, ringed in the picture's colour — and a
+        // lightbox trigger when the portrait is worth a look.
+        <Avatar
           src={author.avatar}
-          alt=""
-          width={40}
-          height={40}
+          alt={author.name}
+          size={face}
+          focus={focus}
+          tone={tone}
+          full={author.full}
         />
       )}
       {author &&
