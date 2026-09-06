@@ -34,6 +34,11 @@ comes from the registry at ui.adriangalilea.com (`components.json` maps `@ag`):
 (the rules and `renderQuoteSvg`, the 1200×630 still the OG route rasterizes). Refresh a
 copy with `npx shadcn@latest add @ag/quote --overwrite`; never edit the copies, fix the
 registry and re-add. `app/tokens.css` is the `@ag/tokens` copy, imported from globals.
+**Gotcha when the registry has just been pushed:** `add quote` pulls its dependency
+`quote-card` from the REMOTE registry, which lags the deploy by minutes, and overwrites
+`lib/quote-card.ts` with the stale copy — a `tsc` failure on an export the new
+`quote.tsx` imports. From the ui checkout, `mise run add quote <site>` then
+`mise run add quote-card <site>`, in that order, installs both from the local build.
 
 **Everything the card needs from a portrait's pixels is ASSET PREPARATION, not a build
 step.** `content/quotes/<author>/avatar.json` sits beside each `avatar.png` and holds
