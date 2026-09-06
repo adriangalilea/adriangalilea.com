@@ -8,7 +8,7 @@ import type { ReactNode } from "react";
 import { ClickableWrapper } from "@/components/clickable-wrapper";
 import { FeedComments } from "@/components/comment-feed";
 import { CoverImage } from "@/components/cover-image";
-import { LightboxExpandButton } from "@/components/lightbox";
+import { ExpandButton, type Picture } from "@/components/media-lightbox";
 import { STATUS_CONFIG, StatusBadge } from "@/components/status-badge";
 import { Quote } from "@/components/ui/quote";
 import { VerdictBadge } from "@/components/verdict-badge";
@@ -39,6 +39,26 @@ const cardHover = "hover:scale-[1.02] hover:-translate-y-1";
 const feedFlat = "glass-card-feed-flat";
 const cardDraft = "opacity-50 grayscale-[30%]";
 
+/** A card's static cover as the expand button opens it. Null when the cover was never
+ *  measured: a button that opens a picture of unknown size is not offered. */
+function coverPicture(c: {
+  cover: string | null;
+  coverWidth: number | null;
+  coverHeight: number | null;
+  blurDataURL: string | null;
+  title?: string;
+}): Picture | null {
+  if (!c.cover || !isStaticCover(c.cover) || !c.coverWidth || !c.coverHeight)
+    return null;
+  return {
+    src: c.cover,
+    width: c.coverWidth,
+    height: c.coverHeight,
+    alt: c.title ?? "",
+    blur: c.blurDataURL,
+  };
+}
+
 const statusHoverClasses: Record<string, string> = {
   violet: "hover:bg-violet-500/5 max-sm:bg-violet-500/5",
   rose: "hover:bg-rose-500/5 max-sm:bg-rose-500/5",
@@ -58,6 +78,7 @@ function NoteCard({
   renderedContent?: ReactNode;
 }) {
   const author = getAuthorForContent(note);
+  const picture = coverPicture(note);
   const body = renderedContent ? (
     renderedContent
   ) : (
@@ -91,9 +112,7 @@ function NoteCard({
             hoverPlay
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 400px"
           />
-          {isStaticCover(note.cover) && (
-            <LightboxExpandButton src={note.cover} />
-          )}
+          {picture && <ExpandButton picture={picture} />}
         </div>
       )}
       <div className="p-4">
@@ -161,6 +180,7 @@ function NoteCard({
 // ============================================================================
 
 function PageCard({ page }: { page: Page }) {
+  const picture = coverPicture(page);
   return (
     <ClickableWrapper
       href={page.path}
@@ -188,9 +208,7 @@ function PageCard({ page }: { page: Page }) {
             hoverPlay
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 400px"
           />
-          {isStaticCover(page.cover) && (
-            <LightboxExpandButton src={page.cover} alt={page.title} />
-          )}
+          {picture && <ExpandButton picture={picture} />}
         </div>
       )}
       <div className="p-4">
@@ -245,6 +263,7 @@ function PageCard({ page }: { page: Page }) {
 
 function FolderCard({ folder }: { folder: Folder }) {
   const colorKey = folder.status ? STATUS_CONFIG[folder.status].colorKey : null;
+  const picture = coverPicture(folder);
 
   return (
     <ClickableWrapper
@@ -273,9 +292,7 @@ function FolderCard({ folder }: { folder: Folder }) {
             hoverPlay
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 400px"
           />
-          {isStaticCover(folder.cover) && (
-            <LightboxExpandButton src={folder.cover} alt={folder.title} />
-          )}
+          {picture && <ExpandButton picture={picture} />}
         </div>
       )}
       <div className="p-4">

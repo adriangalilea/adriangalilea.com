@@ -5,7 +5,7 @@ import { Children, isValidElement, type ReactElement } from "react";
 import { Card } from "@/components/card";
 import { Bars, CompareBars, CompareLines } from "@/components/charts";
 import { Pre } from "@/components/code-block";
-import { Lightbox } from "@/components/lightbox";
+import { type Picture, Zoomable } from "@/components/media-lightbox";
 import { Quote } from "@/components/ui/quote";
 import { YouTube } from "@/components/youtube";
 import { getContentByPath, isNote } from "@/lib/content";
@@ -45,21 +45,37 @@ function textOf(node: React.ReactNode): string {
   return "";
 }
 
-function findImgSrc(children: React.ReactNode): string | null {
-  let src: string | null = null;
+/** A measured pixel count as it arrives from compiled MDX: hast serializes every
+ *  attribute as a string, so rehype-image-size's `1216` reaches the component as
+ *  `"1216"`. Null for anything that is not a positive whole number. */
+function px(v: unknown): number | null {
+  const n = typeof v === "number" ? v : typeof v === "string" ? Number(v) : NaN;
+  return Number.isInteger(n) && n > 0 ? n : null;
+}
+
+/** The first image inside a figure, as the lightbox needs it. A local image carries
+ *  the width and height rehype-image-size measured; a remote one has no measured size
+ *  and does not open, it is just shown. */
+function findPicture(children: React.ReactNode): Picture | null {
+  let found: Picture | null = null;
   Children.forEach(children, (child) => {
-    if (src) return;
-    if (isValidElement(child)) {
-      const props = child.props as Record<string, unknown>;
-      if (props.src && typeof props.src === "string") {
-        src = props.src;
-      }
-      if (props.children) {
-        src = findImgSrc(props.children as React.ReactNode);
-      }
+    if (found || !isValidElement(child)) return;
+    const props = child.props as Record<string, unknown>;
+    if (typeof props.src === "string") {
+      const width = px(props.width);
+      const height = px(props.height);
+      if (width && height)
+        found = {
+          src: props.src,
+          width,
+          height,
+          alt: typeof props.alt === "string" ? props.alt : "",
+        };
+      return;
     }
+    if (props.children) found = findPicture(props.children as React.ReactNode);
   });
-  return src;
+  return found;
 }
 
 export function getMDXComponents(): MDXComponents {
@@ -114,7 +130,7 @@ export function getMDXComponents(): MDXComponents {
       );
     },
     figure: ({ children, ...props }) => {
-      const src = findImgSrc(children);
+      const picture = findPicture(children);
 
       let imgNode: React.ReactNode = null;
       let captionNode: React.ReactNode = null;
@@ -132,20 +148,19 @@ export function getMDXComponents(): MDXComponents {
         }
       });
 
-      if (!src) {
+      if (!picture) {
         return <figure {...props}>{children}</figure>;
       }
 
+      // The figcaption stays the figure's: the lightbox reads it as the caption at open.
       return (
         <figure {...props}>
-          <Lightbox src={src} caption={captionNode}>
-            {imgNode}
-          </Lightbox>
+          <Zoomable picture={picture}>{imgNode}</Zoomable>
           {captionNode}
         </figure>
       );
     },
-    img: ({ src, alt, ...props }) => {
+    img: ({ src, alt, width, height, ...props }) => {
       if (!src) return null;
       const isExternal = typeof src === "string" && src.startsWith("http");
       const isBadge =
@@ -157,13 +172,19 @@ export function getMDXComponents(): MDXComponents {
       if (isExternal) {
         return <img src={src} alt={alt ?? ""} {...props} />;
       }
+      // A local image arrives measured (rehype-image-size); the box is reserved at its
+      // real proportions, never at a guess.
+      const w = px(width);
+      const h = px(height);
+      if (!w || !h)
+        throw new Error(`image ${src} reached the renderer unmeasured`);
       const isAnimated = typeof src === "string" && src.endsWith(".gif");
       return (
         <Image
           src={src}
           alt={alt ?? ""}
-          width={800}
-          height={450}
+          width={w}
+          height={h}
           className="rounded-lg"
           unoptimized={isAnimated}
           {...props}

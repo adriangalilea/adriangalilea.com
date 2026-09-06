@@ -54,10 +54,19 @@ The author's face in an attribution is `components/ui/avatar.tsx` (`@ag/avatar`)
 positioned on the sidecar's `focus` and ringed in the tone; with the sidecar's `size` it
 opens the portrait ALONE, captioned with the name (`LightboxSolo` inside the item: its
 own provider, so a feed of faces is never one reel). Nothing is mounted in the layout
-for it. The site's own `components/lightbox.tsx` still handles covers and article
-figures; folding those onto `@ag/lightbox` is the rest of that adoption. Refresh order
-when pulling from the local ui checkout: `add avatar` resolves its `lightbox` dependency
-from the REMOTE registry, which lags, so run `mise run add lightbox <site>` AFTER it.
+for it. **Every picture on the site opens through `@ag/lightbox`, alone**: article
+figures and page covers via `Zoomable`, the corner button on a feed card via
+`ExpandButton`, both in `components/media-lightbox.tsx` (a client module, because the
+trigger's `render` element must be made on the client side). The lightbox needs a
+picture's natural size, so `lib/rehype-image-size.ts` measures every local `<img>` at
+compile time from `content/<slug>/<file>` (image-size) and writes width/height into the
+hast; the `img` MDX component reserves the box at those proportions and THROWS for a
+local image that arrives unmeasured, and the plugin throws for a local image that is
+not on disk (that assert found a 404 that had been live for a year). hast serializes
+attributes as strings, so `"1216"` is what reaches the component; `px()` parses it.
+Remote images are shown, not opened. Pull items from the local ui checkout with
+`mise run add <item> <site>`: it re-adds every dependency after the item, so the
+deployed registry's lag cannot leave a stale file.
 
 What the site supplies beyond that: the words with markdown stripped, the formatted date
 (`noteDate` in `lib/content.ts`), and a rasterizer. `lib/og.tsx` renders the still with

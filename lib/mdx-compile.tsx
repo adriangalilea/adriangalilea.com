@@ -10,9 +10,10 @@ import rehypeSlug from "rehype-slug";
 import remarkGfm from "remark-gfm";
 import type { ShikiTransformer } from "shiki";
 import rehypeFigure from "./rehype-figure";
+import rehypeImageSize from "./rehype-image-size";
 
 // Bump when compile pipeline output shape changes (plugins, themes, MDX major).
-const COMPILER_VERSION = "1";
+const COMPILER_VERSION = "2";
 
 const CACHE_DIR = join(process.cwd(), ".next", "cache", "content-mdx");
 
@@ -34,6 +35,7 @@ const compileOptions = {
   development: false,
   remarkPlugins: [remarkGfm],
   rehypePlugins: [
+    rehypeImageSize,
     rehypeFigure,
     rehypeSlug,
     [rehypeShiki, shikiOptions],

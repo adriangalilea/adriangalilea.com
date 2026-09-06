@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
-import { Lightbox } from "@/components/lightbox";
+import { Zoomable } from "@/components/media-lightbox";
 import { slugToGradient } from "@/lib/gradient";
 import { isGif, isVideo } from "@/lib/media";
 
@@ -221,8 +221,18 @@ export function CoverImage({
   const imgWidth = width ?? 1200;
   const imgHeight = height ?? 630;
   const aspectRatio = imgWidth && imgHeight ? imgWidth / imgHeight : 16 / 9;
+  // What the lightbox opens when `lightbox` is on: the cover at its measured size.
+  const picture = cover
+    ? {
+        src: cover,
+        width: imgWidth,
+        height: imgHeight,
+        alt: title,
+        blur: blurDataURL,
+      }
+    : null;
 
-  if (cover) {
+  if (cover && picture) {
     // Contained mode: blurred bg + object-contain, self-sizing via aspect-ratio + max-height cap
     if (contained) {
       const bgBlurClass =
@@ -288,9 +298,7 @@ export function CoverImage({
           </div>
         );
         return lightbox ? (
-          <Lightbox src={cover} alt={title} eager>
-            {content}
-          </Lightbox>
+          <Zoomable picture={picture}>{content}</Zoomable>
         ) : (
           content
         );
@@ -322,9 +330,7 @@ export function CoverImage({
         </div>
       );
       return lightbox ? (
-        <Lightbox src={cover} alt={title} eager>
-          {content}
-        </Lightbox>
+        <Zoomable picture={picture}>{content}</Zoomable>
       ) : (
         content
       );
@@ -431,11 +437,7 @@ export function CoverImage({
       );
 
       if (lightbox) {
-        return (
-          <Lightbox src={cover} alt={title} eager>
-            {content}
-          </Lightbox>
-        );
+        return <Zoomable picture={picture}>{content}</Zoomable>;
       }
 
       return content;

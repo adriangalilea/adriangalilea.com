@@ -18,7 +18,7 @@ This is when I realized that the pico deserved to have qwiic and a reset button,
 
 Plug, Reset, and Prototype Effortlessly.
 
-![pico qwiicReset](./board.webp)
+![pico qwiicReset](/pico-qwiic-reset/board.webp)
 
 ## Pico Pain Points
 1. **Flash Mode**: Requires unplugging and holding BOOTSEL while you plug.
