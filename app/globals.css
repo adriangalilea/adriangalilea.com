@@ -10,6 +10,8 @@
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
   --font-serif: var(--font-instrument-serif);
+  /* Quotes read in Tinos (a Times-metric book serif), not the heading face. */
+  --font-quote: var(--font-tinos);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);

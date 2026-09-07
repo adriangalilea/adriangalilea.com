@@ -71,8 +71,12 @@ deployed registry's lag cannot leave a stale file.
 What the site supplies beyond that: the words with markdown stripped, the formatted date
 (`noteDate` in `lib/content.ts`), and a rasterizer. `lib/og.tsx` renders the still with
 **resvg**, not satori: it takes font FILES, so the three voices resolve to the faces they
-name — Instrument Serif (`lib/fonts/`, OFL, the same face `--font-serif` loads for the
-page), Geist and Geist Mono from the `geist` package. resvg is a native addon and is
+name — Tinos (`lib/fonts/`, Apache 2.0, the same face `--font-quote` loads for the
+page), Geist and Geist Mono from the `geist` package. **The quotes' face is Tinos, never
+Instrument Serif**: the heading face is a condensed display serif and was illegible at
+reading size the moment the quote inherited `--font-serif`; the item reads its own
+`--font-quote` token, the site maps it to Tinos (next/font) and `SERIF_CH` in
+`lib/faces.ts` is Tinos's measured advance. resvg is a native addon and is
 listed in `serverExternalPackages`. EVERY note gets an OG card, Adrian's own included,
 on the neutral ground.
 

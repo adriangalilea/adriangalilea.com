@@ -89,13 +89,13 @@ function getFonts() {
 //
 // resvg, not satori: satori draws JSX and this is already an SVG, and resvg is handed the
 // font FILES outright, so the three voices resolve to the faces they name instead of to
-// whatever a build machine's fontconfig has lying around. Instrument Serif is the site's
-// own serif (app/layout.tsx), shipped here under the OFL (lib/fonts/OFL-InstrumentSerif.txt).
+// whatever a build machine's fontconfig has lying around. Tinos is the quotes' face on
+// the page (`--font-quote`, app/layout.tsx), shipped here under Apache 2.0
+// (lib/fonts/LICENSE-Tinos.txt).
+// The still sets the words in the SAME face the page does (`--font-quote` → Tinos), so a
+// shared link and the page it opens cannot disagree about the type.
 const STILL_FONTS = {
-  "Instrument Serif": join(
-    process.cwd(),
-    "lib/fonts/InstrumentSerif-Regular.ttf",
-  ),
+  Tinos: join(process.cwd(), "lib/fonts/Tinos-Regular.ttf"),
   Geist: join(
     process.cwd(),
     "node_modules/geist/dist/fonts/geist-sans/Geist-Regular.ttf",
@@ -137,7 +137,7 @@ export async function generateQuoteOG(content: Content): Promise<Response> {
       background: portrait?.tone.ground,
       accent: portrait?.tone.accent,
       focus: portrait?.focus,
-      fontFamily: "Instrument Serif",
+      fontFamily: "Tinos",
       ch: SERIF_CH,
       nameFamily: "Geist",
       dateFamily: "Geist Mono",
@@ -149,7 +149,7 @@ export async function generateQuoteOG(content: Content): Promise<Response> {
     font: {
       loadSystemFonts: false,
       fontFiles: Object.values(STILL_FONTS),
-      defaultFontFamily: "Instrument Serif",
+      defaultFontFamily: "Tinos",
     },
   })
     .render()

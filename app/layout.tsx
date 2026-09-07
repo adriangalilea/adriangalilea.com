@@ -1,7 +1,7 @@
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
+import { Geist, Geist_Mono, Instrument_Serif, Tinos } from "next/font/google";
 import Link from "next/link";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { HideOnScroll } from "@/components/hide-on-scroll";
@@ -24,6 +24,15 @@ const geistMono = Geist_Mono({
 
 const instrumentSerif = Instrument_Serif({
   variable: "--font-instrument-serif",
+  subsets: ["latin"],
+  weight: "400",
+});
+
+// The quotes' reading serif (`--font-quote`), on the web AND in the OG still
+// (lib/fonts/Tinos-Regular.ttf, the same file): Instrument Serif is the heading face
+// and illegible at reading size.
+const tinos = Tinos({
+  variable: "--font-tinos",
   subsets: ["latin"],
   weight: "400",
 });
@@ -57,7 +66,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${instrumentSerif.variable} flex min-h-screen flex-col antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${instrumentSerif.variable} ${tinos.variable} flex min-h-screen flex-col antialiased`}
       >
         <ThemeProvider>
           <NuqsAdapter>
