@@ -40,6 +40,9 @@ const blurManifest: Record<string, string> = (() => {
   }
 })();
 const NOTE_MAX_CHARS = 280;
+export function imageBlur(src: string): string | undefined {
+  return blurManifest[src.replace(/^\//, "")];
+}
 
 const warnedCovers = new Set<string>();
 

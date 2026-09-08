@@ -8,6 +8,7 @@ import {
 } from "node:fs";
 import { join, parse, relative } from "node:path";
 import sharp from "sharp";
+import { prepareMedia } from "../lib/prepare-media.ts";
 
 const CONTENT_DIR = join(process.cwd(), "content");
 const PUBLIC_DIR = join(process.cwd(), "public");
@@ -15,7 +16,14 @@ const OUT_DIR = join(process.cwd(), ".next");
 const OUT_FILE = join(OUT_DIR, "blur-manifest.json");
 const META_FILE = join(OUT_DIR, "blur-manifest.meta.json");
 
-const IMAGE_EXTENSIONS = new Set([".png", ".webp", ".jpg", ".jpeg"]);
+const IMAGE_EXTENSIONS = new Set([
+  ".png",
+  ".webp",
+  ".jpg",
+  ".jpeg",
+  ".avif",
+  ".gif",
+]);
 
 function findBlurSources(dir) {
   const results = [];
@@ -26,11 +34,8 @@ function findBlurSources(dir) {
       results.push(...findBlurSources(full));
       continue;
     }
-    const { name, ext } = parse(entry.name);
-    if (
-      (name === "cover" || name === "poster") &&
-      IMAGE_EXTENSIONS.has(ext.toLowerCase())
-    ) {
+    const { ext } = parse(entry.name);
+    if (IMAGE_EXTENSIONS.has(ext.toLowerCase())) {
       results.push(full);
     }
   }
@@ -38,12 +43,8 @@ function findBlurSources(dir) {
 }
 
 async function generateBlur(imagePath) {
-  const buf = await sharp(imagePath)
-    .resize(20)
-    .blur(2)
-    .jpeg({ quality: 40 })
-    .toBuffer();
-  return `data:image/jpeg;base64,${buf.toString("base64")}`;
+  const prepared = await prepareMedia(readFileSync(imagePath));
+  return prepared.asset.blurDataURL;
 }
 
 function readJSON(path) {

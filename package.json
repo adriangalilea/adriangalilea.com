@@ -3,8 +3,9 @@
 	"version": "0.1.0",
 	"private": true,
 	"scripts": {
-		"dev": "node scripts/generate-blur.mjs && next dev",
-		"build": "node scripts/generate-blur.mjs && next build",
+		"dev": "tsx scripts/generate-blur.mjs && next dev",
+		"build": "tsx scripts/generate-blur.mjs && next build",
+		"media": "tsx lib/prepare-media-cli.ts",
 		"start": "next start",
 		"check": "biome check --write",
 		"lint": "biome check",
@@ -50,6 +51,7 @@
 		"sharp": "^0.35.4",
 		"shiki": "^3.22.0",
 		"tailwind-merge": "^3.4.1",
+		"tsx": "^4.23.13",
 		"unified": "^11.0.5",
 		"zod": "^4.3.6"
 	},

@@ -8,7 +8,7 @@ import { type Picture, Zoomable } from "@/components/media-lightbox";
 import { Image } from "@/components/ui/image";
 import { Quote } from "@/components/ui/quote";
 import { YouTube } from "@/components/youtube";
-import { getContentByPath, isNote } from "@/lib/content";
+import { getContentByPath, imageBlur, isNote } from "@/lib/content";
 import { SERIF_CH } from "@/lib/faces";
 import { renderMDX } from "@/lib/mdx";
 
@@ -187,6 +187,7 @@ export function getMDXComponents(): MDXComponents {
           height={h}
           sizes="(max-width: 768px) 100vw, 768px"
           className="not-prose cover-contained my-[2em] w-full rounded-xl"
+          blurDataURL={typeof src === "string" ? imageBlur(src) : undefined}
           unoptimized={isAnimated}
           {...props}
         />

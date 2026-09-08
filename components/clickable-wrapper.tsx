@@ -2,11 +2,19 @@
 
 import { useRouter } from "next/navigation";
 import {
+  createContext,
   type KeyboardEvent,
   type MouseEvent,
   type ReactNode,
+  type RefObject,
+  useContext,
   useRef,
 } from "react";
+
+const CardInteraction = createContext<
+  RefObject<HTMLElement | null> | undefined
+>(undefined);
+export const useCardInteraction = () => useContext(CardInteraction);
 
 type ClickableWrapperProps = {
   href: string;
@@ -20,6 +28,7 @@ export function ClickableWrapper({
   children,
 }: ClickableWrapperProps) {
   const router = useRouter();
+  const interactionRef = useRef<HTMLElement>(null);
   const isDragging = useRef(false);
 
   const handleMouseDown = () => {
@@ -39,11 +48,12 @@ export function ClickableWrapper({
   };
 
   const handleKeyDown = (e: KeyboardEvent) => {
-    if (e.key === "Enter") router.push(href);
+    if (e.key === "Enter" && e.target === e.currentTarget) router.push(href);
   };
 
   return (
     <article
+      ref={interactionRef}
       tabIndex={0}
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
@@ -51,7 +61,9 @@ export function ClickableWrapper({
       onKeyDown={handleKeyDown}
       className={className}
     >
-      {children}
+      <CardInteraction.Provider value={interactionRef}>
+        {children}
+      </CardInteraction.Provider>
     </article>
   );
 }
