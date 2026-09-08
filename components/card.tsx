@@ -107,7 +107,6 @@ function NoteCard({
             height={note.coverHeight}
             poster={note.poster}
             blurDataURL={note.blurDataURL}
-            loop={note.coverLoop}
             intrinsic
             hoverPlay
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 400px"
@@ -203,7 +202,6 @@ function PageCard({ page }: { page: Page }) {
             height={page.coverHeight}
             poster={page.poster}
             blurDataURL={page.blurDataURL}
-            loop={page.coverLoop}
             intrinsic
             hoverPlay
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 400px"
@@ -287,7 +285,6 @@ function FolderCard({ folder }: { folder: Folder }) {
             height={folder.coverHeight}
             poster={folder.poster}
             blurDataURL={folder.blurDataURL}
-            loop={folder.coverLoop}
             intrinsic
             hoverPlay
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 400px"

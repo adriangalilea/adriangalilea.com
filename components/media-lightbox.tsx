@@ -66,7 +66,7 @@ export function Zoomable({
         // biome-ignore lint/a11y/useAnchorContent: the trigger clones the picture into it, and alt names it
         <a
           href={picture.src}
-          className={`block cursor-zoom-in outline-offset-2 focus-visible:outline-2 focus-visible:outline-ring ${radius}`}
+          className={`not-prose block cursor-zoom-in outline-offset-2 focus-visible:outline-2 focus-visible:outline-ring ${radius}`}
           aria-label={picture.alt || "picture"}
         />
       }

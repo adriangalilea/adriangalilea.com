@@ -73,7 +73,6 @@ type ContentBase = {
   coverHeight: number | null;
   poster: string | null;
   blurDataURL: string | null;
-  coverLoop: boolean;
   publishedAt: Date | null;
   isDraft: boolean;
   _dir: string;
@@ -467,7 +466,6 @@ function parseContent(filePath: string, slug: string[]): Content | null {
       coverHeight: coverInfo?.height ?? data.coverHeight ?? null,
       poster: coverInfo?.poster ?? null,
       blurDataURL: coverInfo?.blurDataURL ?? null,
-      coverLoop: data.coverLoop ?? true,
       publishedAt: data.publishedAt ?? null,
       isDraft: data.isDraft ?? false,
       _dir: dir,

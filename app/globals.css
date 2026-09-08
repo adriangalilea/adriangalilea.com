@@ -331,7 +331,16 @@
 
 .prose
 :where(a):not(
-  :where(h1 *, h2 *, h3 *, h4 *, h5 *, h6 *, [class~="not-prose"] *)
+  :where(
+      h1 *,
+      h2 *,
+      h3 *,
+      h4 *,
+      h5 *,
+      h6 *,
+      [class~="not-prose"],
+      [class~="not-prose"] *
+    )
 ) {
   color: var(--foreground);
   text-decoration: none;
@@ -341,7 +350,16 @@
 
 .prose
   a:not(
-    :where(h1 *, h2 *, h3 *, h4 *, h5 *, h6 *, [class~="not-prose"] *)
+    :where(
+        h1 *,
+        h2 *,
+        h3 *,
+        h4 *,
+        h5 *,
+        h6 *,
+        [class~="not-prose"],
+        [class~="not-prose"] *
+      )
   ):hover {
   color: var(--foreground);
   opacity: 1;

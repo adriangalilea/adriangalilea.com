@@ -129,7 +129,6 @@ async function NoteView({ note }: { note: Note }) {
               height={note.coverHeight}
               poster={note.poster}
               blurDataURL={note.blurDataURL}
-              loop={note.coverLoop}
               sizes="(max-width: 1024px) 100vw, 672px"
               priority
               contained
@@ -266,7 +265,6 @@ async function PageView({ page }: { page: Page }) {
               height={page.coverHeight}
               poster={page.poster}
               blurDataURL={page.blurDataURL}
-              loop={page.coverLoop}
               sizes="(max-width: 1024px) 100vw, 672px"
               priority
               contained

@@ -20,7 +20,6 @@ type CoverImageProps = {
   poster?: string | null;
   blurDataURL?: string | null;
   hoverPlay?: boolean;
-  loop?: boolean;
   lightbox?: boolean;
   contained?: boolean;
 };
@@ -37,7 +36,6 @@ export function CoverImage({
   poster,
   blurDataURL,
   hoverPlay,
-  loop = true,
   lightbox,
   contained,
 }: CoverImageProps) {
@@ -70,9 +68,9 @@ export function CoverImage({
           blurDataURL={blurDataURL ?? undefined}
           mode="preview"
           interactionRef={interactionRef}
-          playOn={hoverPlay ? "intent" : "visible"}
+          playOn={hoverPlay ? "intent" : "visible-once"}
           label={title}
-          loop={loop}
+          loop
           className="size-full"
           videoClassName={contained ? "object-contain" : "object-cover"}
         />
