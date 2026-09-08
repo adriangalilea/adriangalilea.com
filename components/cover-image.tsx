@@ -1,8 +1,8 @@
 "use client";
 
-import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { Zoomable } from "@/components/media-lightbox";
+import { Image } from "@/components/ui/image";
 import { slugToGradient } from "@/lib/gradient";
 import { isGif, isVideo } from "@/lib/media";
 
@@ -306,27 +306,31 @@ export function CoverImage({
         );
       }
 
-      // Static image: blurred bg + object-contain via Next.js Image
+      // Prepared blur supplies the backdrop without downloading the full original twice.
       const content = (
         <div
           className="cover-contained relative w-full max-h-[32rem] overflow-hidden rounded-2xl"
           style={containerStyle}
         >
-          <img
-            src={cover}
-            alt=""
-            aria-hidden
-            draggable={false}
-            className={bgBlurClass}
-          />
+          {!blurDataURL && (
+            <Image
+              src={cover}
+              alt=""
+              fill
+              sizes="256px"
+              className={bgBlurClass}
+            />
+          )}
           <Image
             src={cover}
             alt={title}
             fill
             draggable={false}
-            className="object-contain"
+            imageClassName="object-contain"
+            blurDataURL={blurDataURL ?? undefined}
             sizes={sizes ?? "100vw"}
-            priority={priority}
+            loading={priority ? "eager" : "lazy"}
+            fetchPriority={priority ? "high" : undefined}
           />
           <GrainOverlay />
         </div>
@@ -422,19 +426,19 @@ export function CoverImage({
           className="relative overflow-hidden"
           style={{
             aspectRatio,
-            ...(blurDataURL
-              ? {
-                  backgroundImage: `url(${blurDataURL})`,
-                  backgroundSize: "cover",
-                }
-              : undefined),
           }}
         >
-          <img
+          <Image
             src={cover}
             alt={title}
             draggable={false}
-            className="w-full h-full object-cover"
+            width={imgWidth}
+            height={imgHeight}
+            sizes={sizes ?? "(max-width: 768px) 100vw, 50vw"}
+            blurDataURL={blurDataURL ?? undefined}
+            loading={priority ? "eager" : "lazy"}
+            fetchPriority={priority ? "high" : undefined}
+            className="w-full h-full"
           />
           <GrainOverlay />
         </div>

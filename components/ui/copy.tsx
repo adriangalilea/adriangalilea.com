@@ -3,9 +3,9 @@
 // Copy to the clipboard, with the only feedback that matters: the control says it
 // worked, in place, and goes back on its own. No toast, nothing to dismiss.
 
-import { Check, Clipboard } from "lucide-react";
+import { Check, CircleAlert, Clipboard } from "lucide-react";
 import * as React from "react";
-import "./copy.css";
+import { cn } from "@/lib/utils";
 
 /** How long the control admits it copied. Long enough to read at a glance, short
  *  enough that a second copy is never blocked by the first one's applause. */
@@ -16,18 +16,27 @@ export const COPIED_MS = 1400;
  *  being cut short by the first one's expiry. */
 export function useCopy(text: string | (() => string)) {
   const [copied, setCopied] = React.useState(false);
+  const [error, setError] = React.useState<unknown>(null);
   const timer = React.useRef(0);
   React.useEffect(() => () => window.clearTimeout(timer.current), []);
   const copy = React.useCallback(async () => {
     const value = typeof text === "function" ? text() : text;
     // Empty is not a copy: writing "" silently wipes what the reader already had.
-    if (!value) return;
-    await navigator.clipboard.writeText(value);
-    setCopied(true);
     window.clearTimeout(timer.current);
-    timer.current = window.setTimeout(() => setCopied(false), COPIED_MS);
+    setCopied(false);
+    setError(null);
+    if (!value) return false;
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopied(true);
+      timer.current = window.setTimeout(() => setCopied(false), COPIED_MS);
+      return true;
+    } catch (cause) {
+      setError(cause);
+      return false;
+    }
   }, [text]);
-  return { copied, copy };
+  return { copied, copy, error };
 }
 
 export interface CopyProps
@@ -38,21 +47,53 @@ export interface CopyProps
   label?: boolean;
 }
 
-export function Copy({ value, label = false, className, ...props }: CopyProps) {
-  const { copied, copy } = useCopy(value);
+export function Copy({
+  value,
+  label = false,
+  className,
+  onClick,
+  ...props
+}: CopyProps) {
+  const { copied, copy, error } = useCopy(value);
   return (
     <button
+      data-slot="copy"
       type="button"
-      onClick={copy}
+      onClick={(event) => {
+        onClick?.(event);
+        if (!event.defaultPrevented) void copy();
+      }}
       // The accessible name carries the state, because the icon swap alone is silent
       // to a screen reader and `aria-live` on a control this small is noise.
-      aria-label={copied ? "Copied" : "Copy"}
+      aria-label={error ? "Copy failed. Try again" : copied ? "Copied" : "Copy"}
+      title={
+        error
+          ? "Clipboard unavailable. Try again or select the text to copy."
+          : undefined
+      }
       data-copied={copied ? "" : undefined}
-      className={`ag-copy${className ? ` ${className}` : ""}`}
+      className={cn(
+        "inline-flex h-8 shrink-0 cursor-pointer select-none items-center justify-center gap-1.5 rounded-md px-2 font-mono text-xs leading-none text-muted-foreground transition-colors hover:bg-foreground/6 hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:pointer-events-none disabled:opacity-40 data-copied:text-foreground",
+        !label && "w-8 px-0",
+        className,
+      )}
       {...props}
     >
-      {copied ? <Check size={14} /> : <Clipboard size={14} />}
-      {label && <span>{copied ? "copied" : "copy"}</span>}
+      {error ? (
+        <CircleAlert size={14} aria-hidden />
+      ) : copied ? (
+        <Check size={14} aria-hidden />
+      ) : (
+        <Clipboard size={14} aria-hidden />
+      )}
+      {label && (
+        <span
+          data-slot="copy-label"
+          className="inline-block min-w-[6ch] text-left"
+        >
+          {error ? "retry" : copied ? "copied" : "copy"}
+        </span>
+      )}
     </button>
   );
 }

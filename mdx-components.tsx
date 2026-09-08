@@ -1,11 +1,11 @@
 import type { MDXComponents } from "mdx/types";
-import Image from "next/image";
 import Link from "next/link";
 import { Children, isValidElement, type ReactElement } from "react";
 import { Card } from "@/components/card";
 import { Bars, CompareBars, CompareLines } from "@/components/charts";
 import { Pre } from "@/components/code-block";
 import { type Picture, Zoomable } from "@/components/media-lightbox";
+import { Image } from "@/components/ui/image";
 import { Quote } from "@/components/ui/quote";
 import { YouTube } from "@/components/youtube";
 import { getContentByPath, isNote } from "@/lib/content";
@@ -185,6 +185,7 @@ export function getMDXComponents(): MDXComponents {
           alt={alt ?? ""}
           width={w}
           height={h}
+          sizes="(max-width: 768px) 100vw, 768px"
           className="rounded-lg"
           unoptimized={isAnimated}
           {...props}
