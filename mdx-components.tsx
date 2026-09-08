@@ -186,7 +186,7 @@ export function getMDXComponents(): MDXComponents {
           width={w}
           height={h}
           sizes="(max-width: 768px) 100vw, 768px"
-          className="rounded-lg"
+          className="not-prose cover-contained my-[2em] w-full rounded-xl"
           unoptimized={isAnimated}
           {...props}
         />
