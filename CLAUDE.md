@@ -10,6 +10,8 @@ Next.js personal site.
 `pnpm format`
 `pnpm build`
 
+Commits are conventional, `type(scope): description`; `.githooks/commit-msg` refuses anything else, wired once per clone with `git config core.hooksPath .githooks`. `pnpm lint` is the gate and it covers `package.json` too; the `avatar.json` sidecars under `content/` are written by ui's `mise portrait` and excluded from it.
+
 ## Design references
 
 - https://wsocial.news/ — style/visual reference
