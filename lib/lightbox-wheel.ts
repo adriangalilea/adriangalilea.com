@@ -48,8 +48,8 @@ export type WheelSession = {
   samples: readonly Sample[];
   last: number;
   at: Point;
-  /** Hand or coast. The dismiss drag reads it to decide the moment the hand lets go
-   *  instead of waiting out the tail. */
+  /** Hand or coast, carried across the session's ticks. The binder reads `endsIn` off
+   *  it to time the silence that ends a session; no landing is decided on it. */
   phase: Phase;
 };
 
