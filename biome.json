@@ -7,7 +7,14 @@
   },
   "files": {
     "ignoreUnknown": true,
-    "includes": ["**", "!node_modules", "!.next", "!dist", "!build"]
+    "includes": [
+      "**",
+      "!node_modules",
+      "!.next",
+      "!dist",
+      "!build",
+      "!content/**/avatar.json"
+    ]
   },
   "formatter": {
     "enabled": true,
@@ -44,6 +51,19 @@
           },
           "a11y": {
             "useAltText": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["components/ui/chart.tsx"],
+      "linter": {
+        "rules": {
+          "security": {
+            "noDangerouslySetInnerHtml": "off"
+          },
+          "suspicious": {
+            "noArrayIndexKey": "off"
           }
         }
       }
