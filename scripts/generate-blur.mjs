@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import {
   existsSync,
   mkdirSync,
@@ -12,9 +13,15 @@ import { prepareMedia } from "../lib/prepare-media.ts";
 
 const CONTENT_DIR = join(process.cwd(), "content");
 const PUBLIC_DIR = join(process.cwd(), "public");
-const OUT_DIR = join(process.cwd(), ".next");
+// Generated inputs must survive Next clearing its build output.
+const OUT_DIR = join(process.cwd(), ".source", "media");
 const OUT_FILE = join(OUT_DIR, "blur-manifest.json");
 const META_FILE = join(OUT_DIR, "blur-manifest.meta.json");
+const recipe = createHash("sha256")
+  .update(readFileSync(new URL(import.meta.url)))
+  .update(readFileSync(new URL("../lib/prepare-media.ts", import.meta.url)))
+  .update(JSON.stringify(sharp.versions))
+  .digest("hex");
 
 const IMAGE_EXTENSIONS = new Set([
   ".png",
@@ -58,7 +65,7 @@ function readJSON(path) {
 const prevManifest = readJSON(OUT_FILE);
 const prevMeta = readJSON(META_FILE);
 const manifest = {};
-const meta = {};
+const meta = { recipe };
 
 let regenCount = 0;
 const sources = findBlurSources(CONTENT_DIR);
@@ -69,6 +76,7 @@ for (const src of sources) {
   meta[key] = mtime;
 
   if (
+    prevMeta.recipe === recipe &&
     prevMeta[key] === mtime &&
     typeof prevManifest[key] === "string" &&
     prevManifest[key].length > 0
@@ -117,7 +125,7 @@ function findOGSources(dir) {
 
 const OG_META_FILE = join(OUT_DIR, "blur-og.meta.json");
 const prevOGMeta = readJSON(OG_META_FILE);
-const ogMeta = {};
+const ogMeta = { recipe };
 let ogBlurCount = 0;
 
 for (const src of findOGSources(CONTENT_DIR)) {
@@ -130,7 +138,12 @@ for (const src of findOGSources(CONTENT_DIR)) {
   const mtime = statSync(src).mtimeMs;
   ogMeta[key] = mtime;
 
-  if (existsSync(dest) && prevOGMeta[key] === mtime) continue;
+  if (
+    existsSync(dest) &&
+    prevOGMeta.recipe === recipe &&
+    prevOGMeta[key] === mtime
+  )
+    continue;
 
   try {
     mkdirSync(destDir, { recursive: true });

@@ -22,7 +22,6 @@ import {
   COVER_EXTENSIONS,
   IMAGE_EXTENSIONS,
   isMedia,
-  NON_WEBM_ANIMATED,
   POSTER_EXTENSIONS,
 } from "@/lib/media";
 import { type QuoteTone, toneFrom } from "@/lib/quote-card";
@@ -30,15 +29,14 @@ import { type QuoteTone, toneFrom } from "@/lib/quote-card";
 const CONTENT_DIR = join(process.cwd(), "content");
 const PUBLIC_DIR = join(process.cwd(), "public");
 
-const blurManifest: Record<string, string> = (() => {
-  try {
-    return JSON.parse(
-      readFileSync(join(process.cwd(), ".next", "blur-manifest.json"), "utf-8"),
-    );
-  } catch {
-    return {};
-  }
-})();
+// The dev/build preparation step creates this input. Missing it is a broken
+// pipeline, not a reason to silently publish without prepared previews.
+const blurManifest: Record<string, string> = JSON.parse(
+  readFileSync(
+    join(process.cwd(), ".source", "media", "blur-manifest.json"),
+    "utf-8",
+  ),
+);
 const NOTE_MAX_CHARS = 280;
 export function imageBlur(src: string): string | undefined {
   return blurManifest[src.replace(/^\//, "")];
@@ -276,13 +274,6 @@ function resolveCover(dir: string, slug: string[]): CoverInfo {
           );
           unlinkSync(stale);
         }
-      }
-
-      if (NON_WEBM_ANIMATED.includes(ext) && !warnedCovers.has(slugPath)) {
-        warnedCovers.add(slugPath);
-        console.warn(
-          `⚠ ${slugPath}/cover${ext} is not webm — convert with: ffmpeg -i content/${slugPath}/cover${ext} -c:v libvpx-vp9 -crf 30 -b:v 0 -an content/${slugPath}/cover.webm`,
-        );
       }
 
       // Get dimensions for images (not videos)
