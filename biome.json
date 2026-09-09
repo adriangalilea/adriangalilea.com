@@ -13,7 +13,8 @@
       "!.next",
       "!dist",
       "!build",
-      "!content/**/avatar.json"
+      "!content/**/avatar.json",
+      "!**/*.svg"
     ]
   },
   "formatter": {
