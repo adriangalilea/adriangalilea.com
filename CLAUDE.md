@@ -48,7 +48,8 @@ pure arithmetic, so a rule change in the registry needs no re-annotation. `mise 
 it crops; `mise portraits content/quotes` writes any that are missing and never
 overwrites one, so a value set by hand stays. `lib/content.ts` reads it into
 `Folder.portrait` → `AuthorInfo.portrait`, and warns at build for a portrait without
-one. The build decodes NO pixels: no sharp, no Vision, no fontconfig.
+one. Portrait placement reads the sidecar without decoding. Media preparation
+uses Sharp before the Next build; it does not rerun Vision or portrait annotation.
 
 The author's face in an attribution is `components/ui/avatar.tsx` (`@ag/avatar`),
 positioned on the sidecar's `focus` and ringed in the tone; with the sidecar's `size` it
@@ -65,8 +66,8 @@ local image that arrives unmeasured, and the plugin throws for a local image tha
 not on disk (that assert found a 404 that had been live for a year). hast serializes
 attributes as strings, so `"1216"` is what reaches the component; `px()` parses it.
 Remote images are shown, not opened. Pull items from the local ui checkout with
-`mise run add <item> <site>`: it re-adds every dependency after the item, so the
-deployed registry's lag cannot leave a stale file.
+`mise run add <item> <site>`: it serves the local registry to shadcn, which resolves
+the dependency graph. Run the site's formatter on installed files afterward.
 
 What the site supplies beyond that: the words with markdown stripped, the formatted date
 (`noteDate` in `lib/content.ts`), and a rasterizer. `lib/og.tsx` renders the still with
@@ -144,7 +145,6 @@ Children live as sibling files or subdirectories inside the folder.
 | `publishedAt` | date | null | Publication date. Required for content to appear in feeds. |
 | `isDraft` | boolean | false | Hidden from listings but still accessible by URL. |
 | `isPublished` | boolean | true | `false` = completely hidden, not even parsed. |
-| `coverLoop` | boolean | true | Whether animated covers loop. |
 | `coverWidth` | number | null | Manual width for animated covers without poster image. |
 | `coverHeight` | number | null | Manual height for animated covers without poster image. |
 
@@ -229,11 +229,14 @@ Embed in other content with `<ContentQuote slug="quotes/satoshi-nakamoto/on-time
 
 `resolveCover()` scans for `cover.*` in the content directory (not `public/`). Priority: `.png .webp .jpg .jpeg .gif .mp4 .webm .mov`. Auto-copied to `public/` at build.
 
-For animated covers (gif/video), place a `poster.*` image alongside for the static crossfade preview. Poster priority: `.webp .jpg .jpeg .png`.
+For animated covers (gif/video), place a `poster.*` image alongside for the static crossfade preview. Poster priority: `.webp .jpg .jpeg .png .avif`.
 
 If an animated cover has no poster, set `coverWidth`/`coverHeight` in frontmatter manually.
 
-Preferred format for animated covers is `.webm`. The build warns about non-webm animated files.
+MP4 and WebM are supported. Feed videos loop during hover/focus; article videos
+play once on arrival, hold the final frame, then loop on a fresh hover/focus.
+Controls are opt-in in the shared component. Native GIFs retain their encoded loop
+behavior; prepare them as video when a finite play-once or boomerang is needed.
 
 ## Media in articles
 
@@ -241,7 +244,11 @@ Images/media referenced with `./filename` get rewritten to `/${slugPath}/filenam
 
 ## Blur placeholders
 
-`scripts/generate-blur.mjs` pre-generates blur data URLs for cover/poster images into `.next/blur-manifest.json`. Runs before `dev` and `build`. Adding a new cover while `next dev` is running requires a restart.
+`scripts/generate-blur.mjs` prepares blur data URLs for local article images and
+cover/poster images into `.source/media/blur-manifest.json`, before `dev` and `build`.
+Generated inputs live outside `.next` so the production build cannot erase them.
+Restart dev after adding media. Its cache includes the preparation recipe, so
+processor changes regenerate placeholders even when original files are unchanged.
 
 ## X-ray cards
 

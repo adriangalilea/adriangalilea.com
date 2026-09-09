@@ -65,6 +65,7 @@ export function CoverImage({
           width={w}
           height={h}
           poster={poster ?? undefined}
+          sizes={sizes}
           blurDataURL={blurDataURL ?? undefined}
           mode="preview"
           interactionRef={interactionRef}

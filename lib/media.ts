@@ -1,10 +1,16 @@
 // Single source of truth for media file type classification
 
 export const VIDEO_EXTENSIONS = [".mp4", ".webm", ".mov"];
-export const IMAGE_EXTENSIONS = [".png", ".webp", ".jpg", ".jpeg", ".gif"];
+export const IMAGE_EXTENSIONS = [
+  ".png",
+  ".webp",
+  ".jpg",
+  ".jpeg",
+  ".gif",
+  ".avif",
+];
 export const ANIMATED_EXTENSIONS = [".gif", ...VIDEO_EXTENSIONS];
-export const NON_WEBM_ANIMATED = [".gif", ".mp4", ".mov"];
-export const POSTER_EXTENSIONS = [".webp", ".jpg", ".jpeg", ".png"];
+export const POSTER_EXTENSIONS = [".webp", ".jpg", ".jpeg", ".png", ".avif"];
 export const AVATAR_EXTENSIONS = [".png", ".webp", ".jpg", ".jpeg"];
 export const COVER_EXTENSIONS = [
   ".png",
@@ -12,6 +18,7 @@ export const COVER_EXTENSIONS = [
   ".jpg",
   ".jpeg",
   ".gif",
+  ".avif",
   ...VIDEO_EXTENSIONS,
 ];
 export const MEDIA_EXTENSIONS = [...COVER_EXTENSIONS];
