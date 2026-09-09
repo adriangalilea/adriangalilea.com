@@ -63,7 +63,6 @@ export function Zoomable({
       entry={entryOf(picture)}
       label="picture"
       render={
-        // biome-ignore lint/a11y/useAnchorContent: the trigger clones the picture into it, and alt names it
         <a
           href={picture.src}
           className={`not-prose block cursor-zoom-in outline-offset-2 focus-visible:outline-2 focus-visible:outline-ring ${radius}`}
