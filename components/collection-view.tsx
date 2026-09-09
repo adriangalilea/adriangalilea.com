@@ -20,10 +20,11 @@ import {
 import { renderMDX } from "@/lib/mdx";
 import { getMDXComponents } from "@/mdx-components";
 
-// Height calculation for masonry distribution
+/** A card's height guess for masonry distribution, at the grid's 300px column. A cover
+ *  without measured dimensions is assumed 16:9. */
 function getCoverHeight(w: number | null, h: number | null): number {
   if (w && h) return 300 / (w / h);
-  return 170; // default 16:9
+  return 170;
 }
 
 function getItemHeight(content: Content): number {
@@ -41,6 +42,31 @@ function getItemHeight(content: Content): number {
     }
   }
   return h;
+}
+
+/** Every card in a grid, rendered server-side in the order given. */
+export async function prepareGridItems(items: Content[]) {
+  return Promise.all(
+    items.map(async (content) => ({
+      path: content.path,
+      tags: isPost(content)
+        ? content.tags
+        : isFolder(content)
+          ? getFolderTags(content)
+          : [],
+      height: getItemHeight(content),
+      content: (
+        <Card
+          content={content}
+          renderedNoteContent={
+            isNote(content)
+              ? await renderMDX(content.content, getMDXComponents())
+              : undefined
+          }
+        />
+      ),
+    })),
+  );
 }
 
 type Props = {
@@ -117,27 +143,7 @@ export async function CollectionView({ folder, slug }: Props) {
     ...xrayChildSlugs,
   ];
 
-  // Pre-render all cards server-side (in sorted order)
-  const items = await Promise.all(
-    sortedChildren.map(async (content) => {
-      const renderedNoteContent = isNote(content)
-        ? await renderMDX(content.content, getMDXComponents())
-        : undefined;
-
-      return {
-        path: content.path,
-        tags: isPost(content)
-          ? content.tags
-          : isFolder(content)
-            ? getFolderTags(content)
-            : [],
-        height: getItemHeight(content),
-        content: (
-          <Card content={content} renderedNoteContent={renderedNoteContent} />
-        ),
-      };
-    }),
-  );
+  const items = await prepareGridItems(sortedChildren);
 
   const noteSlugs = sortedChildren.filter(isNote).map((n) => n.slug.join("/"));
 
@@ -154,17 +160,14 @@ export async function CollectionView({ folder, slug }: Props) {
 
           {/* Folder Header */}
           {folder &&
-            (folder.description ||
-              Object.keys(folder.links).length > 0 ||
-              folder.kpis.length > 0) && (
+            (folder.description || Object.keys(folder.links).length > 0) && (
               <header className="mb-8">
                 {folder.description && (
                   <p className="font-serif text-2xl text-foreground-low tracking-tight">
                     {folder.description}
                   </p>
                 )}
-                {(Object.keys(folder.links).length > 0 ||
-                  folder.kpis.length > 0) && (
+                {Object.keys(folder.links).length > 0 && (
                   <div className="mt-4 flex flex-wrap items-center gap-2">
                     {Object.entries(folder.links).map(([key, url]) => (
                       <a
@@ -177,15 +180,6 @@ export async function CollectionView({ folder, slug }: Props) {
                         <LinkIcon linkKey={key} />
                         {key}
                       </a>
-                    ))}
-                    {folder.kpis.map((kpi) => (
-                      <span
-                        key={kpi.label}
-                        className="inline-flex items-center gap-1.5 rounded-full bg-glass-l1 border border-glass-l1-border px-3 py-1 font-mono text-xs text-foreground-low"
-                      >
-                        <span className="font-semibold">{kpi.value}</span>
-                        {kpi.label}
-                      </span>
                     ))}
                   </div>
                 )}

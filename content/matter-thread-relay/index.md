@@ -2,8 +2,6 @@
 title: "$10 Matter over Thread Relay"
 publishedAt: 2026-02-02
 description: "No commercial product exists, so I built one."
-coverWidth: 512
-coverHeight: 638
 tags:
   - electronics
   - smarthome

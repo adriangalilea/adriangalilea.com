@@ -21,7 +21,6 @@ export const COVER_EXTENSIONS = [
   ".avif",
   ...VIDEO_EXTENSIONS,
 ];
-export const MEDIA_EXTENSIONS = [...COVER_EXTENSIONS];
 
 export function isVideo(url: string): boolean {
   const lower = url.toLowerCase();
@@ -43,5 +42,5 @@ export function isStaticCover(url: string): boolean {
 
 export function isMedia(name: string): boolean {
   const lower = name.toLowerCase();
-  return MEDIA_EXTENSIONS.some((ext) => lower.endsWith(ext));
+  return COVER_EXTENSIONS.some((ext) => lower.endsWith(ext));
 }

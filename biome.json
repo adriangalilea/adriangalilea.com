@@ -39,12 +39,7 @@
   },
   "overrides": [
     {
-      "includes": [
-        "components/cover-image.tsx",
-        "components/lightbox.tsx",
-        "mdx-components.tsx",
-        "lib/og.tsx"
-      ],
+      "includes": ["mdx-components.tsx"],
       "linter": {
         "rules": {
           "performance": {
@@ -80,7 +75,7 @@
       }
     },
     {
-      "includes": ["components/comment-feed.tsx", "components/lightbox.tsx"],
+      "includes": ["components/comment-feed.tsx", "components/ui/lightbox.tsx"],
       "linter": {
         "rules": {
           "a11y": {

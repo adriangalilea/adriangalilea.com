@@ -5,12 +5,10 @@ import { Zoomable } from "@/components/media-lightbox";
 import { Image } from "@/components/ui/image";
 import { AnimatedImage } from "@/components/ui/image-animation";
 import { Video } from "@/components/ui/video";
-import { slugToGradient } from "@/lib/gradient";
 import { isGif, isVideo } from "@/lib/media";
 
 type CoverImageProps = {
-  cover: string | null;
-  slug: string;
+  cover: string;
   title: string;
   sizes?: string;
   priority?: boolean;
@@ -26,7 +24,6 @@ type CoverImageProps = {
 
 export function CoverImage({
   cover,
-  slug,
   title,
   sizes = "(max-width: 768px) 100vw, 50vw",
   priority,
@@ -47,16 +44,6 @@ export function CoverImage({
   const grain = (
     <div className="cover-grain pointer-events-none absolute inset-0 z-10" />
   );
-  if (!cover)
-    return (
-      <div
-        className={frame}
-        style={{ ...style, background: slugToGradient(slug) }}
-      >
-        {grain}
-      </div>
-    );
-
   if (isVideo(cover))
     return (
       <div className={frame} style={style}>

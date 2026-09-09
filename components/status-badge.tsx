@@ -19,49 +19,11 @@ export const STATUS_CONFIG: Record<
   shipped: { icon: Trophy, label: "shipped", colorKey: "yellow" },
 };
 
-export const STATUS_COLORS: Record<
-  string,
-  {
-    text: string;
-    bg: string;
-    border: string;
-    colorVar: string;
-    bgVar: string;
-    borderVar: string;
-  }
-> = {
-  violet: {
-    text: "text-violet-400",
-    bg: "bg-violet-500/5",
-    border: "border-violet-400/20",
-    colorVar: "rgb(167,139,250)",
-    bgVar: "rgba(139,92,246,0.05)",
-    borderVar: "rgba(167,139,250,0.2)",
-  },
-  rose: {
-    text: "text-rose-400",
-    bg: "bg-rose-500/5",
-    border: "border-rose-400/20",
-    colorVar: "rgb(251,113,133)",
-    bgVar: "rgba(251,113,133,0.05)",
-    borderVar: "rgba(251,113,133,0.2)",
-  },
-  cyan: {
-    text: "text-cyan-400",
-    bg: "bg-cyan-500/5",
-    border: "border-cyan-400/20",
-    colorVar: "rgb(34,211,238)",
-    bgVar: "rgba(34,211,238,0.05)",
-    borderVar: "rgba(34,211,238,0.2)",
-  },
-  yellow: {
-    text: "text-yellow-400",
-    bg: "bg-yellow-500/5",
-    border: "border-yellow-400/20",
-    colorVar: "rgb(250,204,21)",
-    bgVar: "rgba(250,204,21,0.05)",
-    borderVar: "rgba(250,204,21,0.2)",
-  },
+export const STATUS_COLORS: Record<string, { text: string; bg: string }> = {
+  violet: { text: "text-violet-400", bg: "bg-violet-500/5" },
+  rose: { text: "text-rose-400", bg: "bg-rose-500/5" },
+  cyan: { text: "text-cyan-400", bg: "bg-cyan-500/5" },
+  yellow: { text: "text-yellow-400", bg: "bg-yellow-500/5" },
 };
 
 export function StatusBadge({
@@ -77,7 +39,6 @@ export function StatusBadge({
   return (
     <GlassPill
       variant="collapsible"
-      expand="left"
       shadow="md"
       icon={config.icon}
       label={config.label}

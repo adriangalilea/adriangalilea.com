@@ -1,8 +1,7 @@
 import { PenLine } from "lucide-react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { Card } from "@/components/card";
-import { CollectionView } from "@/components/collection-view";
+import { CollectionView, prepareGridItems } from "@/components/collection-view";
 import { Comments } from "@/components/comments";
 import { CoverImage } from "@/components/cover-image";
 import { Grid } from "@/components/filterable-grid";
@@ -13,68 +12,23 @@ import { Quote } from "@/components/ui/quote";
 import { VerdictInline } from "@/components/verdict-badge";
 import { ViewCounter } from "@/components/view-counter";
 import {
-  type Content,
   type Folder,
   getAllContent,
   getAuthorForContent,
   getBacklinks,
   getContentByPath,
-  getFeaturedChildren,
   getRecommendations,
   isFolder,
   isNote,
   isPage,
-  isPost,
   type Note,
   noteDate,
   type Page,
 } from "@/lib/content";
 import { SERIF_CH } from "@/lib/faces";
 import { renderMDX } from "@/lib/mdx";
-import { stripMarkdown } from "@/lib/utils";
+import { formatDate, stripMarkdown } from "@/lib/utils";
 import { getMDXComponents } from "@/mdx-components";
-
-// Height calculation for grid distribution
-function getCoverHeight(w: number | null, h: number | null): number {
-  if (w && h) return 300 / (w / h);
-  return 170;
-}
-
-function getItemHeight(c: Content): number {
-  let h = 80;
-  if (c.cover) h += getCoverHeight(c.coverWidth, c.coverHeight);
-  if (isNote(c)) h += Math.min(c.content.length / 3, 100) + 80;
-  else if (isPage(c) && c.description) h += 40;
-  else if (isFolder(c) && !c.cover) {
-    const pages = getFeaturedChildren(c.slug).filter(isPage) as Page[];
-    if (pages.length > 0) {
-      h += 80;
-      if (pages[0].cover)
-        h += getCoverHeight(pages[0].coverWidth, pages[0].coverHeight) * 0.7;
-    }
-  }
-  return h;
-}
-
-async function prepareGridItems(items: Content[]) {
-  return Promise.all(
-    items.map(async (c) => ({
-      path: c.path,
-      tags: isPost(c) ? c.tags : [],
-      height: getItemHeight(c),
-      content: (
-        <Card
-          content={c}
-          renderedNoteContent={
-            isNote(c)
-              ? await renderMDX(c.content, getMDXComponents())
-              : undefined
-          }
-        />
-      ),
-    })),
-  );
-}
 
 type Props = {
   params: Promise<{ slug?: string[] }>;
@@ -123,7 +77,6 @@ async function NoteView({ note }: { note: Note }) {
           <figure className="mb-8 text-center">
             <CoverImage
               cover={note.cover}
-              slug={note.slug.join("/")}
               title=""
               width={note.coverWidth}
               height={note.coverHeight}
@@ -176,19 +129,9 @@ async function NoteView({ note }: { note: Note }) {
               </div>
             )}
 
-            {(note.estimatedDate ||
-              (note.publishedAt &&
-                new Date(note.publishedAt).getFullYear() >= 1000)) && (
+            {noteDate(note) && (
               <div className="mt-6 flex items-center gap-2 font-mono text-xs text-foreground-lowest uppercase tracking-wider">
-                <time>
-                  {note.estimatedDate ??
-                    (note.publishedAt &&
-                      new Date(note.publishedAt).toLocaleDateString("en-US", {
-                        year: "numeric",
-                        month: "short",
-                        day: "numeric",
-                      }))}
-                </time>
+                <time>{noteDate(note)}</time>
                 <span className="text-muted-foreground">·</span>
                 <ViewCounter slug={note.slug.join("/")} />
                 <TrackView slug={note.slug.join("/")} />
@@ -259,7 +202,6 @@ async function PageView({ page }: { page: Page }) {
           <figure className="mb-8 mx-auto max-w-2xl text-center">
             <CoverImage
               cover={page.cover}
-              slug={page.slug.join("/")}
               title={page.title}
               width={page.coverWidth}
               height={page.coverHeight}
@@ -295,13 +237,7 @@ async function PageView({ page }: { page: Page }) {
               )}
               {page.publishedAt && (
                 <div className="mt-4 font-mono text-muted-foreground text-xs uppercase tracking-wider">
-                  <time>
-                    {new Date(page.publishedAt).toLocaleDateString("en-US", {
-                      year: "numeric",
-                      month: "short",
-                      day: "numeric",
-                    })}
-                  </time>
+                  <time>{formatDate(page.publishedAt)}</time>
                   {page.updatedAt && (
                     <>
                       <span className="mx-2">·</span>
@@ -309,13 +245,7 @@ async function PageView({ page }: { page: Page }) {
                         className="size-3.5 inline-block mr-1"
                         strokeWidth={1.5}
                       />
-                      <time>
-                        {new Date(page.updatedAt).toLocaleDateString("en-US", {
-                          year: "numeric",
-                          month: "short",
-                          day: "numeric",
-                        })}
-                      </time>
+                      <time>{formatDate(page.updatedAt)}</time>
                     </>
                   )}
                   <span className="mx-2">·</span>

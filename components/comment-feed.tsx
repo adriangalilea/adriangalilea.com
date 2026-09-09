@@ -19,8 +19,6 @@ import {
   MAX_CHARS,
 } from "./comment-primitives";
 
-export { CharCounter, MAX_CHARS };
-
 type SlugComments = {
   comments: CommentData[];
   total: number;

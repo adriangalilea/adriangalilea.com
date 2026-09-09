@@ -24,7 +24,7 @@ import {
 } from "@/lib/content";
 import { SERIF_CH } from "@/lib/faces";
 import { isStaticCover } from "@/lib/media";
-import { cn } from "@/lib/utils";
+import { cn, formatDate } from "@/lib/utils";
 
 // ============================================================================
 // STYLES
@@ -101,7 +101,6 @@ function NoteCard({
         <div className="relative">
           <CoverImage
             cover={note.cover}
-            slug={note.slug.join("/")}
             title=""
             width={note.coverWidth}
             height={note.coverHeight}
@@ -153,13 +152,7 @@ function NoteCard({
               {note.publishedAt && (
                 <>
                   <StickyNote className="size-3" />
-                  <time>
-                    {new Date(note.publishedAt).toLocaleDateString("en-US", {
-                      year: "numeric",
-                      month: "short",
-                      day: "numeric",
-                    })}
-                  </time>
+                  <time>{formatDate(note.publishedAt)}</time>
                   <span>·</span>
                 </>
               )}
@@ -196,7 +189,6 @@ function PageCard({ page }: { page: Page }) {
         <div className="relative">
           <CoverImage
             cover={page.cover}
-            slug={page.slug.join("/")}
             title={page.title}
             width={page.coverWidth}
             height={page.coverHeight}
@@ -220,25 +212,13 @@ function PageCard({ page }: { page: Page }) {
           {page.publishedAt && (
             <>
               <FileText className="size-3" />
-              <time>
-                {new Date(page.publishedAt).toLocaleDateString("en-US", {
-                  year: "numeric",
-                  month: "short",
-                  day: "numeric",
-                })}
-              </time>
+              <time>{formatDate(page.publishedAt)}</time>
               {page.updatedAt &&
                 new Date(page.updatedAt) > new Date(page.publishedAt) && (
                   <>
                     <span className="text-foreground-lowest">·</span>
                     <PenLine className="size-3" />
-                    <time>
-                      {new Date(page.updatedAt).toLocaleDateString("en-US", {
-                        year: "numeric",
-                        month: "short",
-                        day: "numeric",
-                      })}
-                    </time>
+                    <time>{formatDate(page.updatedAt)}</time>
                   </>
                 )}
               <span className="text-foreground-lowest">·</span>
@@ -279,7 +259,6 @@ function FolderCard({ folder }: { folder: Folder }) {
         <div className="relative">
           <CoverImage
             cover={folder.cover}
-            slug={folder.slug.join("/")}
             title={folder.title}
             width={folder.coverWidth}
             height={folder.coverHeight}

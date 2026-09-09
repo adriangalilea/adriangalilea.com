@@ -1,5 +1,6 @@
 import Image from "next/image";
 import type { ReactNode } from "react";
+import { formatDate } from "@/lib/utils";
 
 export type CommentData = {
   id: string;
@@ -21,11 +22,7 @@ export function timeAgo(date: string): string {
   if (hours < 24) return `${hours}h ago`;
   const days = Math.floor(hours / 24);
   if (days < 30) return `${days}d ago`;
-  return new Date(date).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
+  return formatDate(date);
 }
 
 const AVATAR_SIZE = { sm: 18, md: 20 } as const;

@@ -34,13 +34,10 @@ comes from the registry at ui.adriangalilea.com (`components.json` maps `@ag`):
 `components/ui/quote.tsx` + `quote.css` (the web card: `feature` on a quote's own page,
 `prose` inside `Card` in the feed and in `ContentQuote` embeds) and `lib/quote-card.ts`
 (the rules and `renderQuoteSvg`, the 1200×630 still the OG route rasterizes). Refresh a
-copy with `npx shadcn@latest add @ag/quote --overwrite`; never edit the copies, fix the
-registry and re-add. `app/tokens.css` is the `@ag/tokens` copy, imported from globals.
-**Gotcha when the registry has just been pushed:** `add quote` pulls its dependency
-`quote-card` from the REMOTE registry, which lags the deploy by minutes, and overwrites
-`lib/quote-card.ts` with the stale copy — a `tsc` failure on an export the new
-`quote.tsx` imports. From the ui checkout, `mise run add quote <site>` then
-`mise run add quote-card <site>`, in that order, installs both from the local build.
+copy with `mise add quote` run in the ui checkout: it installs the item AND its whole
+dependency tree from the local build, so `quote-card` can never lag behind `quote.tsx`.
+Never edit the copies, fix the registry and re-add. `app/tokens.css` is the `@ag/tokens`
+copy, imported from globals.
 
 **Everything the card needs from a portrait's pixels is ASSET PREPARATION, not a build
 step.** `content/quotes/<author>/avatar.json` sits beside each `avatar.png` and holds
@@ -72,8 +69,8 @@ Remote images are shown, not opened. Pull items from the local ui checkout with
 the dependency graph. Run the site's formatter on installed files afterward.
 
 What the site supplies beyond that: the words with markdown stripped, the formatted date
-(`noteDate` in `lib/content.ts`), and a rasterizer. `lib/og.tsx` renders the still with
-**resvg**, not satori: it takes font FILES, so the three voices resolve to the faces they
+(`noteDate` in `lib/content.ts`), and a rasterizer. `lib/og.ts` renders the still with
+**resvg**: it takes font FILES, so the three voices resolve to the faces they
 name — Tinos (`lib/fonts/`, Apache 2.0, the same face `--font-quote` loads for the
 page), Geist and Geist Mono from the `geist` package. **The quotes' face is Tinos, never
 Instrument Serif**: the heading face is a condensed display serif and was illegible at
@@ -81,7 +78,9 @@ reading size the moment the quote inherited `--font-serif`; the item reads its o
 `--font-quote` token, the site maps it to Tinos (next/font) and `SERIF_CH` in
 `lib/faces.ts` is Tinos's measured advance. resvg is a native addon and is
 listed in `serverExternalPackages`. EVERY note gets an OG card, Adrian's own included,
-on the neutral ground.
+on the neutral ground. A page or folder with a cover gets the cover contained over a
+blurred fill of itself, drawn by sharp from the cover file (an `og.png` beside the
+content wins; a video cover previews with its poster).
 
 ## Content Architecture
 
@@ -89,13 +88,12 @@ All content lives in `content/` as `.md` or `.mdx` files. Three content types, d
 
 ### Note
 
-No `title` in frontmatter. Body must be <= 280 chars. Renders as a short card.
+No `title` in frontmatter. Body must be <= 280 chars (`quotes/` and `predictions/`
+are exempt). Renders as a short card.
 
 ```yaml
 ---
 publishedAt: 2026-02-06
-coverWidth: 480
-coverHeight: 264
 ---
 ~~The everything APP~~ → The everything API
 ```
@@ -144,11 +142,9 @@ Children live as sibling files or subdirectories inside the folder.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `publishedAt` | date | null | Publication date. Required for content to appear in feeds. |
+| `publishedAt` | date | null | When it went on the site. Required for content to appear in feeds. |
 | `isDraft` | boolean | false | Hidden from listings but still accessible by URL. |
-| `isPublished` | boolean | true | `false` = completely hidden, not even parsed. |
-| `coverWidth` | number | null | Manual width for animated covers without poster image. |
-| `coverHeight` | number | null | Manual height for animated covers without poster image. |
+| `isPublished` | boolean | true | `false` = dropped at parse, never rendered. |
 
 ### Page only
 
@@ -157,8 +153,7 @@ Children live as sibling files or subdirectories inside the folder.
 | `title` | string | **required** | Presence of title is what makes it a Page (vs Note). |
 | `description` | string | null | Subtitle / meta description. |
 | `tags` | string[] | [] | Used for filtering and recommendations. |
-| `updatedAt` | date | null | Shows "updated" badge if within 30 days. |
-| `pinned` | boolean | false | Boosts scoring in featured listings. |
+| `updatedAt` | date | null | Second date beside the published one; the card shows it only when later. |
 
 ### Note only
 
@@ -166,6 +161,9 @@ Children live as sibling files or subdirectories inside the folder.
 |-------|------|---------|-------------|
 | `tags` | string[] | [] | Same as Page. |
 | `source` | string | null | URL attribution (used for quotes). |
+| `estimatedDate` | string | null | When the words were said (`"~500 BC"`). Shown instead of `publishedAt`, on the page and the OG card. |
+| `verdict` | `"pending"` \| `"partial"` \| `"confirmed"` \| `"missed"` | null | A prediction's outcome badge. |
+| `deadline` | string | null | When a prediction resolves. |
 
 ### Folder only
 
@@ -176,8 +174,6 @@ Children live as sibling files or subdirectories inside the folder.
 | `description` | string | null | One-liner. |
 | `status` | `"soon"` \| `"shipped"` \| `"lab"` \| `"sunset"` | null | Project status badge. |
 | `links` | Record<string, string> | {} | Named URLs. Keys like `github`, `site`, etc. |
-| `kpis` | { label, value }[] | [] | Key metrics displayed on the folder card. |
-| `techs` | string[] | [] | Technology tags. |
 | `feedThrough` | boolean | false | Children bubble up to the parent's parent (used for quotes). |
 
 ## How to create content
@@ -222,18 +218,19 @@ content/quotes/
   satoshi-nakamoto/
     index.md                      # type: folder, feedThrough: true
     avatar.png                    # author avatar
-    on-timestamps.md              # Note (no title, <= 280 chars, has source URL)
+    on-timestamps.md              # Note (no title, has source URL)
 ```
 
 Embed in other content with `<ContentQuote slug="quotes/satoshi-nakamoto/on-timestamps" />`.
 
 ## Covers
 
-`resolveCover()` scans for `cover.*` in the content directory (not `public/`). Priority: `.png .webp .jpg .jpeg .gif .mp4 .webm .mov`. Auto-copied to `public/` at build.
+`resolveCover()` scans for `cover.*` in the content directory (not `public/`). Priority: `.png .webp .jpg .jpeg .gif .avif .mp4 .webm .mov`. Auto-copied to `public/` at build.
 
 For animated covers (gif/video), place a `poster.*` image alongside for the static crossfade preview. Poster priority: `.webp .jpg .jpeg .png .avif`.
 
-If an animated cover has no poster, set `coverWidth`/`coverHeight` in frontmatter manually.
+An animated cover takes its dimensions from the poster; without one the grid sizes the
+card as 16:9 and the build warns once.
 
 MP4 and WebM are supported. Feed videos loop during hover/focus; article videos
 play once on arrival, hold the final frame, then loop on a fresh hover/focus.
@@ -299,7 +296,6 @@ These were copied into `content/` and adapted. The originals at source are stale
 |---|---|
 | `memory-is-not-an-afterthought.md` | `~/self/writing/notes/memory-is-not-an-afterthought.md` |
 | `the-xy-problem.md` | `~/self/writing/references/xy-problem.md` |
-| `principles.md` | `~/self/writing/principles.md` |
 | `why-i-hate-apple.md` | `~/self/writing/notes/xdg-over-apple.md` + `~/Documents/writings/notes/why_I_hate_apple.md` |
 | `backstory.md` | `~/Documents/writings/Obsidian Vault/site/Adrian Galilea.md` |
 | `quotes/` (Carmack, Ango, Peterson) | `~/self/writing/references/{carmack-constraints,ango-style-constraint,peterson-rules-freedom}.md` |
@@ -343,11 +339,6 @@ These were copied into `content/` and adapted. The originals at source are stale
 ## TODO
 
 - Masonry sorting is broken — especially visible at `/quotes`, the ordering algorithm fails
-- Date model is broken — frontmatter should have one single date field; `publishedAt` is the wrong concept for quotes (it was meant for notes/pages). Quotes need a different date semantic (original utterance/publication date). Ancient quotes (BC era) use `estimatedDate` string field as a workaround but the whole model needs rethinking.
-- Add Vercel Analytics for traffic analysis
-- Add comment section with GitHub and Telegram auth using Better Auth
-- Add backstory page
-- Generate OG images for quotes (author avatar + quote text + author name)
 - Clean up stale duplicates at source locations after confirming site versions are canonical
 - Run `vercel link` — the Vercel project exists and is live (`adriangalilea-com`, team adriangalileas-projects) but this local repo is unlinked, so `vercel env pull` / CLI ops won't work until linked
 

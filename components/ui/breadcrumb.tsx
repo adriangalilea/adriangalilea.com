@@ -1,6 +1,5 @@
 import { ChevronRight, MoreHorizontal } from "lucide-react";
-import { Slot } from "radix-ui";
-import type * as React from "react";
+import * as React from "react";
 
 import { cn } from "@/lib/utils";
 
@@ -31,22 +30,25 @@ function BreadcrumbItem({ className, ...props }: React.ComponentProps<"li">) {
   );
 }
 
+/** `render` hands the link's props to another element (a Next `Link`), Base UI's
+ *  own convention, instead of a second headless library's `asChild`. */
 function BreadcrumbLink({
-  asChild,
+  render,
   className,
   ...props
 }: React.ComponentProps<"a"> & {
-  asChild?: boolean;
+  render?: React.ReactElement<React.ComponentProps<"a">>;
 }) {
-  const Comp = asChild ? Slot.Root : "a";
-
-  return (
-    <Comp
-      data-slot="breadcrumb-link"
-      className={cn("hover:text-foreground transition-colors", className)}
-      {...props}
-    />
-  );
+  const own = {
+    "data-slot": "breadcrumb-link",
+    ...props,
+    className: cn(
+      "hover:text-foreground transition-colors",
+      className,
+      render?.props.className,
+    ),
+  };
+  return render ? React.cloneElement(render, own) : <a {...own} />;
 }
 
 function BreadcrumbPage({ className, ...props }: React.ComponentProps<"span">) {

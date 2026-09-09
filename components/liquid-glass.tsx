@@ -99,35 +99,25 @@ export function GlassSurface<T extends ElementType = "span">({
 // GlassPill — collapsible/full icon+label pill
 // ============================================================================
 
+/** A collapsible pill sits at its container's right edge and grows leftwards on hover. */
 const HOVER_CLASSES = {
   "group/pill": {
     group: "group/pill",
-    surface_expand_left:
+    surface:
       "group-hover/pill:gap-1.5 group-hover/pill:pl-3 group-hover/pill:pr-2",
-    surface_expand_right: "group-hover/pill:pr-3",
-    label_expand_left: "group-hover/pill:max-w-24 group-hover/pill:opacity-100",
-    label_expand_right:
-      "group-hover/pill:max-w-24 group-hover/pill:opacity-100 group-hover/pill:pl-1.5",
+    label: "group-hover/pill:max-w-24 group-hover/pill:opacity-100",
   },
   "group/status": {
     group: "group/status",
-    surface_expand_left:
+    surface:
       "group-hover/status:gap-1.5 group-hover/status:pl-3 group-hover/status:pr-2",
-    surface_expand_right: "group-hover/status:pr-3",
-    label_expand_left:
-      "group-hover/status:max-w-24 group-hover/status:opacity-100",
-    label_expand_right:
-      "group-hover/status:max-w-24 group-hover/status:opacity-100 group-hover/status:pl-1.5",
+    label: "group-hover/status:max-w-24 group-hover/status:opacity-100",
   },
   "group/verdict": {
     group: "group/verdict",
-    surface_expand_left:
+    surface:
       "group-hover/verdict:gap-1.5 group-hover/verdict:pl-3 group-hover/verdict:pr-2",
-    surface_expand_right: "group-hover/verdict:pr-3",
-    label_expand_left:
-      "group-hover/verdict:max-w-24 group-hover/verdict:opacity-100",
-    label_expand_right:
-      "group-hover/verdict:max-w-24 group-hover/verdict:opacity-100 group-hover/verdict:pl-1.5",
+    label: "group-hover/verdict:max-w-24 group-hover/verdict:opacity-100",
   },
 } as const;
 
@@ -138,7 +128,6 @@ type GlassPillProps<T extends ElementType = "span"> = {
   icon?: LucideIcon;
   label: string;
   variant?: "collapsible" | "full";
-  expand?: "left" | "right";
   shadow?: Shadow;
   color?: string;
   groupClass?: GroupName;
@@ -150,7 +139,6 @@ export function GlassPill<T extends ElementType = "span">({
   icon: Icon,
   label,
   variant = "collapsible",
-  expand = "right",
   shadow = "sm",
   color,
   groupClass = "group/pill",
@@ -184,64 +172,33 @@ export function GlassPill<T extends ElementType = "span">({
     );
   }
 
-  if (expand === "left") {
-    return (
-      <Tag className={cn(h.group, className)} {...rest}>
-        <GlassSurface
-          shadow={shadow}
-          className={cn(
-            "absolute right-0 top-0 flex h-7 min-w-7 items-center justify-end rounded-full",
-            "gap-0 px-[7px]",
-            h.surface_expand_left,
-            "max-sm:gap-1.5 max-sm:pl-3 max-sm:pr-2",
-            "transition-all",
-            color,
-          )}
-        >
-          <span
-            className={cn(
-              "max-w-0 overflow-hidden text-xs font-medium leading-none whitespace-nowrap opacity-0 transition-all duration-200 ease-out",
-              h.label_expand_left,
-              "max-sm:max-w-24 max-sm:opacity-100",
-            )}
-          >
-            {label}
-          </span>
-          {Icon && (
-            <span className="flex size-3.5 items-center justify-center shrink-0">
-              <Icon className="size-3 shrink-0" />
-            </span>
-          )}
-        </GlassSurface>
-      </Tag>
-    );
-  }
-
-  // expand === "right"
   return (
     <Tag className={cn(h.group, className)} {...rest}>
       <GlassSurface
         shadow={shadow}
         className={cn(
-          "flex h-7 min-w-7 items-center rounded-full text-foreground-low hover:text-foreground transition-all",
-          "pl-[7px] pr-[7px]",
-          h.surface_expand_right,
+          "absolute right-0 top-0 flex h-7 min-w-7 items-center justify-end rounded-full",
+          "gap-0 px-[7px]",
+          h.surface,
+          "max-sm:gap-1.5 max-sm:pl-3 max-sm:pr-2",
+          "transition-all",
           color,
         )}
       >
+        <span
+          className={cn(
+            "max-w-0 overflow-hidden text-xs font-medium leading-none whitespace-nowrap opacity-0 transition-all duration-200 ease-out",
+            h.label,
+            "max-sm:max-w-24 max-sm:opacity-100",
+          )}
+        >
+          {label}
+        </span>
         {Icon && (
           <span className="flex size-3.5 items-center justify-center shrink-0">
             <Icon className="size-3 shrink-0" />
           </span>
         )}
-        <span
-          className={cn(
-            "max-w-0 overflow-hidden text-xs font-medium leading-none whitespace-nowrap opacity-0 transition-all duration-200 ease-out",
-            h.label_expand_right,
-          )}
-        >
-          {label}
-        </span>
       </GlassSurface>
     </Tag>
   );

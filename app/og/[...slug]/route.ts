@@ -38,7 +38,6 @@ export async function GET(
   { params }: { params: Promise<{ slug: string[] }> },
 ) {
   const { slug } = await params;
-  const slugStr = slug.join("/");
   const content = getContentByPath(slug);
   if (!content) return new Response(null, { status: 404 });
 
@@ -47,7 +46,7 @@ export async function GET(
   }
 
   if ((isPage(content) || isFolder(content)) && content.cover) {
-    return withCacheHeaders(generateCoverOG(slugStr));
+    return withCacheHeaders(await generateCoverOG(content));
   }
 
   return new Response(null, { status: 404 });

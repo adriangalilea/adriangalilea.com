@@ -1,7 +1,8 @@
 "use client";
 
 import { Check, Clipboard } from "lucide-react";
-import { type ComponentProps, useRef, useState } from "react";
+import { type ComponentProps, useRef } from "react";
+import { useCopy } from "@/components/ui/copy";
 
 const LANG_NAMES: Record<string, string> = {
   js: "JavaScript",
@@ -59,20 +60,14 @@ function CopyButton({
 
 export function Pre({ children, style, ...props }: ComponentProps<"pre">) {
   const ref = useRef<HTMLPreElement>(null);
-  const [copied, setCopied] = useState(false);
+  const { copied, copy } = useCopy(
+    () => ref.current?.querySelector("code")?.textContent ?? "",
+  );
 
   const lang = (props as Record<string, unknown>)["data-language"] as
     | string
     | undefined;
   const label = lang && lang !== "text" ? (LANG_NAMES[lang] ?? lang) : null;
-
-  function copy() {
-    const code = ref.current?.querySelector("code");
-    if (!code) return;
-    navigator.clipboard.writeText(code.textContent ?? "");
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  }
 
   // Forward shiki bg variables to wrapper so the header can use them
   const bgVars = style as Record<string, string> | undefined;
@@ -92,11 +87,11 @@ export function Pre({ children, style, ...props }: ComponentProps<"pre">) {
           <span className="text-xs font-medium text-muted-foreground select-none">
             {label}
           </span>
-          <CopyButton copied={copied} onClick={copy} />
+          <CopyButton copied={copied} onClick={() => void copy()} />
         </div>
       ) : (
         <div className="absolute top-3 right-3 z-10 opacity-0 transition-opacity group-hover:opacity-100">
-          <CopyButton copied={copied} onClick={copy} />
+          <CopyButton copied={copied} onClick={() => void copy()} />
         </div>
       )}
       <pre ref={ref} style={style} {...props}>

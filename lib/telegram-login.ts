@@ -58,9 +58,8 @@ function openPopup(botId: number): Promise<TelegramAuthData | null> {
   });
 }
 
-// Better Auth client plugin — drop-in replacement for telegramClient()
-// that uses Telegram.Login.auth() popup instead of the iframe widget.
-// Server-side keeps using `telegram()` from better-auth-telegram as-is.
+// Better Auth client plugin: Telegram.Login.auth() opens a popup instead of the iframe
+// widget. The server side is `telegram()` in lib/telegram-plugin.ts.
 export function telegramLoginClient(opts: { botId: number }) {
   return {
     id: "telegram",

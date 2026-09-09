@@ -1,6 +1,5 @@
 import { createHash } from "node:crypto";
 import {
-  existsSync,
   mkdirSync,
   readdirSync,
   readFileSync,
@@ -9,10 +8,10 @@ import {
 } from "node:fs";
 import { join, parse, relative } from "node:path";
 import sharp from "sharp";
+import { IMAGE_EXTENSIONS } from "../lib/media.ts";
 import { prepareMedia } from "../lib/prepare-media.ts";
 
 const CONTENT_DIR = join(process.cwd(), "content");
-const PUBLIC_DIR = join(process.cwd(), "public");
 // Generated inputs must survive Next clearing its build output.
 const OUT_DIR = join(process.cwd(), ".source", "media");
 const OUT_FILE = join(OUT_DIR, "blur-manifest.json");
@@ -22,15 +21,6 @@ const recipe = createHash("sha256")
   .update(readFileSync(new URL("../lib/prepare-media.ts", import.meta.url)))
   .update(JSON.stringify(sharp.versions))
   .digest("hex");
-
-const IMAGE_EXTENSIONS = new Set([
-  ".png",
-  ".webp",
-  ".jpg",
-  ".jpeg",
-  ".avif",
-  ".gif",
-]);
 
 function findBlurSources(dir) {
   const results = [];
@@ -42,7 +32,7 @@ function findBlurSources(dir) {
       continue;
     }
     const { ext } = parse(entry.name);
-    if (IMAGE_EXTENSIONS.has(ext.toLowerCase())) {
+    if (IMAGE_EXTENSIONS.includes(ext.toLowerCase())) {
       results.push(full);
     }
   }
@@ -85,12 +75,8 @@ for (const src of sources) {
     continue;
   }
 
-  try {
-    manifest[key] = await generateBlur(src);
-    regenCount++;
-  } catch (e) {
-    console.warn(`Failed to generate blur for ${key}:`, e.message);
-  }
+  manifest[key] = await generateBlur(src);
+  regenCount++;
 }
 
 mkdirSync(OUT_DIR, { recursive: true });
@@ -99,64 +85,3 @@ writeFileSync(META_FILE, JSON.stringify(meta, null, 2));
 console.log(
   `Blur manifest: ${Object.keys(manifest).length} entries (${regenCount} regenerated)`,
 );
-
-// OG blur: heavily blurred 1200x630 PNGs for Satori OG backgrounds.
-// Satori doesn't support CSS filter:blur(); pre-render here.
-
-function findOGSources(dir) {
-  const results = [];
-  for (const entry of readdirSync(dir, { withFileTypes: true })) {
-    if (entry.name.startsWith(".")) continue;
-    const full = join(dir, entry.name);
-    if (entry.isDirectory()) {
-      results.push(...findOGSources(full));
-      continue;
-    }
-    const { name, ext } = parse(entry.name);
-    if (
-      (name === "cover" || name === "poster" || name === "og") &&
-      IMAGE_EXTENSIONS.has(ext.toLowerCase())
-    ) {
-      results.push(full);
-    }
-  }
-  return results;
-}
-
-const OG_META_FILE = join(OUT_DIR, "blur-og.meta.json");
-const prevOGMeta = readJSON(OG_META_FILE);
-const ogMeta = { recipe };
-let ogBlurCount = 0;
-
-for (const src of findOGSources(CONTENT_DIR)) {
-  const slugPath = relative(CONTENT_DIR, parse(src).dir);
-  if (!slugPath) continue;
-  const { name } = parse(src);
-  const destDir = join(PUBLIC_DIR, slugPath);
-  const dest = join(destDir, `${name}.og.blur.png`);
-  const key = relative(CONTENT_DIR, src);
-  const mtime = statSync(src).mtimeMs;
-  ogMeta[key] = mtime;
-
-  if (
-    existsSync(dest) &&
-    prevOGMeta.recipe === recipe &&
-    prevOGMeta[key] === mtime
-  )
-    continue;
-
-  try {
-    mkdirSync(destDir, { recursive: true });
-    await sharp(src)
-      .resize(1200, 630, { fit: "cover" })
-      .blur(60)
-      .modulate({ brightness: 1.3 })
-      .png()
-      .toFile(dest);
-    ogBlurCount++;
-  } catch (e) {
-    console.warn(`OG blur failed for ${slugPath}/${name}:`, e.message);
-  }
-}
-writeFileSync(OG_META_FILE, JSON.stringify(ogMeta, null, 2));
-console.log(`OG blur: ${ogBlurCount} new images generated`);

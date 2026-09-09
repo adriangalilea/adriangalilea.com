@@ -5,7 +5,6 @@ import {
   readdirSync,
   readFileSync,
   statSync,
-  unlinkSync,
 } from "node:fs";
 import { join, parse, relative } from "node:path";
 import matter from "gray-matter";
@@ -14,7 +13,6 @@ import { toString as mdastToString } from "mdast-util-to-string";
 import readingTime from "reading-time";
 import remarkMdx from "remark-mdx";
 import remarkParse from "remark-parse";
-import sharp from "sharp";
 import { unified } from "unified";
 import {
   ANIMATED_EXTENSIONS,
@@ -25,6 +23,7 @@ import {
   POSTER_EXTENSIONS,
 } from "@/lib/media";
 import { type QuoteTone, toneFrom } from "@/lib/quote-card";
+import { formatDate } from "@/lib/utils";
 
 const CONTENT_DIR = join(process.cwd(), "content");
 const PUBLIC_DIR = join(process.cwd(), "public");
@@ -97,7 +96,6 @@ export type Page = PostBase & {
   description: string | null;
   toc: TOCItem[];
   updatedAt: Date | null;
-  pinned: boolean;
   verdict: Verdict | null;
   deadline: string | null;
   source: string | null;
@@ -112,8 +110,6 @@ export type Folder = ContentBase & {
   description: string | null;
   status: Status | null;
   links: Record<string, string>;
-  kpis: { label: string; value: string }[];
-  techs: string[];
   feedThrough: boolean;
   avatar: string | null;
   /** What the quote card needs to know about the portrait, read from the sidecar
@@ -264,30 +260,13 @@ function resolveCover(dir: string, slug: string[]): CoverInfo {
       mkdirSync(destDir, { recursive: true });
       syncFile(src, dest);
 
-      // Remove stale covers with different extensions
-      for (const oldExt of COVER_EXTENSIONS) {
-        if (oldExt === ext) continue;
-        const stale = join(destDir, `cover${oldExt}`);
-        if (existsSync(stale)) {
-          console.warn(
-            `Removing stale cover: ${stale} (replaced by cover${ext})`,
-          );
-          unlinkSync(stale);
-        }
-      }
-
-      // Get dimensions for images (not videos)
+      // Videos have no dimensions until their poster is measured below.
       let width: number | null = null;
       let height: number | null = null;
       if (IMAGE_EXTENSIONS.includes(ext)) {
-        try {
-          const buffer = readFileSync(src);
-          const dims = imageSize(buffer);
-          width = dims.width ?? null;
-          height = dims.height ?? null;
-        } catch {
-          // Ignore dimension errors
-        }
+        const dims = imageSize(readFileSync(src));
+        width = dims.width ?? null;
+        height = dims.height ?? null;
       }
 
       let poster: string | null = null;
@@ -298,20 +277,14 @@ function resolveCover(dir: string, slug: string[]): CoverInfo {
           if (existsSync(posterSrc)) {
             const posterDest = join(destDir, `poster${posterExt}`);
             syncFile(posterSrc, posterDest);
-            ensureOGCopy(posterSrc, destDir, "poster", posterExt);
             poster = `/${slugPath}/poster${posterExt}`;
             blurDataURL =
               blurManifest[relative(CONTENT_DIR, posterSrc)] ?? null;
 
             if (!width || !height) {
-              try {
-                const buffer = readFileSync(posterSrc);
-                const dims = imageSize(buffer);
-                width = dims.width ?? null;
-                height = dims.height ?? null;
-              } catch {
-                // Ignore dimension errors
-              }
+              const dims = imageSize(readFileSync(posterSrc));
+              width = dims.width ?? null;
+              height = dims.height ?? null;
             }
             break;
           }
@@ -327,7 +300,6 @@ function resolveCover(dir: string, slug: string[]): CoverInfo {
         }
       } else {
         blurDataURL = blurManifest[relative(CONTENT_DIR, src)] ?? null;
-        ensureOGCopy(src, destDir, "cover", ext);
       }
 
       return {
@@ -340,30 +312,6 @@ function resolveCover(dir: string, slug: string[]): CoverInfo {
     }
   }
   return null;
-}
-
-// Satori (next/og) only supports PNG/JPEG. Convert WebP/GIF to PNG at build time.
-// Also generate a heavily blurred version for OG background fills.
-const NEEDS_OG_CONVERT = new Set([".webp", ".gif"]);
-
-function ensureOGCopy(
-  src: string,
-  destDir: string,
-  baseName: string,
-  ext: string,
-): void {
-  // Convert non-Satori formats to PNG (sync via toFile which blocks on the same tick)
-  if (NEEDS_OG_CONVERT.has(ext)) {
-    const dest = join(destDir, `${baseName}.og.png`);
-    if (!existsSync(dest)) {
-      try {
-        sharp(src).png().toFile(dest);
-      } catch {
-        // non-fatal
-      }
-    }
-  }
-  // Blur generation happens in scripts/generate-blur.mjs (async, runs before next build)
 }
 
 /** The portrait's sidecar, written by `mise portrait` beside the avatar. A portrait
@@ -401,22 +349,14 @@ function resolveAvatar(dir: string, slug: string[]): string | null {
       const dest = join(destDir, `avatar${ext}`);
       mkdirSync(destDir, { recursive: true });
       syncFile(src, dest);
-      ensureOGCopy(src, destDir, "avatar", ext);
-      // Clean up stale avatar files from previous formats
-      for (const staleExt of AVATAR_EXTENSIONS) {
-        if (staleExt === ext) continue;
-        const stale = join(destDir, `avatar${staleExt}`);
-        if (existsSync(stale)) unlinkSync(stale);
-        const staleOg = join(destDir, "avatar.og.png");
-        if (staleExt !== ".png" && existsSync(staleOg)) unlinkSync(staleOg);
-      }
       return `/${slugPath}/avatar${ext}`;
     }
   }
   return null;
 }
 
-// Copy og.png from content dir to public if it exists (author-provided OG background)
+/** An author-provided `og.png` beside the content wins over the cover as the link
+ *  preview (`lib/og.ts`). */
 function syncOGImage(dir: string, slug: string[]): void {
   const src = join(dir, "og.png");
   if (!existsSync(src)) return;
@@ -424,7 +364,6 @@ function syncOGImage(dir: string, slug: string[]): void {
   const destDir = join(PUBLIC_DIR, slugPath);
   mkdirSync(destDir, { recursive: true });
   syncFile(src, join(destDir, "og.png"));
-  ensureOGCopy(src, destDir, "og", ".png");
 }
 
 // ============================================================================
@@ -453,29 +392,14 @@ function parseContent(filePath: string, slug: string[]): Content | null {
       readingTime: stats,
       media,
       cover: coverInfo?.url ?? null,
-      coverWidth: coverInfo?.width ?? data.coverWidth ?? null,
-      coverHeight: coverInfo?.height ?? data.coverHeight ?? null,
+      coverWidth: coverInfo?.width ?? null,
+      coverHeight: coverInfo?.height ?? null,
       poster: coverInfo?.poster ?? null,
       blurDataURL: coverInfo?.blurDataURL ?? null,
       publishedAt: data.publishedAt ?? null,
       isDraft: data.isDraft ?? false,
       _dir: dir,
     };
-
-    if (
-      coverInfo &&
-      ANIMATED_EXTENSIONS.includes(parse(coverInfo.url).ext) &&
-      !base.coverWidth &&
-      !base.coverHeight
-    ) {
-      const key = `dims:${slug.join("/")}`;
-      if (!warnedCovers.has(key)) {
-        warnedCovers.add(key);
-        console.warn(
-          `⚠ ${slug.join("/")} has animated cover but no dimensions — set coverWidth/coverHeight in frontmatter`,
-        );
-      }
-    }
 
     if (data.type === "folder") {
       return {
@@ -485,8 +409,6 @@ function parseContent(filePath: string, slug: string[]): Content | null {
         description: data.description ?? null,
         status: data.status ?? null,
         links: data.links ?? {},
-        kpis: data.kpis ?? [],
-        techs: data.techs ?? [],
         feedThrough: data.feedThrough ?? false,
         avatar: resolveAvatar(dir, slug),
         portrait: readPortrait(dir, slug),
@@ -527,14 +449,14 @@ function parseContent(filePath: string, slug: string[]): Content | null {
       toc,
       tags,
       updatedAt: data.updatedAt ?? null,
-      pinned: data.pinned ?? false,
       verdict: data.verdict ?? null,
       deadline: data.deadline ?? null,
       source: data.source ?? null,
     };
   } catch (e) {
-    console.error(`Error parsing ${filePath}:`, e);
-    return null;
+    // A file that cannot be parsed fails the build; a page that silently vanishes
+    // from the site is worse than one that names its error.
+    throw new Error(`${filePath}: ${(e as Error).message}`, { cause: e });
   }
 }
 
@@ -657,30 +579,8 @@ export function getRootContent(): Content[] {
   return getAllContent().filter((c) => c.slug.length === 1);
 }
 
-export function getAllTags(): string[] {
-  const tags = new Set<string>();
-  for (const c of getAllContent()) {
-    if (isPost(c)) {
-      for (const tag of c.tags) tags.add(tag);
-    }
-  }
-  return [...tags].sort();
-}
-
 export function getAllFolders(): Folder[] {
   return getAllContent().filter(isFolder);
-}
-
-export function getAllPosts(): Post[] {
-  return getAllContent().filter(isPost);
-}
-
-export function getAllNotes(): Note[] {
-  return getAllContent().filter(isNote);
-}
-
-export function getAllPages(): Page[] {
-  return getAllContent().filter(isPage);
 }
 
 export function getChildrenForSlug(slug: string[]): Content[] {
@@ -723,17 +623,11 @@ export type AuthorInfo = {
 };
 
 /** The date a note shows, already formatted - the quote card takes a string because it
- *  does not own a locale. An estimate wins over a stamp, and a stamp before the year
- *  1000 is the placeholder for "nobody wrote one down", not a date. */
+ *  does not own a locale. `estimatedDate` is when the words were said ("~500 BC") and
+ *  wins over `publishedAt`, which is when they went on the site. */
 export function noteDate(note: Note): string | null {
   if (note.estimatedDate) return note.estimatedDate;
-  if (note.publishedAt && new Date(note.publishedAt).getFullYear() >= 1000)
-    return new Date(note.publishedAt).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-  return null;
+  return note.publishedAt ? formatDate(note.publishedAt) : null;
 }
 
 export function getAuthorForContent(c: Content): AuthorInfo | null {
@@ -792,7 +686,6 @@ function scoreForFeatured(c: Content): number {
   let score = 0;
 
   if (isPage(c)) {
-    if (c.pinned) score += 10000;
     if (c.updatedAt) {
       // More recent updatedAt = higher score (epoch ms as tiebreaker)
       score += new Date(c.updatedAt).getTime() / 1e10;
@@ -813,11 +706,6 @@ export function getFeaturedChildren(folderSlug: string[]): Content[] {
   return getChildren(folderSlug)
     .filter((c) => c.publishedAt)
     .sort((a, b) => scoreForFeatured(b) - scoreForFeatured(a));
-}
-
-export function wasRecentlyUpdated(c: Content): boolean {
-  if (!isPage(c) || !c.updatedAt || !c.publishedAt) return false;
-  return new Date(c.updatedAt).getTime() > new Date(c.publishedAt).getTime();
 }
 
 export function getRecommendations(content: Content, limit = 3): Content[] {

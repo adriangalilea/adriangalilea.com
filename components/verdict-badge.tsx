@@ -33,7 +33,6 @@ export function VerdictBadge({
   return (
     <GlassPill
       variant="collapsible"
-      expand="left"
       shadow="md"
       icon={config.icon}
       label={config.label}

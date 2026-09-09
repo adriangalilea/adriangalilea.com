@@ -2,7 +2,7 @@ import type { MDXComponents } from "mdx/types";
 import Link from "next/link";
 import { Children, isValidElement, type ReactElement } from "react";
 import { Card } from "@/components/card";
-import { Bars, CompareBars, CompareLines } from "@/components/charts";
+import { Bars, CompareLines } from "@/components/charts";
 import { Pre } from "@/components/code-block";
 import { type Picture, Zoomable } from "@/components/media-lightbox";
 import { Image } from "@/components/ui/image";
@@ -81,7 +81,6 @@ function findPicture(children: React.ReactNode): Picture | null {
 export function getMDXComponents(): MDXComponents {
   return {
     Bars,
-    CompareBars,
     CompareLines,
     ContentQuote,
     Prediction,
@@ -138,10 +137,7 @@ export function getMDXComponents(): MDXComponents {
       Children.forEach(children, (child) => {
         if (!isValidElement(child)) return;
         const el = child as ReactElement<Record<string, unknown>>;
-        if (
-          el.type === "figcaption" ||
-          (el.props && el.props.mdxType === "figcaption")
-        ) {
+        if (el.type === "figcaption") {
           captionNode = el;
         } else {
           imgNode = child;
@@ -193,12 +189,5 @@ export function getMDXComponents(): MDXComponents {
         />
       );
     },
-  };
-}
-
-export function useMDXComponents(components: MDXComponents): MDXComponents {
-  return {
-    ...getMDXComponents(),
-    ...components,
   };
 }

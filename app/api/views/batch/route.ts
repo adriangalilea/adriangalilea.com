@@ -2,15 +2,7 @@ import { inArray, sql } from "drizzle-orm";
 import { type NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { pageViews } from "@/lib/schema";
-
-function hash(input: string): Promise<string> {
-  const encoder = new TextEncoder();
-  return crypto.subtle.digest("SHA-256", encoder.encode(input)).then((buf) =>
-    Array.from(new Uint8Array(buf))
-      .map((b) => b.toString(16).padStart(2, "0"))
-      .join(""),
-  );
-}
+import { today, visitorOf } from "@/lib/visitor";
 
 export async function POST(request: NextRequest) {
   const body = await request.json();
@@ -20,11 +12,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: true });
   }
 
-  const ip =
-    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
-  const ua = request.headers.get("user-agent") ?? "unknown";
-  const visitor = await hash(`${ip}|${ua}`);
-  const viewedAt = new Date().toISOString().slice(0, 10);
+  const visitor = await visitorOf(request);
+  const viewedAt = today();
 
   await db
     .insert(pageViews)

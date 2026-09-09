@@ -2,8 +2,6 @@
 title: "kai"
 description: "One of the earliest multimodal Telegram bots — text, voice, multilingual, all before anyone else was doing it"
 publishedAt: 2023-03-01
-coverWidth: 1080
-coverHeight: 1080
 ---
 
 Kai was a Telegram bot launched when GPT-3.5 was the frontier. Multilingual, audio input, audio output — full multimodal before that word meant anything to most people. Possibly the earliest bot to ship that complete UX.
