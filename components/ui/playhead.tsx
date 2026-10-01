@@ -1,0 +1,256 @@
+"use client";
+
+// The playhead: where a clip is (`at`) and where it is going (`target`), both in ms.
+// Every driver is a way of setting the target: the player's play aims at the end,
+// pause aims where it is, a seek moves both, a scroll stage's act cues a span to be
+// in. One clock walks `at` to `target` at the clip's own pace, only while the content
+// is on screen and the tab is visible, so a scroll stage and a player's bar move the
+// SAME playhead and whichever moved last wins. `Playhead` hands the moment to the
+// content inside; a component on the clip contract (terminal, macos, telegram-chat)
+// reads it with `usePlayhead`. So a page composes plain elements, `<Playback
+// clip={clip}><Terminal session={s} /></Playback>`, and a server page can too.
+
+import * as React from "react";
+import { type Clip, progressAt, type Span } from "@/lib/clip";
+
+const Context = React.createContext<{ at: number; playing: boolean } | null>(
+  null,
+);
+
+/** Provides the moment (0..1 of the clip) to the content inside, and whether time is
+ *  running forward at the clip's pace from it. */
+export function Playhead({
+  at,
+  playing = false,
+  children,
+}: {
+  at: number;
+  playing?: boolean;
+  children: React.ReactNode;
+}) {
+  const value = React.useMemo(() => ({ at, playing }), [at, playing]);
+  return <Context.Provider value={value}>{children}</Context.Provider>;
+}
+
+/** The moment a component draws (`at`, 0..1): its own `progress` when given, else the
+ *  driver's around it. Neither is a component placed where nothing moves it, and
+ *  that screams. `driven` says which: a driven component can change at any moment
+ *  (a chat keeps a viewport that a landing message slides inside), one with its own
+ *  progress is a still and never will. `playing` says time runs forward at the clip's
+ *  pace, for content with a clock of its own (a video) to run alongside; anything
+ *  else (paused, scrubbed, rewinding, a still) holds it on `at`. */
+export function usePlayhead(progress: number | undefined): {
+  at: number;
+  driven: boolean;
+  playing: boolean;
+} {
+  const driver = React.useContext(Context);
+  if (progress === undefined && driver === null)
+    throw new Error(
+      "no playhead: pass `progress`, or place the component inside a driver (Playback, Player)",
+    );
+  const p = progress ?? (driver?.at as number);
+  return {
+    at: Math.min(1, Math.max(0, p)),
+    driven: progress === undefined,
+    playing: progress === undefined && !!driver?.playing,
+  };
+}
+
+export interface PlaybackOptions {
+  /** Where it stands before it plays (ms): a story that opens mid-conversation. */
+  start?: number;
+  /** Time on screen before it starts to play (ms): lets a neighbour go first. */
+  delay?: number;
+  /** A span to be in, heading to its end: what a scroll stage's act asks for
+   *  (`chapterSpan`). Behind it, the playhead jumps to `from` (the act's story, not a
+   *  replay of everything before it); inside, it plays on to `to` and waits; past it,
+   *  it rewinds to `to`. A new cue wins over the bar, and the bar over the last cue.
+   *  A scrub that follows scroll exactly is no cue: it passes `progress`. */
+  cue?: Span;
+  /** Whether it plays, when the page decides (a card under the pointer): true plays
+   *  the clip from the top, false returns it to where it stands at rest (`start`).
+   *  Set, it replaces playing once on screen. */
+  playing?: boolean;
+}
+
+interface PlaybackState {
+  at: number;
+  target: number;
+}
+
+/** How much faster than the clip an aim behind the playhead plays it backwards. */
+const REWIND = 3;
+
+/** The clock. Plays once, the first time the content is on screen (after `delay`),
+ *  or while the page says `playing`; holds off screen and in a hidden tab; under
+ *  reduced motion every aim lands at once. One rule for motion: an AIM travels
+ *  (forward at the clip's pace, backward at `REWIND`x, so scrolling back an act
+ *  unwinds it), a SEEK jumps (the bar). */
+export function usePlayback(
+  clip: Clip,
+  { start = 0, delay = 0, cue, playing }: PlaybackOptions = {},
+) {
+  const duration = clip.duration;
+  if (!(duration > 0)) throw new Error("playback: duration must be positive");
+  const clamp = React.useCallback(
+    (ms: number) => Math.min(duration, Math.max(0, ms)),
+    [duration],
+  );
+  const root = React.useRef<HTMLDivElement>(null);
+  const [state, setState] = React.useState<PlaybackState>(() => {
+    const at = clamp(Math.max(start, cue?.from ?? start));
+    return { at, target: at };
+  });
+  const reduced = React.useRef(false);
+  const armed = React.useRef(false);
+  const inView = React.useRef(false);
+  const cueRef = React.useRef(cue);
+  cueRef.current = cue;
+  // Driven by the page, the first sight of it starts nothing.
+  const pageDriven = playing !== undefined;
+
+  /** Every transition goes through here: reduced motion lands every aim at once. */
+  const go = React.useCallback(
+    (next: (s: PlaybackState) => PlaybackState) =>
+      setState((s) => {
+        const n = next(s);
+        const target = clamp(n.target);
+        const at = reduced.current ? target : clamp(n.at);
+        return at === s.at && target === s.target ? s : { at, target };
+      }),
+    [clamp],
+  );
+  const seek = React.useCallback(
+    (ms: number) => go(() => ({ at: ms, target: ms })),
+    [go],
+  );
+  const aim = React.useCallback(
+    (ms: number) => go((s) => ({ at: s.at, target: ms })),
+    [go],
+  );
+  const pause = React.useCallback(
+    () => go((s) => ({ at: s.at, target: s.at })),
+    [go],
+  );
+  const enter = React.useCallback(
+    (c: Span) => go((s) => ({ at: Math.max(s.at, c.from), target: c.to })),
+    [go],
+  );
+
+  // First time on screen (and `delay` later) it plays: to the cue's end, else the end.
+  React.useEffect(() => {
+    const el = root.current;
+    if (!el) return;
+    const motion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    let timer = 0;
+    const settle = () => {
+      reduced.current = motion.matches;
+      if (reduced.current) go((s) => s);
+    };
+    const arm = () => {
+      armed.current = true;
+      const c = cueRef.current;
+      if (c) enter(c);
+      else aim(duration);
+    };
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        inView.current =
+          !!entry?.isIntersecting && el.getBoundingClientRect().height > 0;
+        if (inView.current && !armed.current && !timer && !pageDriven)
+          timer = window.setTimeout(arm, delay);
+      },
+      { threshold: 0.35 },
+    );
+    settle();
+    io.observe(el);
+    motion.addEventListener("change", settle);
+    return () => {
+      io.disconnect();
+      motion.removeEventListener("change", settle);
+      window.clearTimeout(timer);
+    };
+  }, [go, aim, enter, duration, delay, pageDriven]);
+
+  // The page's word: play from the top, or back to rest.
+  React.useEffect(() => {
+    if (playing === undefined) return;
+    if (playing) go(() => ({ at: 0, target: duration }));
+    else go(() => ({ at: start, target: start }));
+  }, [playing, go, duration, start]);
+
+  // A new cue moves the playhead into its span; before the first view it only
+  // decides where the story stands.
+  const cueKey = cue ? `${cue.from}:${cue.to}` : "";
+  // biome-ignore lint/correctness/useExhaustiveDependencies: the cue's value is its key
+  React.useEffect(() => {
+    const c = cueRef.current;
+    if (!c) return;
+    if (armed.current) enter(c);
+    else
+      go((s) => ({
+        at: Math.max(s.at, c.from),
+        target: Math.max(s.at, c.from),
+      }));
+  }, [cueKey, enter, go]);
+
+  const moving = state.at !== state.target;
+  React.useEffect(() => {
+    if (!moving) return;
+    let frame = 0;
+    let last = performance.now();
+    const tick = (now: number) => {
+      const dt = now - last;
+      last = now;
+      if (inView.current && !document.hidden)
+        go((s) => ({
+          at:
+            s.at < s.target
+              ? Math.min(s.target, s.at + dt)
+              : Math.max(s.target, s.at - dt * REWIND),
+          target: s.target,
+        }));
+      frame = requestAnimationFrame(tick);
+    };
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [moving, go]);
+
+  return {
+    root,
+    at: state.at,
+    target: state.target,
+    moving,
+    /** Forward at the clip's pace (a rewind moves too, at `REWIND`x). */
+    playing: state.at < state.target,
+    progress: progressAt(clip, state.at),
+    seek,
+    aim,
+    pause,
+  };
+}
+
+export interface PlaybackProps extends PlaybackOptions {
+  clip: Clip;
+  children: React.ReactNode;
+  className?: string;
+}
+
+/** A clip that plays once on screen, with no controls: a film in a card. The same
+ *  clock as the player, so a still, a playback and a player are one component apart. */
+export function Playback({
+  clip,
+  children,
+  className,
+  ...options
+}: PlaybackProps) {
+  const playback = usePlayback(clip, options);
+  return (
+    <div ref={playback.root} data-slot="playback" className={className}>
+      <Playhead at={playback.progress} playing={playback.playing}>
+        {children}
+      </Playhead>
+    </div>
+  );
+}
