@@ -8,6 +8,12 @@
   },
   "createdAt": "2025-07-02T07:16:18Z",
   "bodyHtml": "<ul dir=\"auto\">\n<li><strong>Files support</strong> – make it really easy to attach a bunch of files, upload transparently</li>\n<li><strong>Easy model switching</strong> - e.g.: <code class=\"notranslate\">-m</code> to alternate between models</li>\n<li><strong>Unix-y</strong> - make it easy to pipe, consume stdin, etc. e.g.: <code class=\"notranslate\">echo 'what is life?' | npx ai</code></li>\n</ul>",
+  "reactions": [
+    {
+      "emoji": "❤️",
+      "count": 1
+    }
+  ],
   "thread": {
     "kind": "issue",
     "url": "https://github.com/vercel/ai/issues/6976",
