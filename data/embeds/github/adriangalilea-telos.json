@@ -1,0 +1,47 @@
+{
+  "kind": "repo",
+  "url": "https://github.com/adriangalilea/telos",
+  "name": "adriangalilea/telos",
+  "owner": {
+    "login": "adriangalilea",
+    "avatar": "/embeds/github/adriangalilea-telos/avatar-adriangalilea.jpg",
+    "url": "https://github.com/adriangalilea"
+  },
+  "description": "Self-improving programs defined by purpose that magically work and evolve with use",
+  "stars": 2,
+  "forks": 0,
+  "topics": [
+    "ai",
+    "programming-paradigm",
+    "telos",
+    "teleological-programming",
+    "self-improvement"
+  ],
+  "license": "Apache-2.0",
+  "archived": false,
+  "pushedAt": "2025-06-13T13:20:33Z",
+  "commits": [
+    {
+      "sha": "a8c78b37568a64b5b1fb7d5bbcffeac715a4b8bc",
+      "message": "\"~~programming~~ language\"",
+      "url": "https://github.com/adriangalilea/telos/commit/a8c78b37568a64b5b1fb7d5bbcffeac715a4b8bc",
+      "date": "2025-06-13T13:20:30Z",
+      "author": {
+        "name": "adriangalilea",
+        "avatar": "https://avatars.githubusercontent.com/u/90320947?v=4&s=96",
+        "url": "https://github.com/adriangalilea"
+      }
+    },
+    {
+      "sha": "ffb06a2a6ce3a9fa034a18f54bfc19d84321d5fc",
+      "message": "genesis",
+      "url": "https://github.com/adriangalilea/telos/commit/ffb06a2a6ce3a9fa034a18f54bfc19d84321d5fc",
+      "date": "2025-06-12T22:40:30Z",
+      "author": {
+        "name": "adriangalilea",
+        "avatar": "https://avatars.githubusercontent.com/u/90320947?v=4&s=96",
+        "url": "https://github.com/adriangalilea"
+      }
+    }
+  ]
+}

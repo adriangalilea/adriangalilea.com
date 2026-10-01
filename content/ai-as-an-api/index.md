@@ -16,7 +16,26 @@ The part that mattered was the last line of the output: `"confidence": 0.95`. An
 
 ## 2025
 
-In June I wrote it down properly: [Intention Is All You Need](/telos/intention-is-all-you-need). A function defined by its purpose, typed in and out, a `confidence` in what it returns. It works from the first call because an LLM answers it, and with use it synthesizes itself into plain code.
+In June I wrote it down properly: [Intention Is All You Need](/telos/intention-is-all-you-need). A function defined by its purpose, not its body.
+
+```python
+class SentimentResult(BaseModel):
+    sentiment: Literal["positive", "negative", "neutral"]
+    confidence: float = Field(ge=0.0, le=1.0)
+
+@telos
+def analyze_sentiment(text: str) -> SentimentResult:
+    """Analyze the sentiment of a text string."""
+    pass
+
+analyze_sentiment("This is amazing! I love it!")  # positive (0.98)
+# day 1:  an LLM answers it,         847ms, $0.01 a call
+# day 30: code it synthesized itself, 0.001ms
+```
+
+Typed in, typed out, and a **confidence** in what it returns. It works from the first call because an LLM answers it, and with use it writes the code that replaces the LLM.
+
+<GitHub url="https://github.com/adriangalilea/telos" />
 
 Three weeks later Vercel opened [an issue for an AI CLI](https://github.com/vercel/ai/issues/6976). Guillermo asked for files, model switching and pipes:
 
