@@ -14,6 +14,7 @@
       "!dist",
       "!build",
       "!content/**/avatar.json",
+      "!data/embeds",
       "!**/*.svg"
     ]
   },

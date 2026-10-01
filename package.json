@@ -9,6 +9,7 @@
     "check": "biome check --write",
     "lint": "biome check",
     "format": "biome format --write",
+    "embed": "tsx scripts/embed.mts",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio"
   },

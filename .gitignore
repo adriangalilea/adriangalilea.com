@@ -38,6 +38,8 @@ yarn-error.log*
 
 # generated content assets (covers, og images copied from content/ at build time)
 /public/*/
+# ...except the pictures `pnpm embed` keeps: sources, not copies (Telegram's expire)
+!/public/embeds/
 
 # vercel
 .vercel

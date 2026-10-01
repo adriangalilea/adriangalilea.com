@@ -241,6 +241,28 @@ behavior; prepare them as video when a finite play-once or boomerang is needed.
 
 Images/media referenced with `./filename` get rewritten to `/${slugPath}/filename`. Place media files next to the `.md` file in the content directory; they get copied to `public/` automatically.
 
+## Embeds: posts from Telegram and X
+
+Write the tag in any content file, then run `pnpm embed`:
+
+```
+<Telegram url="https://t.me/jardindigital/236" />
+<Tweet url="https://x.com/Mappletons/status/2101560333441610133" />
+```
+
+`pnpm embed` (`scripts/embed.mts`) finds every such tag, fetches the facts of any post
+not kept yet and downloads its pictures: `data/embeds/<kind>/<key>.json` and
+`public/embeds/<kind>/<key>/`, both committed. A kept post is never refetched (it is
+what the post said when quoted); trash its JSON to refresh. The build only READS: a tag
+with no facts throws "run `pnpm embed`", so a deploy never depends on Telegram or X.
+Telegram's CDN paths are signed and expire, which is why pictures are always kept;
+tweet video stays on X's CDN, its poster is kept.
+
+The drawing is the registry's: a channel post is `@ag/telegram-chat` (one message,
+frameless, frozen, via `postScript` from `lib/telegram-chat-post.ts`), a post on X is
+`@ag/tweet`. `components/embeds.tsx` only reads the facts and places them. Keys and
+paths live in `lib/embeds.ts`.
+
 ## Blur placeholders
 
 `scripts/generate-blur.mjs` prepares blur data URLs for local article images and

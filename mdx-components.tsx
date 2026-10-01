@@ -4,6 +4,7 @@ import { Children, isValidElement, type ReactElement } from "react";
 import { Card } from "@/components/card";
 import { Bars, CompareLines } from "@/components/charts";
 import { Pre } from "@/components/code-block";
+import { Telegram, Tweet } from "@/components/embeds";
 import { type Picture, Zoomable } from "@/components/media-lightbox";
 import { Image } from "@/components/ui/image";
 import { Quote } from "@/components/ui/quote";
@@ -84,6 +85,8 @@ export function getMDXComponents(): MDXComponents {
     CompareLines,
     ContentQuote,
     Prediction,
+    Telegram,
+    Tweet,
     YouTube,
     pre: Pre,
     // A MARKDOWN BLOCKQUOTE IS A QUOTATION, so it is the same object as every other quote
