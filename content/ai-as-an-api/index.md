@@ -33,11 +33,13 @@ TypeSafe shipped [Jev](https://simonwillison.net/2026/Sep/21/jev/), a model that
 Two days later Vercel's [ai-cli](https://github.com/vercel-labs/ai-cli) had it:
 
 ```bash
-cat ticket.txt | ai evaluate \
+cat ticket.txt | ai decide \
   --boolean "refund=Refund requested?" \
   --choice "team=Which team?" \
   --choices "team=billing,support"
 ```
+
+It shipped as `ai evaluate`. Two weeks later they [renamed it `ai decide`](https://github.com/vercel-labs/ai-cli/pull/103). The name caught up with what it does.
 
 The first cut was even closer to the 2024 post: `git log | ai filter "describes a concurrency fix"`, `ai rank`, `ai pick`. Records in, records out, decided by meaning.
 
