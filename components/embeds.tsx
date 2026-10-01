@@ -11,6 +11,7 @@ export function Telegram({ url }: { url: string }) {
     <div className="not-prose my-8 flex justify-center">
       <TelegramChat
         script={postScript(post)}
+        href={post.url}
         // Telegram's own doodle pattern on Telegram's chat background: the context
         // that makes a lone bubble read as a channel post.
         wallpaper="/tg-pattern.svg"

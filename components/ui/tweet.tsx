@@ -1,5 +1,6 @@
 import { Heart, MessageCircle } from "lucide-react";
 import type * as React from "react";
+import { CardLink } from "@/components/ui/card-link";
 import { WebPreview } from "@/components/ui/web-preview";
 import type {
   TweetAuthor,
@@ -189,7 +190,9 @@ function Avatar({ author, size }: { author: TweetAuthor; size: string }) {
 
 function Quote({ tweet }: { tweet: TweetFacts }) {
   return (
-    <div
+    // The quoted post opens itself, not the post quoting it: the innermost card wins.
+    <CardLink
+      href={tweet.url}
       data-slot="tweet-quote"
       className="relative space-y-2 rounded-2xl border border-border p-3 text-[15px] transition-colors hover:bg-foreground/3"
     >
@@ -210,73 +213,80 @@ function Quote({ tweet }: { tweet: TweetFacts }) {
       {tweet.body.length > 0 && <Body runs={tweet.body} />}
       {tweet.media.length > 0 && <Media media={tweet.media} url={tweet.url} />}
       {tweet.card && <WebPreview facts={tweet.card} style="x" />}
-    </div>
+    </CardLink>
   );
 }
 
 export function Tweet({ tweet, className }: TweetProps) {
   return (
-    <article
+    // The whole post opens the post on X, as X's own embed does; a keyboard gets
+    // there through the mark and the date.
+    <CardLink
+      href={tweet.url}
       data-slot="tweet"
       className={cn(
-        "space-y-3 rounded-2xl border border-border bg-card p-4 font-sans text-[15px] text-card-foreground",
+        "rounded-2xl border border-border bg-card font-sans text-[15px] text-card-foreground transition-colors hover:bg-[color-mix(in_srgb,var(--card),var(--foreground)_3%)]",
         className,
       )}
     >
-      <header className="flex items-start gap-3">
-        <Avatar author={tweet.author} size="size-10" />
-        <div className="min-w-0 flex-1">
-          <Names author={tweet.author} />
-        </div>
-        <a
-          href={tweet.url}
-          {...ANCHOR}
-          aria-label="View on X"
-          className="text-foreground/80 hover:text-foreground"
-        >
-          <XMark />
-        </a>
-      </header>
-      {tweet.body.length > 0 && (
-        <Body runs={tweet.body} className="text-[17px] leading-6" />
-      )}
-      {tweet.media.length > 0 && <Media media={tweet.media} url={tweet.url} />}
-      {tweet.card && <WebPreview facts={tweet.card} style="x" />}
-      {tweet.quote && <Quote tweet={tweet.quote} />}
-      <a
-        href={tweet.url}
-        {...ANCHOR}
-        className={cn("block hover:underline", MUTED)}
-      >
-        <time dateTime={tweet.date}>{DATE.format(new Date(tweet.date))}</time>
-        {tweet.edited && " · edited"}
-      </a>
-      <footer
-        data-slot="tweet-counts"
-        className={cn(
-          "flex gap-6 border-border border-t pt-3 font-medium",
-          MUTED,
+      <article className="space-y-3 p-4">
+        <header className="flex items-start gap-3">
+          <Avatar author={tweet.author} size="size-10" />
+          <div className="min-w-0 flex-1">
+            <Names author={tweet.author} />
+          </div>
+          <a
+            href={tweet.url}
+            {...ANCHOR}
+            aria-label="View on X"
+            className="text-foreground/80 hover:text-foreground"
+          >
+            <XMark />
+          </a>
+        </header>
+        {tweet.body.length > 0 && (
+          <Body runs={tweet.body} className="text-[17px] leading-6" />
         )}
-      >
+        {tweet.media.length > 0 && (
+          <Media media={tweet.media} url={tweet.url} />
+        )}
+        {tweet.card && <WebPreview facts={tweet.card} style="x" />}
+        {tweet.quote && <Quote tweet={tweet.quote} />}
         <a
           href={tweet.url}
           {...ANCHOR}
-          className="flex items-center gap-1.5 hover:text-[#f91880]"
+          className={cn("block hover:underline", MUTED)}
         >
-          <Heart className="size-[1.15em]" aria-hidden="true" />
-          {COUNT.format(tweet.likes)}
-          <span className="sr-only"> likes</span>
+          <time dateTime={tweet.date}>{DATE.format(new Date(tweet.date))}</time>
+          {tweet.edited && " · edited"}
         </a>
-        <a
-          href={tweet.url}
-          {...ANCHOR}
-          className="flex items-center gap-1.5 hover:text-[#1d9bf0]"
+        <footer
+          data-slot="tweet-counts"
+          className={cn(
+            "flex gap-6 border-border border-t pt-3 font-medium",
+            MUTED,
+          )}
         >
-          <MessageCircle className="size-[1.15em]" aria-hidden="true" />
-          {COUNT.format(tweet.replies)}
-          <span className="sr-only"> replies</span>
-        </a>
-      </footer>
-    </article>
+          <a
+            href={tweet.url}
+            {...ANCHOR}
+            className="flex items-center gap-1.5 hover:text-[#f91880]"
+          >
+            <Heart className="size-[1.15em]" aria-hidden="true" />
+            {COUNT.format(tweet.likes)}
+            <span className="sr-only"> likes</span>
+          </a>
+          <a
+            href={tweet.url}
+            {...ANCHOR}
+            className="flex items-center gap-1.5 hover:text-[#1d9bf0]"
+          >
+            <MessageCircle className="size-[1.15em]" aria-hidden="true" />
+            {COUNT.format(tweet.replies)}
+            <span className="sr-only"> replies</span>
+          </a>
+        </footer>
+      </article>
+    </CardLink>
   );
 }
