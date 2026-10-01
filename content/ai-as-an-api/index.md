@@ -48,6 +48,14 @@ On Tuesday OpenAI announced a **Decisions API** at DevDay. Same shape: context i
 
 The model is not the product. **The model is a function call.** The interesting part was never the prose, it was the typed answer and the number next to it, because that number is what lets code decide when to trust the answer and when to hand it to a person.
 
-Two years from a Telegram post with 59 views to a product category.
+Two years from a Telegram post to a product category. The idea was the easy part. TypeSafe did the hard one: a model whose 0.95 actually means 95%.
 
-I'm getting a bit tired of being early.
+## One layer
+
+A decision model is one layer, not the whole thing.
+
+[Feelings are cognition metadata](/feelings-are-cognition-metadata). That confidence is the model's feeling about its own answer. A gut call, and how sure the gut is. Sure enough, act. Not sure, think slower, or ask someone.
+
+So I see the model as **composable**. A hybrid. Fast processes and slow ones, routed by that feeling.
+
+Mixture of Experts already has the shape: a router picks which part of the model handles each token. The name says experts, as in what they know. I think the split that matters is by **how they think**. Deciding, reasoning, writing, remembering. Different processes, one model, the metadata doing the routing.
