@@ -1,8 +1,10 @@
-// `pnpm embed`: every `<Telegram url>` and `<Tweet url>` in content/ gets its facts
-// fetched and its pictures downloaded, ONCE. A post already kept is never fetched again
+// `pnpm embed`: every `<Telegram url>`, `<Tweet url>` and `<GitHub url>` in content/
+// gets its facts fetched and its pictures downloaded, ONCE. GitHub is read with your
+// own `gh auth token`, which stays on this machine. A post already kept is never fetched again
 // (it is what the post said when it was quoted); to refresh one, trash its JSON and run
 // this again. The only place an embed touches the network.
 
+import { execSync } from "node:child_process";
 import {
   existsSync,
   mkdirSync,
@@ -18,6 +20,11 @@ import {
   embedKey,
   embedMedia,
 } from "@/lib/embeds";
+import {
+  fetchGithub,
+  type GithubFacts,
+  type GithubUser,
+} from "@/lib/github-data";
 import { fetchTelegramPost, type TelegramPost } from "@/lib/telegram-chat-post";
 import { fetchTweet, type Tweet } from "@/lib/tweet-data";
 
@@ -29,6 +36,13 @@ function* contentFiles(dir: string): Generator<string> {
   }
 }
 
+const EXT: Record<string, string> = {
+  "image/png": ".png",
+  "image/jpeg": ".jpg",
+  "image/gif": ".gif",
+  "image/webp": ".webp",
+};
+
 /** Download one picture beside the post and answer its served path. */
 async function keep(
   src: string,
@@ -38,7 +52,10 @@ async function keep(
 ): Promise<string> {
   const res = await fetch(src);
   if (!res.ok) throw new Error(`embed: ${src}: HTTP ${res.status}`);
-  const ext = extname(new URL(src).pathname) || ".jpg";
+  // GitHub's avatars have no extension in their path; the response says what they are.
+  const type = res.headers.get("content-type")?.split(";")[0] ?? "";
+  const ext = extname(new URL(src).pathname) || EXT[type];
+  if (!ext) throw new Error(`embed: ${src}: a picture of type "${type}"`);
   const media = embedMedia(kind, key);
   mkdirSync(media.dir, { recursive: true });
   writeFileSync(
@@ -109,6 +126,29 @@ async function tweet(t: Tweet, key: string, prefix = ""): Promise<Tweet> {
   };
 }
 
+/** Every face in the facts is kept, once per person. */
+async function github(url: string, key: string): Promise<GithubFacts> {
+  const token = execSync("gh auth token", { encoding: "utf8" }).trim();
+  const facts = await fetchGithub(url, token);
+  const kept = new Map<string, Promise<string>>();
+  const face = async (u: GithubUser): Promise<GithubUser> => {
+    if (!kept.has(u.login))
+      kept.set(u.login, keep(u.avatar, "github", key, `avatar-${u.login}`));
+    return { ...u, avatar: await (kept.get(u.login) as Promise<string>) };
+  };
+  if (facts.kind === "repo")
+    return { ...facts, owner: await face(facts.owner) };
+  if (facts.kind === "profile")
+    return { ...facts, user: await face(facts.user) };
+  if (facts.kind === "comment")
+    return {
+      ...facts,
+      author: await face(facts.author),
+      thread: { ...facts.thread, author: await face(facts.thread.author) },
+    };
+  return { ...facts, author: await face(facts.author) };
+}
+
 const wanted = new Map<string, { kind: EmbedKind; url: string }>();
 for (const file of contentFiles(join(process.cwd(), "content"))) {
   const text = readFileSync(file, "utf8");
@@ -127,7 +167,9 @@ for (const { kind, url } of wanted.values()) {
   const facts =
     kind === "telegram"
       ? await telegram(url, key)
-      : await tweet(await fetchTweet(url), key);
+      : kind === "github"
+        ? await github(url, key)
+        : await tweet(await fetchTweet(url), key);
   mkdirSync(join(file, ".."), { recursive: true });
   writeFileSync(file, `${JSON.stringify(facts, null, 2)}\n`);
   console.log(`kept ${kind} ${url} -> ${file}`);

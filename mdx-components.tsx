@@ -4,7 +4,7 @@ import { Children, isValidElement, type ReactElement } from "react";
 import { Card } from "@/components/card";
 import { Bars, CompareLines } from "@/components/charts";
 import { Pre } from "@/components/code-block";
-import { Telegram, Tweet } from "@/components/embeds";
+import { GitHub, Telegram, Tweet } from "@/components/embeds";
 import { type Picture, Zoomable } from "@/components/media-lightbox";
 import { Image } from "@/components/ui/image";
 import { Quote } from "@/components/ui/quote";
@@ -84,6 +84,7 @@ export function getMDXComponents(): MDXComponents {
     Bars,
     CompareLines,
     ContentQuote,
+    GitHub,
     Prediction,
     Telegram,
     Tweet,

@@ -1,6 +1,8 @@
+import { Github } from "@/components/ui/github";
 import { TelegramChat } from "@/components/ui/telegram-chat";
 import { Tweet as TweetCard } from "@/components/ui/tweet";
 import { readEmbed } from "@/lib/embeds";
+import type { GithubFacts } from "@/lib/github-data";
 import { postScript, type TelegramPost } from "@/lib/telegram-chat-post";
 import type { Tweet as TweetFacts } from "@/lib/tweet-data";
 
@@ -24,6 +26,17 @@ export function Telegram({ url }: { url: string }) {
         frozen
         className="w-full"
       />
+    </div>
+  );
+}
+
+/** Anything on github.com, by its URL: a profile, a repo, an issue or pull request, one
+ *  comment. `lines` cuts a long body: `<GitHub url="…#issuecomment-…" lines={14} />`. */
+export function GitHub({ url, lines }: { url: string; lines?: number }) {
+  const facts = readEmbed<GithubFacts>("github", url);
+  return (
+    <div className="not-prose my-8">
+      <Github facts={facts} lines={lines} className="mx-auto max-w-2xl" />
     </div>
   );
 }
