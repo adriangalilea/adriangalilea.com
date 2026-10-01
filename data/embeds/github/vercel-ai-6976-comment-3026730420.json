@@ -1,0 +1,41 @@
+{
+  "kind": "comment",
+  "url": "https://github.com/vercel/ai/issues/6976#issuecomment-3026730420",
+  "author": {
+    "login": "rauchg",
+    "avatar": "/embeds/github/vercel-ai-6976-comment-3026730420/avatar-rauchg.jpg",
+    "url": "https://github.com/rauchg"
+  },
+  "createdAt": "2025-07-02T07:16:18Z",
+  "bodyHtml": "<ul dir=\"auto\">\n<li><strong>Files support</strong> – make it really easy to attach a bunch of files, upload transparently</li>\n<li><strong>Easy model switching</strong> - e.g.: <code class=\"notranslate\">-m</code> to alternate between models</li>\n<li><strong>Unix-y</strong> - make it easy to pipe, consume stdin, etc. e.g.: <code class=\"notranslate\">echo 'what is life?' | npx ai</code></li>\n</ul>",
+  "thread": {
+    "kind": "issue",
+    "url": "https://github.com/vercel/ai/issues/6976",
+    "repo": "vercel/ai",
+    "number": 6976,
+    "title": "AI CLI",
+    "state": "completed",
+    "author": {
+      "login": "lgrammel",
+      "avatar": "/embeds/github/vercel-ai-6976-comment-3026730420/avatar-lgrammel.jpg",
+      "url": "https://github.com/lgrammel"
+    },
+    "createdAt": "2025-07-02T07:06:44Z",
+    "closedAt": "2025-07-15T13:34:33Z",
+    "comments": 4,
+    "labels": [
+      {
+        "name": "feature",
+        "color": "0e8a16"
+      },
+      {
+        "name": "ai/provider",
+        "color": "FE4C25"
+      },
+      {
+        "name": "task-identify-issue-type-done",
+        "color": "ededed"
+      }
+    ]
+  }
+}

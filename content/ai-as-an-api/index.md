@@ -16,14 +16,13 @@ The part that mattered was the last line of the output: `"confidence": 0.95`. An
 
 ## 2025
 
-Vercel opened [an issue for an AI CLI](https://github.com/vercel/ai/issues/6976). Guillermo asked for files, model switching and pipes. I [asked for one more thing](https://github.com/vercel/ai/issues/6976#issuecomment-3029520382): a schema, so the output is data you compose, not text you read.
+Vercel opened [an issue for an AI CLI](https://github.com/vercel/ai/issues/6976). Guillermo asked for files, model switching and pipes:
 
-```bash
-curl -s https://acme.com/pricing | \
-  npx ai "extract pricing tiers" --schema '{ "tiers": [{ "name": "string", "price": "number" }] }'
-```
+<GitHub url="https://github.com/vercel/ai/issues/6976#issuecomment-3026730420" />
 
-AI as an API blackbox, from the shell.
+I asked for one more thing: a schema, so the output is data you compose, not text you read. AI as an API blackbox, from the shell.
+
+<GitHub url="https://github.com/vercel/ai/issues/6976#issuecomment-3029520382" lines={14} />
 
 ## 2026
 
