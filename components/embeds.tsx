@@ -10,7 +10,8 @@ export function Telegram({ url }: { url: string }) {
   return (
     <div className="not-prose my-8 flex justify-center">
       <TelegramChat
-        script={postScript(post)}
+        // Posts are told in the zone they were written in: mine, Madrid.
+        script={postScript(post, { timeZone: "Europe/Madrid" })}
         href={post.url}
         // Telegram's own doodle pattern on Telegram's chat background: the context
         // that makes a lone bubble read as a channel post.
