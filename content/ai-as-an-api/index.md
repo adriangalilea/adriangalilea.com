@@ -8,7 +8,7 @@ tags:
 
 July 2024, [on my Telegram channel](https://t.me/jardindigital/236):
 
-![AI as an API, Jardin Digital, 23 July 2024](./telegram-2024.png)
+<Telegram url="https://t.me/jardindigital/236" />
 
 **Don't write the function. Describe it.** Let the model be the body, validate what comes back, refine for cost and quality.
 
