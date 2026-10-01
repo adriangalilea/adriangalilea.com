@@ -55,7 +55,9 @@ Two years from a Telegram post to a product category. The idea was the easy part
 
 A decision model is one layer, not the whole thing.
 
-[Feelings are cognition metadata](/feelings-are-cognition-metadata). That confidence is the model's feeling about its own answer. A gut call, and how sure the gut is. Sure enough, act. Not sure, think slower, or ask someone.
+<ContentQuote slug="feelings-are-cognition-metadata" />
+
+That confidence is the model's feeling about its own answer. A gut call, and how sure the gut is. Sure enough, act. Not sure, think slower, or ask someone.
 
 So I see the model as **composable**. A hybrid. Fast processes and slow ones, routed by that feeling.
 
