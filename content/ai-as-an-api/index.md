@@ -16,7 +16,9 @@ The part that mattered was the last line of the output: `"confidence": 0.95`. An
 
 ## 2025
 
-Vercel opened [an issue for an AI CLI](https://github.com/vercel/ai/issues/6976). Guillermo asked for files, model switching and pipes:
+In June I wrote it down properly: [Intention Is All You Need](/telos/intention-is-all-you-need). A function defined by its purpose, typed in and out, a `confidence` in what it returns. It works from the first call because an LLM answers it, and with use it synthesizes itself into plain code.
+
+Three weeks later Vercel opened [an issue for an AI CLI](https://github.com/vercel/ai/issues/6976). Guillermo asked for files, model switching and pipes:
 
 <GitHub url="https://github.com/vercel/ai/issues/6976#issuecomment-3026730420" />
 
@@ -62,3 +64,5 @@ That confidence is the model's feeling about its own answer. A gut call, and how
 So I see the model as **composable**. A hybrid. Fast processes and slow ones, routed by that feeling.
 
 Mixture of Experts already has the shape: a router picks which part of the model handles each token. The name says experts, as in what they know. I think the split that matters is by **how they think**. Deciding, reasoning, writing, remembering. Different processes, one model, the metadata doing the routing.
+
+[Telos](/telos) already has the loop. A function starts slow, an LLM reasoning out every answer in 847ms, and use turns it into code that answers the same in 0.001ms. **System 2 becoming System 1**, the way a skill does in a person. A decision model is System 1 out of the box. Telos is how System 2 gets there.
