@@ -361,6 +361,7 @@ These were copied into `content/` and adapted. The originals at source are stale
 ## TODO
 
 - Masonry sorting is broken — especially visible at `/quotes`, the ordering algorithm fails
+- Recommendations (`getRecommendations` in `lib/content.ts`) score only folder, tags and type, so they miss connections by meaning. Test case: `ai-as-an-api` should rank `ai-feelings-in-practice` first (both about a model's "feelings"), but every `ai`-tagged Page outranks it because of the same-type bonus. Fix: embeddings (one model call per piece at build, vectors cached in the repo), cosine over them, tags as a minor bonus, no type bonus. A piece's text should include the notes it embeds, and what it embeds or is embedded by is already on screen, so never recommend it. TF-IDF was tried (2026-10-06) and rejected: the note only reached #6 because the link is one shared word, and short quotes (Rumi above all) matched on single words and flooded every list. Judge by listing the top 6 for every piece, not just the test case.
 - Clean up stale duplicates at source locations after confirming site versions are canonical
 - Run `vercel link` — the Vercel project exists and is live (`adriangalilea-com`, team adriangalileas-projects) but this local repo is unlinked, so `vercel env pull` / CLI ops won't work until linked
 
