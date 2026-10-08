@@ -1,6 +1,7 @@
 "use client";
 
 import NextImage, { type ImageProps as NextImageProps } from "next/image";
+import type * as React from "react";
 import { type CSSProperties, type Ref, useState } from "react";
 import { cn } from "@/lib/utils";
 
@@ -10,14 +11,68 @@ export type ImageProps = Omit<NextImageProps, "placeholder"> & {
   ref?: Ref<HTMLImageElement>;
 };
 
+/** What a static import carries with it: dimensions and a blur, for free. `null` for a
+ *  URL string, which carries nothing. */
+const staticOf = (src: ImageProps["src"]) =>
+  typeof src === "object" ? ("default" in src ? src.default : src) : null;
+
 /** Next.js optimization on any Next host. Supply dimensions (or a sized parent
  * with fill); remote/public assets can supply a prepared blurDataURL. Static
  * imports provide dimensions and a blur automatically. No fetch for a placeholder. */
 export function Image({ src, ...props }: ImageProps) {
-  const data =
-    typeof src === "object" ? ("default" in src ? src.default : src) : null;
   // A new source owns a new load lifecycle, including when the old request finishes late.
-  return <ImageResource key={data?.src ?? String(src)} src={src} {...props} />;
+  return (
+    <ImageResource
+      key={staticOf(src)?.src ?? String(src)}
+      src={src}
+      {...props}
+    />
+  );
+}
+
+/** How a picture arrives, said once for Image and Img: held clear and a little
+ *  blurred until it is decoded, then it fades and sharpens in. Only where scripts
+ *  run (without them nothing would ever mark it ready), and not under reduced
+ *  motion's blur. Keyed on the element's own data-state. */
+const ARRIVAL =
+  "transition-[opacity,filter] duration-300 ease-out motion-reduce:transition-none [@media(scripting:enabled)]:data-[state=loading]:opacity-0 motion-safe:[@media(scripting:enabled)]:data-[state=loading]:blur-sm";
+
+/** A plain `<img>` that arrives the way Image does, for a picture the optimizer
+ *  should not touch (an icon, a poster, any origin, any size). It reads an image
+ *  that finished before hydration from the element itself, since its load event
+ *  fired before React was listening. */
+export function Img({
+  className,
+  onLoad,
+  onError,
+  ref,
+  ...props
+}: React.ImgHTMLAttributes<HTMLImageElement> & {
+  ref?: Ref<HTMLImageElement>;
+}) {
+  const [state, setState] = useState<"loading" | "ready" | "error">("loading");
+  return (
+    // biome-ignore lint/performance/noImgElement: the unoptimized picture, by design
+    // biome-ignore lint/a11y/useAltText: alt passes through with the rest of the props
+    <img
+      {...props}
+      ref={(el) => {
+        if (el?.complete && el.naturalWidth > 0) setState("ready");
+        if (typeof ref === "function") ref(el);
+        else if (ref) ref.current = el;
+      }}
+      data-state={state}
+      onLoad={(event) => {
+        setState("ready");
+        onLoad?.(event);
+      }}
+      onError={(event) => {
+        setState("error");
+        onError?.(event);
+      }}
+      className={cn(ARRIVAL, className)}
+    />
+  );
 }
 
 function ImageResource({
@@ -35,8 +90,7 @@ function ImageResource({
   ...props
 }: ImageProps) {
   const [state, setState] = useState<"loading" | "ready" | "error">("loading");
-  const data =
-    typeof src === "object" ? ("default" in src ? src.default : src) : null;
+  const data = staticOf(src);
   const w = width ?? data?.width;
   const h = height ?? data?.height;
   const blur = blurDataURL ?? data?.blurDataURL;

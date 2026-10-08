@@ -11,7 +11,7 @@
 // initials, the webpage preview is the client's card. The mockup is a `figure`
 // whose chrome is decorative (aria-hidden), but links and previews are REAL anchors:
 // what looks clickable is clickable, and tabbable. It owns no clock: `chatClip(script)`
-// is its clip (the story, then the afterlife), and a driver moves it (ui/playhead):
+// is its clip (the story, then the afterlife), and a driver moves it (ui/playback):
 // Playback plays it once in view, from a `start` so the first frame already shows a
 // conversation; a Player adds the bar; a scroll stage cues it act by act; a fixed
 // `progress` is a still.
@@ -41,7 +41,7 @@ import * as React from "react";
 import { CardLink } from "@/components/ui/card-link";
 import { IphoneFrame } from "@/components/ui/device-frame";
 import { Glass, type GlassTone } from "@/components/ui/liquid-glass";
-import { usePlayhead } from "@/components/ui/playhead";
+import { usePlayhead } from "@/components/ui/playback";
 import { Scrims } from "@/components/ui/scrims";
 import { useChatLayout } from "@/components/ui/telegram-chat-layout";
 import { WebPreview } from "@/components/ui/web-preview";

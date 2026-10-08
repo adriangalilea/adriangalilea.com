@@ -111,4 +111,83 @@
       animation-range: calc(100% - 140px) 100%;
     }
   }
+
+  /* The same idea for anything that scrolls sideways (a command, a row of
+   icons): `ag-edge-fade` on the scroller hides its scrollbar and fades the side
+   that has more to show, read from the scroll itself: at the start the end
+   fades, at the end the start, between them both (--edge-fade, 1.5rem). Nothing
+   scrolls, the timeline is inactive and nothing fades. */
+  .ag-edge-fade {
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .ag-edge-fade::-webkit-scrollbar {
+    display: none;
+  }
+  @supports (animation-timeline: scroll()) {
+    .ag-edge-fade {
+      mask-image: linear-gradient(
+        to right,
+        transparent,
+        #000 var(--ag-edge-fade-start),
+        #000 calc(100% - var(--ag-edge-fade-end)),
+        transparent
+      );
+      animation: ag-edge-fade linear both;
+      animation-timeline: scroll(self inline);
+    }
+  }
+
+  /* `ag-edge-fade-y`: the same for anything that scrolls up and down (a
+     kanban column, a capped list): its top and foot fade to nothing as the
+     scroll says there is more, with no colour of its own, so it sits on any
+     surface (glass included) without a band. */
+  .ag-edge-fade-y {
+    overflow-y: auto;
+    scrollbar-width: none;
+  }
+  .ag-edge-fade-y::-webkit-scrollbar {
+    display: none;
+  }
+  @supports (animation-timeline: scroll()) {
+    .ag-edge-fade-y {
+      mask-image: linear-gradient(
+        to bottom,
+        transparent,
+        #000 var(--ag-edge-fade-start),
+        #000 calc(100% - var(--ag-edge-fade-end)),
+        transparent
+      );
+      animation: ag-edge-fade linear both;
+      animation-timeline: scroll(self block);
+    }
+  }
+}
+
+/* The fades are lengths the scroll moves: registered, so they interpolate, and 0
+   wherever there is no scroll. */
+@property --ag-edge-fade-start {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+@property --ag-edge-fade-end {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+@keyframes ag-edge-fade {
+  0% {
+    --ag-edge-fade-start: 0px;
+    --ag-edge-fade-end: var(--edge-fade, 1.5rem);
+  }
+  10%,
+  90% {
+    --ag-edge-fade-start: var(--edge-fade, 1.5rem);
+    --ag-edge-fade-end: var(--edge-fade, 1.5rem);
+  }
+  100% {
+    --ag-edge-fade-start: var(--edge-fade, 1.5rem);
+    --ag-edge-fade-end: 0px;
+  }
 }

@@ -79,7 +79,7 @@ function AnimationSource({
             e.stopPropagation();
             intent.setManual(!active);
           }}
-          className="absolute right-2 bottom-2 rounded-full bg-black/60 px-3 py-2 text-xs text-white focus-visible:outline-2 focus-visible:outline-offset-2"
+          className="absolute right-2 bottom-2 rounded-full bg-black/60 px-3 py-2 text-xs text-white"
         >
           {active ? "pause" : "play"}
         </button>

@@ -1,0 +1,5 @@
+@property --glass-rim {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 1;
+}

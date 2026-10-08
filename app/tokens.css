@@ -4,7 +4,7 @@
 
    Type: three voices, never mixed. --font-sans (Geist) is display and body;
    --font-mono (Geist Mono) is metadata ONLY (labels, versions, dates, pills,
-   kickers; text-xs or smaller, lowercase); --font-typewriter (Courier Prime) is the
+   kickers; text-xs or smaller, lowercase); --font-typewriter (Cutive Mono) is the
    studio's own voice (wordmark, taglines) and never bolds. The consumer's layout
    defines the three variables with next/font; this file only maps them.
 
@@ -54,6 +54,38 @@
   --dur-1: 150ms;
   --dur-2: 300ms;
   --dur-3: 500ms;
+
+  /* Focus: a fine line just off the shape's edge, in the content's own colour,
+     faint. Following the corner radius, it reads as the control's outline lit,
+     never the browser's heavy ring. */
+  --focus-ring-width: 1.5px;
+  --focus-ring-offset: 3px;
+  --focus-ring-alpha: 45%;
+}
+
+/* The one focus affordance. It answers the keyboard only (:focus-visible): a click
+   or a tap shows nothing, a Tab shows where you are. The base rule gives it to
+   every focusable thing, links in an embed included, so nothing falls back to the
+   browser's default. Where focus lands on one element but should be drawn on
+   another (a field's glass wrapper, a carousel's current card), that element
+   takes `focus-ring` under the matching variant. A composite control whose own
+   drawing can answer focus (a scrubber's bar) does that instead and sets
+   outline-none. */
+@utility focus-ring {
+  outline: var(--focus-ring-width) solid
+    color-mix(in oklab, currentColor var(--focus-ring-alpha), transparent);
+  outline-offset: var(--focus-ring-offset);
+}
+
+@layer base {
+  :focus-visible {
+    @apply focus-ring;
+  }
+  /* tabindex=-1 is where a script puts focus (a dialog, a stage, a scroller), not
+     a control a person chose: it is never ringed. */
+  [tabindex="-1"]:focus-visible {
+    outline: none;
+  }
 }
 
 /* Dark. The shadcn surface variables (--background, --border, --sidebar…) are the

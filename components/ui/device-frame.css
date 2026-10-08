@@ -84,8 +84,13 @@
   }
   /* The lid's face turns in true perspective: the eye at the hinge (perspective()
      in the lid's own transform puts it at the transform origin), at distance P. */
+  /* Open, the lid stands BEHIND the base, as the flat frame's does: the base's
+     top edge covers the lid's foot and the shadow it casts, so an open hinged
+     MacBook and a flat one are the same drawing. The moment it starts to close
+     it comes in front, where a lid swinging toward the eye belongs (z 1 at
+     --device-lid 0, z 3 above it). */
   .device-desktop[data-hinged] .device-lid {
-    z-index: 3;
+    z-index: calc(1 + 2 * round(up, var(--device-lid, 0), 1));
     transform-origin: 50% 100%;
     transform: perspective(344.45cqw)
       rotateX(calc(var(--device-lid, 0) * -90deg));
@@ -180,6 +185,116 @@
       #080809
     );
     box-shadow: 0 0.15cqw 0.2cqw #0008;
+  }
+
+  /* The insides (MacbookInternals): the base's face as a strip of its parts.
+     Parts are hairlines in one neutral, crisp at any size (non-scaling
+     strokes); heat carries the only colour. The fans and the heat pipes move
+     at the fans' pace; held (`data-held`, a caller's `t`), each sits at that
+     instant: a paused animation with a negative delay is a pure function of
+     time. */
+  .device-internals {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+  /* The parts (svg) and the air (canvas, device-airflow) share the base's
+     box, the air on top. */
+  .device-skin,
+  .device-internals-art,
+  .device-airflow {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+  /* Parts are thinner and quieter than the air, so the flow reads first. */
+  .device-parts {
+    fill: none;
+    stroke: rgb(255 255 255 / 0.24);
+    stroke-width: 0.35px;
+    vector-effect: non-scaling-stroke;
+  }
+  .device-parts * {
+    vector-effect: non-scaling-stroke;
+  }
+  .device-labels text {
+    fill: rgb(255 255 255 / 0.45);
+    font-family: var(--font-mono, ui-monospace, monospace);
+    font-size: 7px;
+    text-anchor: middle;
+    dominant-baseline: middle;
+  }
+  /* One turn per --pace (--rate is fanTurnRate, turns per second). Held, a
+     slat sits at the fan's --turns so far, so a fan speeding up mid-film
+     never jumps. --dir is the way the near slats travel (the two fans
+     mirror). */
+  .device-blade {
+    --pace: calc(1s / var(--rate));
+  }
+  /* A blower's impeller seen edge-on: a ring of vertical slats, each sliding
+     across the drum on a cosine (ease-in-out halves), so they bunch at its
+     ends where they turn away; the near half bright, the far half faint
+     through the housing. `--k` spreads them round the ring; a stopped fan
+     keeps its slats where they stand. */
+  .device-blade {
+    stroke: rgb(255 255 255 / 0.6);
+    animation: device-blade var(--pace) linear infinite;
+    animation-delay: calc(var(--k) * var(--pace) * -1);
+  }
+  .device-fan[data-still] .device-blade {
+    animation-play-state: paused;
+  }
+  @keyframes device-blade {
+    0% {
+      translate: calc(var(--dir, 1) * -56px) 0;
+      opacity: 0.9;
+      animation-timing-function: ease-in-out;
+    }
+    50% {
+      translate: calc(var(--dir, 1) * 56px) 0;
+      opacity: 0.9;
+    }
+    50.001% {
+      translate: calc(var(--dir, 1) * 56px) 0;
+      opacity: 0.22;
+      animation-timing-function: ease-in-out;
+    }
+    100% {
+      translate: calc(var(--dir, 1) * -56px) 0;
+      opacity: 0.22;
+    }
+  }
+  .device-internals[data-held] .device-blade {
+    animation-play-state: paused;
+    animation-duration: 1s;
+    animation-delay: calc((var(--turns) + var(--k)) * -1s);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .device-blade {
+      animation-play-state: paused;
+    }
+  }
+  .device-cell {
+    fill: rgb(255 255 255 / 0.04);
+    stroke: rgb(255 255 255 / 0.22);
+  }
+  .device-skin {
+    pointer-events: none;
+  }
+  /* A shut lid's face, warm with the same skin, laid over the rim's aluminium. */
+  .device-lid-skin {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+  }
+  /* The heat is the fill; the edge is only a hairline catching it. */
+  .device-skin path {
+    stroke-width: 0.5px;
+    stroke-opacity: 0.5;
+    vector-effect: non-scaling-stroke;
   }
   .device-desktop[data-device="studio"] .device-lid {
     z-index: 2;
@@ -492,5 +607,28 @@
     display: flex;
     align-items: center;
     gap: 1.4cqw;
+  }
+
+  /* The thermal depth (MacbookThermal.depth): --device-skin and --device-xray,
+     each 0..1. Last so it overrides what it dims: as the insides come in the
+     skin and the body's outer details (the lid notch, the feet) recede, so the
+     inside reads first. Live, a change fades; held, the number is exact. */
+  .device-desktop[data-thermal] .device-skin,
+  .device-desktop[data-thermal] .device-lid-skin {
+    opacity: var(--device-skin);
+  }
+  .device-desktop[data-thermal] .device-internals {
+    opacity: var(--device-xray);
+  }
+  .device-desktop[data-thermal] .device-base::before,
+  .device-desktop[data-thermal] .device-rubber {
+    opacity: calc(1 - var(--device-xray) * 0.7);
+  }
+  .device-desktop[data-thermal="live"] .device-skin,
+  .device-desktop[data-thermal="live"] .device-lid-skin,
+  .device-desktop[data-thermal="live"] .device-internals,
+  .device-desktop[data-thermal="live"] .device-base::before,
+  .device-desktop[data-thermal="live"] .device-rubber {
+    transition: opacity 0.8s cubic-bezier(0.65, 0, 0.35, 1);
   }
 }
