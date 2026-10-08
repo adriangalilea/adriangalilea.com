@@ -1,20 +1,20 @@
-"use client";
+"use client"
 
-import NextImage, { type ImageProps as NextImageProps } from "next/image";
-import type * as React from "react";
-import { type CSSProperties, type Ref, useState } from "react";
-import { cn } from "@/lib/utils";
+import NextImage, { type ImageProps as NextImageProps } from "next/image"
+import type * as React from "react"
+import { type CSSProperties, type Ref, useState } from "react"
+import { cn } from "@/lib/utils"
 
 export type ImageProps = Omit<NextImageProps, "placeholder"> & {
   /** Classes on the pixels, e.g. object-contain or object-top. className styles the frame. */
-  imageClassName?: string;
-  ref?: Ref<HTMLImageElement>;
-};
+  imageClassName?: string
+  ref?: Ref<HTMLImageElement>
+}
 
 /** What a static import carries with it: dimensions and a blur, for free. `null` for a
  *  URL string, which carries nothing. */
 const staticOf = (src: ImageProps["src"]) =>
-  typeof src === "object" ? ("default" in src ? src.default : src) : null;
+  typeof src === "object" ? ("default" in src ? src.default : src) : null
 
 /** Next.js optimization on any Next host. Supply dimensions (or a sized parent
  * with fill); remote/public assets can supply a prepared blurDataURL. Static
@@ -27,7 +27,7 @@ export function Image({ src, ...props }: ImageProps) {
       src={src}
       {...props}
     />
-  );
+  )
 }
 
 /** How a picture arrives, said once for Image and Img: held clear and a little
@@ -35,7 +35,7 @@ export function Image({ src, ...props }: ImageProps) {
  *  run (without them nothing would ever mark it ready), and not under reduced
  *  motion's blur. Keyed on the element's own data-state. */
 const ARRIVAL =
-  "transition-[opacity,filter] duration-300 ease-out motion-reduce:transition-none [@media(scripting:enabled)]:data-[state=loading]:opacity-0 motion-safe:[@media(scripting:enabled)]:data-[state=loading]:blur-sm";
+  "transition-[opacity,filter] duration-300 ease-out motion-reduce:transition-none [@media(scripting:enabled)]:data-[state=loading]:opacity-0 motion-safe:[@media(scripting:enabled)]:data-[state=loading]:blur-sm"
 
 /** A plain `<img>` that arrives the way Image does, for a picture the optimizer
  *  should not touch (an icon, a poster, any origin, any size). It reads an image
@@ -48,31 +48,31 @@ export function Img({
   ref,
   ...props
 }: React.ImgHTMLAttributes<HTMLImageElement> & {
-  ref?: Ref<HTMLImageElement>;
+  ref?: Ref<HTMLImageElement>
 }) {
-  const [state, setState] = useState<"loading" | "ready" | "error">("loading");
+  const [state, setState] = useState<"loading" | "ready" | "error">("loading")
   return (
     // biome-ignore lint/performance/noImgElement: the unoptimized picture, by design
     // biome-ignore lint/a11y/useAltText: alt passes through with the rest of the props
     <img
       {...props}
       ref={(el) => {
-        if (el?.complete && el.naturalWidth > 0) setState("ready");
-        if (typeof ref === "function") ref(el);
-        else if (ref) ref.current = el;
+        if (el?.complete && el.naturalWidth > 0) setState("ready")
+        if (typeof ref === "function") ref(el)
+        else if (ref) ref.current = el
       }}
       data-state={state}
       onLoad={(event) => {
-        setState("ready");
-        onLoad?.(event);
+        setState("ready")
+        onLoad?.(event)
       }}
       onError={(event) => {
-        setState("error");
-        onError?.(event);
+        setState("error")
+        onError?.(event)
       }}
       className={cn(ARRIVAL, className)}
     />
-  );
+  )
 }
 
 function ImageResource({
@@ -89,11 +89,11 @@ function ImageResource({
   ref,
   ...props
 }: ImageProps) {
-  const [state, setState] = useState<"loading" | "ready" | "error">("loading");
-  const data = staticOf(src);
-  const w = width ?? data?.width;
-  const h = height ?? data?.height;
-  const blur = blurDataURL ?? data?.blurDataURL;
+  const [state, setState] = useState<"loading" | "ready" | "error">("loading")
+  const data = staticOf(src)
+  const w = width ?? data?.width
+  const h = height ?? data?.height
+  const blur = blurDataURL ?? data?.blurDataURL
   return (
     <span
       data-slot="image"
@@ -139,12 +139,12 @@ function ImageResource({
         data-slot="image-content"
         // Next's onLoad runs after decode(), including images cached before hydration.
         onLoad={(event) => {
-          setState("ready");
-          onLoad?.(event);
+          setState("ready")
+          onLoad?.(event)
         }}
         onError={(event) => {
-          setState("error");
-          onError?.(event);
+          setState("error")
+          onError?.(event)
         }}
         className={cn(
           "relative block size-full object-cover transition-[opacity,filter] duration-300 ease-out motion-reduce:transition-none",
@@ -153,5 +153,5 @@ function ImageResource({
         )}
       />
     </span>
-  );
+  )
 }

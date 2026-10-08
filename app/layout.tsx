@@ -8,6 +8,7 @@ import { HideOnScroll } from "@/components/hide-on-scroll";
 import { GlassSurface, LiquidGlassFilter } from "@/components/liquid-glass";
 import { NavbarBreadcrumb } from "@/components/navbar-breadcrumb";
 import { ThemeProvider } from "@/components/theme-provider";
+import { FocusSource } from "@/components/ui/focus-source";
 import { socials } from "@/data/site";
 import { getAllFolders } from "@/lib/content";
 import "./globals.css";
@@ -113,6 +114,8 @@ export default function RootLayout({
             <div className="fade-out-mask fixed bottom-0 right-0 w-full h-24 z-10 pointer-events-none backdrop-blur-sm" />
           </NuqsAdapter>
         </ThemeProvider>
+        {/* The focus ring answers the keyboard only (ui/focus-source). */}
+        <FocusSource />
         <Analytics />
         <SpeedInsights />
       </body>

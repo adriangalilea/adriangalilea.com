@@ -1,14 +1,14 @@
-"use client";
+"use client"
 
-import * as React from "react";
+import * as React from "react"
+import { cn } from "@/lib/utils"
 import {
   GlassButton,
   type GlassButtonCorners,
   type GlassButtonProps,
   type GlassTone,
   glassVariants,
-} from "@/components/ui/liquid-glass";
-import { cn } from "@/lib/utils";
+} from "@/components/ui/liquid-glass"
 
 // A text field made of glass, at the button's heights and corners, so a field and
 // the button that submits it sit as one row. Focused, the rim catches more light
@@ -47,28 +47,28 @@ export interface StandardSchema {
       value: unknown,
     ) =>
       | { issues?: readonly { message: string }[] }
-      | Promise<{ issues?: readonly { message: string }[] }>;
-  };
+      | Promise<{ issues?: readonly { message: string }[] }>
+  }
 }
 
 /** Fired (bubbling) on a field each time its value has been checked, so whatever
  *  watches the form reads its validity after a schema's answer, not before. */
-const CHECKED = "glass-input-checked";
+const CHECKED = "glass-input-checked"
 
 export type GlassInputProps = Omit<
   React.ComponentPropsWithRef<"input">,
   "size"
 > & {
-  size?: "sm" | "md" | "lg";
-  corners?: GlassButtonCorners;
-  tone?: GlassTone;
+  size?: "sm" | "md" | "lg"
+  corners?: GlassButtonCorners
+  tone?: GlassTone
   /** Judged against this schema; its first issue's message is shown. */
-  schema?: StandardSchema;
+  schema?: StandardSchema
   /** Or judged by this: a message when wrong, undefined when right. */
-  validate?: (value: string) => string | undefined;
+  validate?: (value: string) => string | undefined
   /** A message from outside (a server's answer), shown whatever the field says. */
-  error?: string;
-};
+  error?: string
+}
 
 export function GlassInput({
   size = "md",
@@ -83,41 +83,41 @@ export function GlassInput({
   ref,
   ...props
 }: GlassInputProps) {
-  const [own, setOwn] = React.useState<string | undefined>();
-  const [judged, setJudged] = React.useState(false);
-  const id = React.useId();
-  const message = error ?? (judged ? own : undefined);
+  const [own, setOwn] = React.useState<string | undefined>()
+  const [judged, setJudged] = React.useState(false)
+  const id = React.useId()
+  const message = error ?? (judged ? own : undefined)
 
   // What is wrong with the value now, told to the browser (so the form will not
   // submit and `:invalid` holds) and kept, shown or not.
   const check = async (el: HTMLInputElement) => {
-    const value = el.value;
-    let next: string | undefined;
+    const value = el.value
+    let next: string | undefined
     if (schema) {
-      const result = await schema["~standard"].validate(value);
-      if (el.value !== value) return; // typed past while the schema answered
-      next = result.issues?.[0]?.message;
-    } else if (validate) next = validate(value);
-    if (schema || validate) el.setCustomValidity(next ?? "");
+      const result = await schema["~standard"].validate(value)
+      if (el.value !== value) return // typed past while the schema answered
+      next = result.issues?.[0]?.message
+    } else if (validate) next = validate(value)
+    if (schema || validate) el.setCustomValidity(next ?? "")
     // The browser's own rules still hold beside a schema (type, required,
     // minLength); when the schema has nothing to say, they speak.
-    if (!next && !el.validity.valid) next = el.validationMessage;
-    setOwn(next);
-    el.dispatchEvent(new Event(CHECKED, { bubbles: true }));
-  };
+    if (!next && !el.validity.valid) next = el.validationMessage
+    setOwn(next)
+    el.dispatchEvent(new Event(CHECKED, { bubbles: true }))
+  }
   const judge = (el: HTMLInputElement) => {
-    setJudged(true);
-    void check(el);
-  };
+    setJudged(true)
+    void check(el)
+  }
 
-  const input = React.useRef<HTMLInputElement>(null);
-  React.useImperativeHandle(ref, () => input.current as HTMLInputElement, []);
+  const input = React.useRef<HTMLInputElement>(null)
+  React.useImperativeHandle(ref, () => input.current as HTMLInputElement, [])
   // Checked as it arrives, so the form knows an empty required field is wrong
   // before anyone has touched it.
   // biome-ignore lint/correctness/useExhaustiveDependencies: once, on arrival
   React.useEffect(() => {
-    if (input.current) void check(input.current);
-  }, []);
+    if (input.current) void check(input.current)
+  }, [])
 
   return (
     <span
@@ -146,17 +146,17 @@ export function GlassInput({
           aria-invalid={message ? true : undefined}
           aria-describedby={message ? `${id}-message` : undefined}
           onBlur={(e) => {
-            judge(e.currentTarget);
-            onBlur?.(e);
+            judge(e.currentTarget)
+            onBlur?.(e)
           }}
           onChange={(e) => {
-            void check(e.currentTarget);
-            onChange?.(e);
+            void check(e.currentTarget)
+            onChange?.(e)
           }}
           onInvalid={(e) => {
             // A submit that found it wrong: say why here, not in the browser's bubble.
-            e.preventDefault();
-            judge(e.currentTarget);
+            e.preventDefault()
+            judge(e.currentTarget)
           }}
           className={cn(
             "size-full min-w-0 rounded-[inherit] bg-transparent outline-none placeholder:text-current/40",
@@ -183,7 +183,7 @@ export function GlassInput({
         </span>
       )}
     </span>
-  );
+  )
 }
 
 // The button that sends a form of glass fields. Until every field in its form is
@@ -201,14 +201,14 @@ const SHAKE: Keyframe[] = [
   { translate: "-2.5px" },
   { translate: "1.5px" },
   { translate: "0" },
-];
+]
 const NUDGE: Keyframe[] = [
   { translate: "0" },
   { translate: "3px" },
   { translate: "0" },
-];
+]
 
-const still = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
+const still = () => matchMedia("(prefers-reduced-motion: reduce)").matches
 
 export function GlassSubmit({
   className,
@@ -216,22 +216,22 @@ export function GlassSubmit({
   children,
   ...props
 }: Omit<GlassButtonProps<"button">, "as" | "type">) {
-  const button = React.useRef<HTMLButtonElement>(null);
-  const [ready, setReady] = React.useState(false);
-  const was = React.useRef(ready);
+  const button = React.useRef<HTMLButtonElement>(null)
+  const [ready, setReady] = React.useState(false)
+  const was = React.useRef(ready)
 
   React.useEffect(() => {
-    const form = button.current?.form;
-    if (!form) throw new Error("GlassSubmit must sit inside a <form>");
-    const read = () => setReady(form.matches(":valid"));
-    read();
-    form.addEventListener("input", read);
-    form.addEventListener(CHECKED, read);
+    const form = button.current?.form
+    if (!form) throw new Error("GlassSubmit must sit inside a <form>")
+    const read = () => setReady(form.matches(":valid"))
+    read()
+    form.addEventListener("input", read)
+    form.addEventListener(CHECKED, read)
     return () => {
-      form.removeEventListener("input", read);
-      form.removeEventListener(CHECKED, read);
-    };
-  }, []);
+      form.removeEventListener("input", read)
+      form.removeEventListener(CHECKED, read)
+    }
+  }, [])
 
   React.useEffect(() => {
     if (ready && !was.current && !still())
@@ -239,9 +239,9 @@ export function GlassSubmit({
         child.animate(NUDGE, {
           duration: 420,
           easing: "cubic-bezier(0.34,1.56,0.64,1)",
-        });
-    was.current = ready;
-  }, [ready]);
+        })
+    was.current = ready
+  }, [ready])
 
   return (
     <GlassButton
@@ -251,20 +251,20 @@ export function GlassSubmit({
       aria-disabled={ready ? undefined : true}
       onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
         if (!ready) {
-          e.preventDefault();
-          const form = e.currentTarget.form;
+          e.preventDefault()
+          const form = e.currentTarget.form
           // Constraint validation fires `invalid` on every wrong field: each
           // glass field says why. Then the first takes focus.
-          form?.checkValidity();
-          form?.querySelector<HTMLElement>(":invalid")?.focus();
+          form?.checkValidity()
+          form?.querySelector<HTMLElement>(":invalid")?.focus()
           if (!still())
             e.currentTarget.animate(SHAKE, {
               duration: 380,
               easing: "ease-out",
-            });
-          return;
+            })
+          return
         }
-        onClick?.(e);
+        onClick?.(e)
       }}
       className={cn(
         "[&>*]:transition-opacity [&>*]:duration-300",
@@ -274,5 +274,5 @@ export function GlassSubmit({
     >
       {children}
     </GlassButton>
-  );
+  )
 }

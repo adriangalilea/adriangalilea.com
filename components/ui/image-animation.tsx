@@ -1,29 +1,29 @@
-"use client";
-import { type RefObject, useRef } from "react";
-import { cn } from "@/lib/utils";
-import { Image } from "./image";
-import { useMediaIntent } from "./image-intent";
+"use client"
+import { type RefObject, useRef } from "react"
+import { cn } from "@/lib/utils"
+import { Image } from "./image"
+import { useMediaIntent } from "./image-intent"
 
 export type AnimatedImageProps = {
-  src: string;
-  poster: string;
-  width: number;
-  height: number;
-  alt: string;
-  blurDataURL?: string;
-  className?: string;
-  imageClassName?: string;
-  sizes?: string;
-  playOn?: "intent" | "visible";
+  src: string
+  poster: string
+  width: number
+  height: number
+  alt: string
+  blurDataURL?: string
+  className?: string
+  imageClassName?: string
+  sizes?: string
+  playOn?: "intent" | "visible"
   /** Show an optional play/pause button. Covers are unadorned by default. */
-  controls?: boolean;
-  interactionRef?: RefObject<HTMLElement | null>;
-};
+  controls?: boolean
+  interactionRef?: RefObject<HTMLElement | null>
+}
 
 /** Native animated image, loaded only while requested. Stopping returns to its poster.
  * This does not promise frame-accurate pause/seek; use Video for those controls. */
 export function AnimatedImage(props: AnimatedImageProps) {
-  return <AnimationSource key={props.src} {...props} />;
+  return <AnimationSource key={props.src} {...props} />
 }
 function AnimationSource({
   src,
@@ -39,9 +39,9 @@ function AnimationSource({
   controls = false,
   interactionRef,
 }: AnimatedImageProps) {
-  const frame = useRef<HTMLDivElement>(null);
-  const intent = useMediaIntent(frame, interactionRef);
-  const active = intent.active(playOn);
+  const frame = useRef<HTMLDivElement>(null)
+  const intent = useMediaIntent(frame, interactionRef)
+  const active = intent.active(playOn)
   return (
     <div
       ref={frame}
@@ -75,9 +75,9 @@ function AnimationSource({
           aria-label={`${active ? "Pause" : "Play"} ${alt}`}
           aria-pressed={active}
           onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            intent.setManual(!active);
+            e.preventDefault()
+            e.stopPropagation()
+            intent.setManual(!active)
           }}
           className="absolute right-2 bottom-2 rounded-full bg-black/60 px-3 py-2 text-xs text-white"
         >
@@ -85,5 +85,5 @@ function AnimationSource({
         </button>
       )}
     </div>
-  );
+  )
 }

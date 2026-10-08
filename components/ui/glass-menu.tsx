@@ -1,10 +1,10 @@
-"use client";
+"use client"
 
-import { Menu } from "@base-ui/react/menu";
-import type * as React from "react";
-import { GlassGlide } from "@/components/ui/glass-glide";
-import { glassVariants } from "@/components/ui/liquid-glass";
-import { cn } from "@/lib/utils";
+import { Menu } from "@base-ui/react/menu"
+import type * as React from "react"
+import { cn } from "@/lib/utils"
+import { GlassGlide } from "@/components/ui/glass-glide"
+import { glassVariants } from "@/components/ui/liquid-glass"
 
 // A dropdown made of glass, as the controls it drops from. Built on Base UI's
 // menu (keyboard, typeahead, focus return, outside press), the parts named the
@@ -24,24 +24,26 @@ import { cn } from "@/lib/utils";
 // background of its own, and a destructive row turns the glide red.
 
 export function GlassMenu(props: Omit<Menu.Root.Props, "modal">) {
-  return <Menu.Root modal={false} {...props} />;
+  return <Menu.Root modal={false} {...props} />
 }
 
 /** The control that opens the menu; `render` makes any button the trigger. While
  *  open it carries `data-popup-open`. */
-export const GlassMenuTrigger = Menu.Trigger;
+export const GlassMenuTrigger = Menu.Trigger
 
 export function GlassMenuContent({
   align = "end",
   side = "bottom",
   sideOffset = 6,
+  container,
   className,
   children,
   ...props
 }: Menu.Popup.Props &
-  Pick<Menu.Positioner.Props, "align" | "side" | "sideOffset">) {
+  Pick<Menu.Positioner.Props, "align" | "side" | "sideOffset"> &
+  Pick<Menu.Portal.Props, "container">) {
   return (
-    <Menu.Portal>
+    <Menu.Portal container={container}>
       <Menu.Positioner
         align={align}
         side={side}
@@ -61,7 +63,7 @@ export function GlassMenuContent({
         </Menu.Popup>
       </Menu.Positioner>
     </Menu.Portal>
-  );
+  )
 }
 
 export function GlassMenuItem({
@@ -70,7 +72,7 @@ export function GlassMenuItem({
   ...props
 }: Menu.Item.Props & {
   /** A row that destroys: red words, a red glide. */
-  destructive?: boolean;
+  destructive?: boolean
 }) {
   return (
     <Menu.Item
@@ -81,7 +83,7 @@ export function GlassMenuItem({
       )}
       {...props}
     />
-  );
+  )
 }
 
 /** A quiet line above the rows (the signed-in name), not a row itself. */
@@ -97,7 +99,7 @@ export function GlassMenuLabel({
       )}
       {...props}
     />
-  );
+  )
 }
 
 export function GlassMenuSeparator({
@@ -109,5 +111,5 @@ export function GlassMenuSeparator({
       className={cn("mx-1.5 my-1 h-px bg-current/10", className)}
       {...props}
     />
-  );
+  )
 }
