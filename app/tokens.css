@@ -77,6 +77,21 @@
   outline-offset: var(--focus-ring-offset);
 }
 
+/* A rounded frame that cuts what it holds smoothly, whatever it holds. Chrome cuts a
+   child with a layer of its own (a video, a playing stage, anything transformed or
+   animating) to a parent's rounded corners WITHOUT anti-aliasing: the corner steps,
+   and the parent's ground shows round it as a light rim. Through a mask the same cut
+   is anti-aliased, and it is applied to the frame's content as one picture, so
+   nothing beneath leaks either. The mask is opaque everywhere: it hides nothing, it
+   exists for the path it sends the cut down. Use it with the frame's radius
+   (`rounded-xl clip-rounded`) on any frame holding media or moving content; a child
+   that rounds itself (ui/video) needs none. */
+@utility clip-rounded {
+  overflow: hidden;
+  -webkit-mask-image: -webkit-radial-gradient(white, black);
+  mask-image: radial-gradient(white, black);
+}
+
 @layer base {
   :focus-visible {
     @apply focus-ring;

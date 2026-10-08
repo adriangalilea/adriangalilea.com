@@ -54,9 +54,8 @@ export function CoverImage({
           poster={poster ?? undefined}
           sizes={sizes}
           blurDataURL={blurDataURL ?? undefined}
-          mode="preview"
+          play={hoverPlay ? "hover" : "once"}
           interactionRef={interactionRef}
-          playOn={hoverPlay ? "intent" : "visible-once"}
           label={title}
           loop
           className="size-full"
