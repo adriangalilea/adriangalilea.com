@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 // The tooltip: shadcn's, on Base UI, with what a control's tooltip needs on top. The
 // parts are shadcn's, so a component written for shadcn (a sidebar) composes it as
@@ -21,16 +21,25 @@
 //
 // It waits a beat before opening and closes at once; once one has opened, neighbours
 // open without waiting (TooltipProvider, or the default one each Tooltip makes); it
-// never opens on touch (a tap is the control's). The face is plain here;
-// liquid-glass's GlassTooltipContent and GlassTip are the same in glass, both through
-// TooltipPopup. Where we part from shadcn's defaults: no arrow (a short line beside
-// its control needs no pointer), the page's popover colours rather than an inverted
-// chip, `keys` drawn as keys, and `card` for content laid out as it comes.
+// never opens on touch (a tap is the control's). Two materials (`material`): plain,
+// the page's popover colours; glass, the material's dark glass, a pill for a line,
+// for controls that are glass themselves (a player's) or over a picture. Where we part
+// from shadcn's defaults: no arrow (a short line beside its control needs no pointer),
+// the page's popover colours rather than an inverted chip, `keys` drawn as keys, and
+// `card` for content laid out as it comes.
 
-import { Tooltip as Base } from "@base-ui/react/tooltip"
-import type * as React from "react"
-import { cn } from "@/lib/utils"
-import { Kbd } from "@/components/ui/kbd"
+import { Tooltip as Base } from "@base-ui/react/tooltip";
+import type * as React from "react";
+import { Kbd } from "@/components/ui/kbd";
+import {
+  type Material,
+  MaterialProvider,
+  type Scheme,
+  useMaterial,
+  useScheme,
+} from "@/components/ui/material";
+import { glassVariants, schemeOf } from "@/components/ui/material-glass";
+import { cn } from "@/lib/utils";
 
 /** Shares the waiting between the tooltips inside it: after one opens, the next opens
  *  at once, so a row of controls reads as you move along it. */
@@ -46,11 +55,11 @@ export function TooltipProvider({
       closeDelay={closeDelay}
       {...props}
     />
-  )
+  );
 }
 
 export function Tooltip(props: React.ComponentProps<typeof Base.Root>) {
-  return <Base.Root data-slot="tooltip" {...props} />
+  return <Base.Root data-slot="tooltip" {...props} />;
 }
 
 /** The control. `render` makes any element the trigger (shadcn's Radix `asChild`);
@@ -67,27 +76,45 @@ export function TooltipTrigger({
       closeDelay={closeDelay}
       {...props}
     />
-  )
+  );
 }
 
 export interface TooltipContentProps
   extends Omit<React.ComponentProps<typeof Base.Popup>, "children"> {
-  children: React.ReactNode
-  side?: React.ComponentProps<typeof Base.Positioner>["side"]
-  align?: React.ComponentProps<typeof Base.Positioner>["align"]
-  sideOffset?: number
+  children: React.ReactNode;
+  side?: React.ComponentProps<typeof Base.Positioner>["side"];
+  align?: React.ComponentProps<typeof Base.Positioner>["align"];
+  sideOffset?: number;
   /** The keys that do the same, in any notation `kbd` reads (`space`, `J`, `⇧J`). */
-  keys?: string
+  keys?: string;
   /** A card rather than a line: the content laid out as it comes (a table of keys, a
    *  short legend), padded, as wide as it needs. */
-  card?: boolean
+  card?: boolean;
   /** Where it is portalled (a player's layer, so it shows in fullscreen). */
-  container?: React.ComponentProps<typeof Base.Portal>["container"]
+  container?: React.ComponentProps<typeof Base.Portal>["container"];
+  material?: Material;
+  /** The colour scheme it stands in (material): default the nearest provider's, so
+   *  a tooltip on a control over a picture (a player's, which says dark) is dark
+   *  with it, and one on the page is the page's. */
+  scheme?: Scheme;
 }
 
-/** The popup every face shares: placement, the line or the card, the keys. `face`
- *  styles it (plain here, glass in liquid-glass). */
-export function TooltipPopup({
+/** The plain face: the page's popover colours, a hairline and a soft shadow. */
+const PLAIN_FACE =
+  "rounded-md border border-border bg-popover text-popover-foreground shadow-md";
+
+/** The glass face: the material's glass at a tooltip's blur, a pill for a line, soft
+ *  corners for a card. */
+const glassFace = (card: boolean) =>
+  cn(
+    glassVariants({ shape: "surface" }),
+    card ? "rounded-xl" : "rounded-full px-2.5",
+    "[--glass-blur:14px]",
+  );
+
+/** The tooltip itself: placement, the line or the card, the keys, in its material.
+ *  What is inside it (its keys) wears the same material. */
+export function TooltipContent({
   children,
   side = "top",
   align = "center",
@@ -95,10 +122,13 @@ export function TooltipPopup({
   keys,
   card = false,
   container,
-  face,
+  material,
+  scheme,
   className,
   ...props
-}: TooltipContentProps & { face: string }) {
+}: TooltipContentProps) {
+  const m = useMaterial(material);
+  const s = useScheme(scheme);
   return (
     <Base.Portal container={container}>
       <Base.Positioner
@@ -109,47 +139,50 @@ export function TooltipPopup({
       >
         <Base.Popup
           data-slot="tooltip-content"
+          data-material={m}
           className={cn(
-            "text-pretty rounded-md text-xs leading-5",
+            "text-pretty text-xs leading-5",
             card
               ? "block p-3"
               : // A name stays on one line; an explanation wraps at a reading width.
                 "flex max-w-72 items-center gap-2 px-2 py-1",
             "origin-(--transform-origin) transition-[opacity,scale] duration-150 ease-out data-[ending-style]:scale-95 data-[ending-style]:opacity-0 data-[starting-style]:scale-95 data-[starting-style]:opacity-0 motion-reduce:transition-none",
-            face,
+            schemeOf(s),
+            m === "glass" ? glassFace(card) : PLAIN_FACE,
             className,
           )}
           {...props}
         >
-          {card ? children : <span>{children}</span>}
-          {keys && <Kbd keys={keys} className="text-[11px]" />}
+          <MaterialProvider material={m} scheme={s}>
+            {card ? children : <span>{children}</span>}
+            {keys && <Kbd keys={keys} className="text-[11px]" />}
+          </MaterialProvider>
         </Base.Popup>
       </Base.Positioner>
     </Base.Portal>
-  )
-}
-
-/** The plain face: the page's popover colours, a hairline and a soft shadow. */
-export const TOOLTIP_FACE =
-  "border border-border bg-popover text-popover-foreground shadow-md"
-
-export function TooltipContent(props: TooltipContentProps) {
-  return <TooltipPopup {...props} face={TOOLTIP_FACE} />
+  );
 }
 
 export interface TipProps
   extends Pick<
     TooltipContentProps,
-    "keys" | "side" | "align" | "card" | "container"
+    | "keys"
+    | "side"
+    | "align"
+    | "card"
+    | "container"
+    | "className"
+    | "material"
+    | "scheme"
   > {
   /** What the control does, in a few words. */
-  content: React.ReactNode
+  content: React.ReactNode;
   /** ms the pointer rests before it opens: 200 on a control (passing over a row of
    *  buttons should not flash a line under each), less where the pointer came to
    *  read (a hint). */
-  delay?: number
+  delay?: number;
   /** The control: one element that takes a ref (a button, a link). */
-  children: React.ReactElement
+  children: React.ReactElement;
 }
 
 /** A control's tooltip in one line: its name, and its keys drawn as keys. */
@@ -159,7 +192,7 @@ export function Tip({ content, delay, children, ...content_ }: TipProps) {
       <TooltipTrigger render={children} delay={delay} />
       <TooltipContent {...content_}>{content}</TooltipContent>
     </Tooltip>
-  )
+  );
 }
 
 /** The affordance for explaining a choice: a small ⓘ that shows `content` on hover or
@@ -170,20 +203,26 @@ export function TooltipHint({
   side = "top",
   className,
   card,
-  tip: Face = Tip,
+  material,
 }: {
-  content: React.ReactNode
+  content: React.ReactNode;
   /** The ⓘ's accessible name. */
-  label?: string
-  card?: boolean
-  side?: TipProps["side"]
-  className?: string
-  /** The face to show it in (Tip, or liquid-glass's GlassTip). */
-  tip?: React.ComponentType<TipProps>
+  label?: string;
+  card?: boolean;
+  side?: TipProps["side"];
+  className?: string;
+  /** The tooltip's material (the ⓘ itself is a glyph in the text's colour). */
+  material?: Material;
 }) {
   return (
     // The pointer came to the ⓘ to read it: it opens almost at once.
-    <Face content={content} side={side} delay={80} card={card}>
+    <Tip
+      content={content}
+      side={side}
+      delay={80}
+      card={card}
+      material={material}
+    >
       <button
         type="button"
         aria-label={label}
@@ -211,6 +250,6 @@ export function TooltipHint({
           <circle cx="8" cy="5" r="0.85" fill="currentColor" />
         </svg>
       </button>
-    </Face>
-  )
+    </Tip>
+  );
 }

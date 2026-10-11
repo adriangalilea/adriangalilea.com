@@ -100,6 +100,16 @@
    `focus-visible:` utility anywhere means this too. */
 @custom-variant focus-visible (&:focus-visible:not([data-focus-pointer]));
 
+/* A surface in the dark scheme: the page's (`.dark` above it) or its own (`.dark` on
+   it, as a glass over a picture wears with `scheme="dark"`), unless it is light
+   itself (`.light`, `scheme="light"`: light glass over a picture on a dark page).
+   Tailwind's `dark:` asks only about what is above an element, so a surface that is
+   dark itself could not style its own face with it; `scheme-dark:` asks about the
+   element too. */
+@custom-variant scheme-dark (&:where(.dark, .dark *):not(.light));
+/* A surface that is light itself whatever the page is (`scheme="light"`). */
+@custom-variant scheme-light (&.light);
+
 @layer base {
   :focus-visible:not([data-focus-pointer]) {
     @apply focus-ring;
@@ -110,9 +120,31 @@
   [data-focus-pointer]:focus-visible {
     outline: none;
   }
-  /* tabindex=-1 is where a script puts focus (a dialog, a stage, a scroller), not
-     a control a person chose: it is never ringed. */
-  [tabindex="-1"]:focus-visible {
+  /* tabindex=-1 on what is not a control is where a script puts focus (a dialog, a
+     stage, a scroller), not something a person chose: it is never ringed. A control
+     at -1 is a roving one the keys moved to (an option, a tree row, a tab, a radio),
+     which may hold -1 a frame after taking focus, or for good: it keeps its ring.
+     A menu's item shows focus by its highlight instead. */
+  [tabindex="-1"]:not(
+    :is(
+      button,
+      a[href],
+      input,
+      select,
+      textarea,
+      [role="option"],
+      [role="treeitem"],
+      [role="gridcell"],
+      [role="row"],
+      [role="tab"],
+      [role="radio"],
+      [role="button"],
+      [role="checkbox"],
+      [role="switch"],
+      [role="slider"],
+      [role="link"]
+    )
+  ):focus-visible {
     outline: none;
   }
 }
@@ -132,6 +164,10 @@
    Keeping the numbers identical across themes is the mistake that makes a dark
    design look flat and unstructured. */
 .dark {
+  /* The browser's own parts (scrollbars, a native select's list, a date field's
+     picker) in the dark scheme too, wherever a surface is dark. */
+  color-scheme: dark;
+
   --brand: oklch(72% 0.09 145);
 
   --tone-ok: oklch(78% 0.16 155);
@@ -144,4 +180,36 @@
   --alpha-meta: 0.45;
   --alpha-body: 0.62;
   --alpha-title: 0.92;
+}
+
+/* An icon is dimmed as ONE shape. A translucent colour (`text-foreground/55` on the
+   icon, or inherited from a dimmed button or label) is painted stroke by stroke, so
+   where two strokes of an icon meet or cross the alpha stacks and the joints come out
+   brighter than the lines. Here its strokes (and a `fill-current` fill) are drawn in
+   that colour made opaque, and the colour's own alpha is laid over the whole icon as
+   a uniform mask: exactly as dim as it was asked to be, evenly. An opaque colour's
+   mask is whole, so an icon drawn opaque is untouched. Unlayered, above the
+   utilities: a `stroke-current` would otherwise put the alpha back on the strokes,
+   dimming the icon twice. A browser without relative colours ignores it and draws
+   as before. Which svgs are icons is read, not opted into one by one: lucide's
+   (`.lucide`), any drawn in the text's colour (`stroke="currentColor"`, the way a
+   hand-drawn icon is written), and any marked `ag-icon`. Inside one, a part painted
+   in the text's colour by its own attribute is made opaque too, or the mask would
+   dim it twice. */
+svg:is(.lucide, .ag-icon, [stroke="currentColor"]) {
+  stroke: rgb(from currentColor r g b);
+  mask-image: linear-gradient(
+    rgb(from currentColor 0 0 0 / alpha),
+    rgb(from currentColor 0 0 0 / alpha)
+  );
+}
+svg:is(.lucide, .ag-icon, [stroke="currentColor"]):is(
+  .fill-current,
+  [fill="currentColor"]
+),
+svg:is(.lucide, .ag-icon, [stroke="currentColor"]) [fill="currentColor"] {
+  fill: rgb(from currentColor r g b);
+}
+svg:is(.lucide, .ag-icon, [stroke="currentColor"]) [stroke="currentColor"] {
+  stroke: rgb(from currentColor r g b);
 }

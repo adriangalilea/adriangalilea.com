@@ -35,15 +35,32 @@
 //                 The one knob that reads the DOM: the message's place on the device is
 //                 measured, not guessed.
 // A scrolly telling composes them: an act index in, focus out.
+//
+// A SKIN OVER ui/chat. The thread, each message (the row with its face, or the bubble
+// alone), the day, the sender's name, the photo and the quoted reply are chat's parts at
+// `look="none"`: chat keeps the structure (the list, the listitems, the run state as
+// `data-continued` / `data-tail`) and this file's stylesheet owns every pixel. What is
+// Telegram's alone stays here: the clock and its beats, the phone, the glass chrome,
+// streaming blocks, reactions, the corner, the composer, the profile video.
 
 import { ChevronDown, Eye, SlidersHorizontal } from "lucide-react";
 import * as React from "react";
 import { CardLink } from "@/components/ui/card-link";
+import {
+  ChatDay,
+  ChatPhoto,
+  ChatReply,
+  ChatSender,
+  ChatThread,
+  // Named apart: this file's `ChatMessage` is the script's message, a public type.
+  ChatMessage as Message,
+} from "@/components/ui/chat";
 import { IphoneFrame } from "@/components/ui/device-frame";
-import { Glass, type GlassTone } from "@/components/ui/liquid-glass";
+import { Glass, type Scheme } from "@/components/ui/material-glass";
 import { usePlayhead } from "@/components/ui/playback";
 import { Scrims } from "@/components/ui/scrims";
 import { useChatLayout } from "@/components/ui/telegram-chat-layout";
+import { Video } from "@/components/ui/video";
 import { WebPreview } from "@/components/ui/web-preview";
 import type { Clip } from "@/lib/clip";
 import type { Person } from "@/lib/person";
@@ -602,51 +619,31 @@ function emphasized(
   );
 }
 
+// Telegram loops a profile video for as long as it is on screen; this is the client's
+// behaviour, not decoration, so it plays on sight and loops. The slot's class sizes the
+// frame (1×1 keeps it square); the photo stands in until it plays.
 function AvatarVideo({
   className,
+  name,
   src,
   poster,
 }: {
   className: string;
+  name: string;
   src: string;
   poster?: string;
 }) {
-  const ref = React.useRef<HTMLVideoElement>(null);
-  React.useEffect(() => {
-    const video = ref.current;
-    if (!video) return;
-    const motion = matchMedia("(prefers-reduced-motion: reduce)");
-    let visible = false;
-    const update = () => {
-      if (motion.matches || !visible || document.hidden) video.pause();
-      else void video.play().catch(() => {});
-    };
-    const observer = new IntersectionObserver(([entry]) => {
-      visible = !!entry?.isIntersecting;
-      update();
-    });
-    observer.observe(video);
-    motion.addEventListener("change", update);
-    document.addEventListener("visibilitychange", update);
-    return () => {
-      observer.disconnect();
-      video.pause();
-      motion.removeEventListener("change", update);
-      document.removeEventListener("visibilitychange", update);
-    };
-  }, []);
-  // Telegram loops a profile video for as long as it is on screen; this is the client's
-  // behaviour, not decoration, so it is the one thing here that never stops on its own.
   return (
-    <video
-      ref={ref}
-      className={className}
+    <Video
       src={src}
       poster={poster}
-      muted
+      optimizePoster={false}
+      width={1}
+      height={1}
+      play="visible"
       loop
-      playsInline
-      tabIndex={-1}
+      label={name}
+      className={className}
     />
   );
 }
@@ -665,7 +662,14 @@ function Avatar({
   video?: string;
 }) {
   if (video)
-    return <AvatarVideo className={className} src={video} poster={photo} />;
+    return (
+      <AvatarVideo
+        className={className}
+        name={name}
+        src={video}
+        poster={photo}
+      />
+    );
   // biome-ignore lint/performance/noImgElement: any origin, a small round avatar
   if (photo) return <img className={className} src={photo} alt="" />;
   return (
@@ -750,13 +754,13 @@ function TelegramGlass({
   tone,
   className,
   ...props
-}: React.ComponentProps<"div"> & { tone: GlassTone }) {
+}: React.ComponentProps<"div"> & { tone: Scheme }) {
   return (
     <Glass
       shape="surface"
-      tone={tone}
+      scheme={tone}
       className={cn(
-        "bg-(--tg-glass) text-(--tg-text) [--glass-blur:1.35cqw] dark:bg-(--tg-glass)",
+        "bg-(--tg-glass) text-(--tg-text) [--glass-blur:1.35cqw] scheme-dark:bg-(--tg-glass)",
         className,
       )}
       {...props}
@@ -816,7 +820,8 @@ export function TelegramChat({
       )
     );
   };
-  const glassTone = theme === "page" ? "auto" : theme;
+  // The glass's scheme: the chat's own theme whatever the page is, or the page's.
+  const glassTone: Scheme = theme === "page" ? "auto" : theme;
   const manager = script.managedBy ? profileOf(script.managedBy) : undefined;
   const header = profileOf(script.chatName);
   const chatTag =
@@ -960,13 +965,12 @@ export function TelegramChat({
     // in the client; a group member signs in their peer colour.
     const handle = isGroup ? undefined : profileOf(who)?.handle;
     return (
-      <div
+      <ChatSender
+        look="none"
         className="tgchat-from"
-        style={{
-          color: isGroup
-            ? SENDER_COLORS[senderIndex(nameOf(who))]
-            : "var(--tg-link)",
-        }}
+        color={
+          isGroup ? SENDER_COLORS[senderIndex(nameOf(who))] : "var(--tg-link)"
+        }
       >
         {handle ? (
           <a
@@ -980,26 +984,21 @@ export function TelegramChat({
         ) : (
           nameOf(who)
         )}
-      </div>
+      </ChatSender>
     );
   };
 
   // Group chats put a mini avatar beside every left bubble, like Telegram does: the
   // profile's picture when the sender has one, the message's own, else the initial.
-  const leftRow = (bubble: React.ReactNode, who: Who, avatarUrl?: string) =>
-    labeled ? (
-      <div className="tgchat-rowline">
-        <Avatar
-          className="tgchat-mini"
-          name={nameOf(who)}
-          photo={avatarUrl ?? profileOf(who)?.avatar}
-          video={frozen ? undefined : profileOf(who)?.avatarVideo}
-        />
-        {bubble}
-      </div>
-    ) : (
-      bubble
-    );
+  // Telegram's own face in the chat's face slot: a profile video, a gradient initial.
+  const leftFace = (who: Who, avatarUrl?: string, video?: string) => (
+    <Avatar
+      className="tgchat-mini"
+      name={nameOf(who)}
+      photo={avatarUrl ?? profileOf(who)?.avatar}
+      video={frozen ? undefined : (video ?? profileOf(who)?.avatarVideo)}
+    />
+  );
 
   const renderBlock = (
     b: ChatBlock,
@@ -1122,8 +1121,8 @@ export function TelegramChat({
     const body = (
       <>
         {m.photo && (
-          // biome-ignore lint/performance/noImgElement: any origin, sized by its own aspect
-          <img
+          <ChatPhoto
+            look="none"
             className="tgchat-photo"
             src={m.photo.src}
             width={m.photo.width}
@@ -1132,18 +1131,18 @@ export function TelegramChat({
           />
         )}
         {m.reply && (
-          <div
+          <ChatReply
+            look="none"
             className="tgchat-reply"
+            who={nameOf(m.reply.from)}
+            text={m.reply.text}
             style={
               {
                 "--tg-reply-color":
                   SENDER_COLORS[senderIndex(nameOf(m.reply.from))],
               } as React.CSSProperties
             }
-          >
-            <strong>{nameOf(m.reply.from)}</strong>
-            <span>{m.reply.text}</span>
-          </div>
+          />
         )}
         {m.via && <div className="tgchat-via">{m.via}</div>}
         {m.text && emphasized(m.text, m.emphasis, lit)}
@@ -1187,49 +1186,50 @@ export function TelegramChat({
     // A new day opens with its date, centred over the wallpaper; the bubble's corner
     // then only says the hour.
     const day = m.day && (
-      <div className="tgchat-day">
-        <span>{m.day}</span>
-      </div>
+      <ChatDay look="none" className="tgchat-day">
+        {m.day}
+      </ChatDay>
     );
     if (m.from === "me")
       return (
         <React.Fragment key={i}>
           {day}
-          <div
-            ref={hold}
-            data-focused={hero}
-            data-continued={continued || undefined}
-            data-tail={!hasFollowing || undefined}
-            className={`tgchat-bubble user${m.preview || linkIn(m.text) ? " link" : ""}`}
+          <Message
+            look="none"
+            side="self"
+            cardRef={hold}
+            continued={!!continued}
+            tail={!hasFollowing}
+            cardProps={{ "data-focused": hero }}
+            cardClassName={`tgchat-bubble user${m.preview || linkIn(m.text) ? " link" : ""}`}
           >
             {body}
-          </div>
+          </Message>
         </React.Fragment>
       );
     return (
       <React.Fragment key={i}>
         {day}
-        {leftRow(
-          <div
-            ref={hold}
-            data-focused={hero}
-            data-continued={continued || undefined}
-            data-tail={!hasFollowing || undefined}
-            className={`tgchat-bubble bot${streaming ? " tgchat-summary" : ""}${!streaming && (m.preview || linkIn(m.text)) ? " link" : ""}`}
+        <Message
+          look="none"
+          cardRef={hold}
+          continued={!!continued}
+          tail={!hasFollowing}
+          face={labeled ? leftFace(m.from, m.avatar) : undefined}
+          rowClassName="tgchat-rowline"
+          cardClassName={`tgchat-bubble bot${streaming ? " tgchat-summary" : ""}${!streaming && (m.preview || linkIn(m.text)) ? " link" : ""}`}
+          cardProps={{
+            "data-focused": hero,
             // The sender's peer colour: Telegram tints a quote in an incoming message
             // with it, the same palette that colours a group's sender labels.
-            style={
-              {
-                "--tg-quote": SENDER_COLORS[senderIndex(nameOf(m.from))],
-              } as React.CSSProperties
-            }
-          >
-            {senderLabel(m.from)}
-            {body}
-          </div>,
-          m.from,
-          m.avatar,
-        )}
+            style: {
+              "--tg-quote": SENDER_COLORS[senderIndex(nameOf(m.from))],
+            } as React.CSSProperties,
+          }}
+        >
+          {senderLabel(m.from)}
+          {body}
+        </Message>
       </React.Fragment>
     );
   };
@@ -1304,6 +1304,7 @@ export function TelegramChat({
               <TelegramGlass tone={glassTone} className="tgchat-round">
                 <svg
                   aria-hidden="true"
+                  className="ag-icon"
                   viewBox="0 0 16 16"
                   fill="none"
                   stroke="currentColor"
@@ -1365,7 +1366,7 @@ export function TelegramChat({
             </TelegramGlass>
           )}
           <div className="tgchat-messages" ref={thread}>
-            <div className="tgchat-thread">
+            <ChatThread look="none" className="tgchat-thread">
               {/* Messages are positional by design: their order IS their identity,
                   and the array never reorders. */}
               {script.messages.map((m, i) => renderMessage(m, i, at, bubbles))}
@@ -1377,11 +1378,11 @@ export function TelegramChat({
                     adds nothing to the thread's scroll range. */}
               {focused.length > 0 && (
                 <div className="tgchat-ghost" aria-hidden ref={ghostRoot}>
-                  <div className="tgchat-thread">
+                  <ChatThread look="none" className="tgchat-thread">
                     {script.messages.map((m, i) =>
                       renderMessage(m, i, Number.POSITIVE_INFINITY, ghosts),
                     )}
-                  </div>
+                  </ChatThread>
                 </div>
               )}
               {/* A late message is a left bubble like any other: in a group it
@@ -1392,40 +1393,34 @@ export function TelegramChat({
                 .filter((late) => aliveSec >= late.at)
                 .map((late) => {
                   const who = script.afterlife?.from ?? script.chatName;
-                  const bubble = (
-                    <div className="tgchat-bubble bot">
+                  const withFace =
+                    labeled ||
+                    !!script.afterlife?.avatar ||
+                    !!profileOf(who)?.avatar;
+                  return (
+                    // A late bubble draws no tail: it lands on its own, after the story.
+                    <Message
+                      key={late.at}
+                      look="none"
+                      tail={false}
+                      face={
+                        withFace
+                          ? leftFace(
+                              who,
+                              script.afterlife?.avatar,
+                              script.afterlife?.avatarVideo,
+                            )
+                          : undefined
+                      }
+                      rowClassName="tgchat-rowline"
+                      cardClassName="tgchat-bubble bot"
+                    >
                       {senderLabel(who)}
                       {linkify(late.text)}
-                    </div>
-                  );
-                  if (
-                    !labeled &&
-                    !script.afterlife?.avatar &&
-                    !profileOf(who)?.avatar
-                  )
-                    return (
-                      <React.Fragment key={late.at}>{bubble}</React.Fragment>
-                    );
-                  return (
-                    <div className="tgchat-rowline" key={late.at}>
-                      <Avatar
-                        className="tgchat-mini"
-                        name={nameOf(who)}
-                        photo={
-                          script.afterlife?.avatar ?? profileOf(who)?.avatar
-                        }
-                        video={
-                          frozen
-                            ? undefined
-                            : (script.afterlife?.avatarVideo ??
-                              profileOf(who)?.avatarVideo)
-                        }
-                      />
-                      {bubble}
-                    </div>
+                    </Message>
                   );
                 })}
-            </div>
+            </ChatThread>
           </div>
           {composer && composing?.reply && composerChars > 0 && (
             <TelegramGlass
@@ -1435,6 +1430,7 @@ export function TelegramChat({
             >
               <svg
                 aria-hidden="true"
+                className="ag-icon"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
@@ -1455,8 +1451,8 @@ export function TelegramChat({
             <Glass
               as="button"
               shape="circle"
-              tone={glassTone}
-              className="absolute right-(--tg-control-inset) bottom-[calc(var(--tg-composer-h)+var(--tg-control-bottom)+2cqw)] z-3 size-[10cqw] bg-(--tg-glass) text-(--tg-text) [--glass-blur:1.35cqw] dark:bg-(--tg-glass)"
+              scheme={glassTone}
+              className="absolute right-(--tg-control-inset) bottom-[calc(var(--tg-composer-h)+var(--tg-control-bottom)+2cqw)] z-3 size-[10cqw] bg-(--tg-glass) text-(--tg-text) [--glass-blur:1.35cqw] scheme-dark:bg-(--tg-glass)"
               aria-label="Jump to latest message"
               onClick={scrollToLatest}
             >

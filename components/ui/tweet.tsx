@@ -1,6 +1,7 @@
 import { Heart, MessageCircle } from "lucide-react";
 import type * as React from "react";
 import { CardLink } from "@/components/ui/card-link";
+import { Video } from "@/components/ui/video";
 import { WebPreview } from "@/components/ui/web-preview";
 import type {
   TweetAuthor,
@@ -105,7 +106,7 @@ function Media({ media, url }: { media: TweetMedia[]; url: string }) {
     <div
       data-slot="tweet-media"
       className={cn(
-        "grid aspect-(--ag-tweet-aspect) gap-0.5 overflow-hidden rounded-2xl border border-border",
+        "grid aspect-(--ag-tweet-aspect) gap-0.5 clip-rounded rounded-2xl border border-border",
         GRID[media.length],
       )}
       style={{ "--ag-tweet-aspect": String(aspect) } as React.CSSProperties}
@@ -124,19 +125,20 @@ function Media({ media, url }: { media: TweetMedia[]; url: string }) {
             className="size-full min-h-0 object-cover"
           />
         ) : (
-          <video
+          // A video waits for the person and keeps the browser's own bar, as an
+          // embed should; a gif plays on sight and loops, as X plays one.
+          <Video
             // biome-ignore lint/suspicious/noArrayIndexKey: media are positional
             key={i}
             src={m.src}
             poster={m.poster}
-            width={m.width}
-            height={m.height}
-            controls
-            playsInline
-            preload="none"
+            optimizePoster={false}
+            play={m.kind === "gif" ? "visible" : "manual"}
             loop={m.kind === "gif"}
-            muted={m.kind === "gif"}
-            className="size-full min-h-0 bg-black object-contain"
+            preload="none"
+            label={m.kind === "gif" ? "gif" : "video"}
+            className="min-h-0 bg-black"
+            videoClassName="object-contain"
           />
         ),
       )}

@@ -34,10 +34,10 @@ export interface ThermalKey {
   depth?: ThermalDepth;
 }
 
-/** The moment a frame draws: the reading, the view's depth, and each fan's turns
- *  so far (its position: everything it has turned, never its speed now times the
- *  clock, which jumps whenever the speed does). */
-export interface ThermalMoment extends ThermalReading {
+/** What a frame draws at an instant: the reading, the view's depth, and each fan's
+ *  turns so far (its position: everything it has turned, never its speed now times
+ *  the clock, which jumps whenever the speed does). */
+export interface ThermalState extends ThermalReading {
   depth: ThermalDepth;
   turns: number[];
 }
@@ -131,10 +131,7 @@ const drift = (ms: number, seed: number, amplitude: number) =>
     0.4 * Math.sin(ms / 1900 + seed * 4.1));
 
 /** The track at `ms`, or null before it has a reading. Keys in time order. */
-export function thermalAt(
-  keys: ThermalKey[],
-  ms: number,
-): ThermalMoment | null {
+export function thermalAt(keys: ThermalKey[], ms: number): ThermalState | null {
   for (let i = 1; i < keys.length; i++)
     if ((keys[i] as ThermalKey).at < (keys[i - 1] as ThermalKey).at)
       throw new Error("thermalAt: keys must be in time order");

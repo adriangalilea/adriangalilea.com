@@ -73,7 +73,7 @@ export function Copy({
       }
       data-copied={copied ? "" : undefined}
       className={cn(
-        "inline-flex h-8 shrink-0 cursor-pointer select-none items-center justify-center gap-1.5 rounded-md px-2 font-mono text-xs leading-none text-muted-foreground transition-colors hover:bg-foreground/6 hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:pointer-events-none disabled:opacity-40 data-copied:text-foreground",
+        "inline-flex h-8 shrink-0 cursor-pointer select-none items-center justify-center gap-1.5 rounded-md px-2 font-mono text-xs leading-none text-muted-foreground transition-colors hover:bg-foreground/6 hover:text-foreground disabled:pointer-events-none disabled:opacity-40 data-copied:text-foreground",
         !label && "w-8 px-0",
         className,
       )}

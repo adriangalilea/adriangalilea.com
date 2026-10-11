@@ -26,6 +26,8 @@ import { Dialog } from "@base-ui/react/dialog";
 import { useRender } from "@base-ui/react/use-render";
 import * as React from "react";
 import { Copy } from "@/components/ui/copy";
+import { EdgeArrow } from "@/components/ui/edge-arrows";
+import { ownedHere, registerKeys } from "@/components/ui/key-router";
 import {
   INSET_Y,
   measureBand,
@@ -34,6 +36,8 @@ import {
   rectOf,
   sameBand,
 } from "@/components/ui/lightbox-viewport";
+import { ThumbStrip, type ThumbStripItem } from "@/components/ui/thumb-strip";
+import { Video } from "@/components/ui/video";
 import {
   type Action,
   type ActionId,
@@ -221,8 +225,6 @@ const StateContext = React.createContext<State | null>(null);
 
 /** Reserved for the bar and the caption; consumer chrome is declared via data-obstructs. */
 const INSET_X = 16;
-/** Thumbnails ride the bar, between the counter and the buttons: 32px tall. */
-const THUMB_H = 32;
 /** Slides each side of the one on screen that hold decoded media. Two, not one: a
  *  throw crosses its neighbour and is already looking at the next one by the time
  *  anything commits. */
@@ -240,11 +242,8 @@ const ACTIVATABLE = "a[href], button";
 /** The bottom strip of a `<video>` where the native controls live (css px): Chrome,
  *  Safari and iOS inline controls all sit in the bottom 40 to 50 px. */
 const CONTROLS_H = 56;
-/** Targets that keep their own keys (Escape excepted). */
-const TYPING = "input, textarea, select, [contenteditable]";
-/** Targets Space and Enter activate. */
-const ACTIVATES =
-  "button, a[href], select, summary, [role=button], [role=link]";
+/** The lightbox's own parts (its keys sheet, a slide), whose keys it answers. */
+const OWN_ROLES = ["dialog", "group"];
 /** What Tab can land on; hidden chrome and inert siblings are filtered live. */
 const TABBABLE =
   "a[href], button, input, select, textarea, summary, iframe, [tabindex]:not([tabindex='-1'])";
@@ -631,6 +630,29 @@ function Stage(props: StageProps) {
   // The strip shows when there is somewhere to go; `t` folds it.
   const [strip, setStrip] = React.useState(count > 1);
   const stripOn = strip && count > 1;
+  // Every slide as a thumbnail: the page's own rendition, a video's poster; a frame
+  // has neither and shows its title.
+  const thumbs = React.useMemo<ThumbStripItem[]>(
+    () =>
+      ids.map((tid) => {
+        const m = entryOf(tid).media;
+        const box = boxOf(m);
+        return {
+          id: tid,
+          src:
+            m.kind === "image" || m.kind === "gif"
+              ? m.source.src
+              : m.kind === "video"
+                ? m.poster.src
+                : undefined,
+          width: box.w,
+          height: box.h,
+          label: altOf(m),
+          video: m.kind === "video",
+        };
+      }),
+    [ids, entryOf],
+  );
   const [band, setBand] = React.useState<Band>(() => measureBand(rail));
   /** The engine's own `S.ph` decides everything; this React copy exists to publish it
    *  as `data-phase`, a declared TEST HOOK. The browser rig waits on
@@ -2356,14 +2378,10 @@ function Stage(props: StageProps) {
       const key = keyOf(e);
       const { layerSet, unavailable } = L.current;
       const target = e.target instanceof Element ? e.target : null;
-      const swallow = () => {
-        e.preventDefault();
-        e.stopPropagation();
-      };
       if (key === "Escape") {
         const rung = escRung(layerSet);
         if (rung) {
-          swallow();
+          e.preventDefault();
           dispatch(rung);
         }
         return;
@@ -2384,12 +2402,11 @@ function Stage(props: StageProps) {
         (list[next] as HTMLElement).focus();
         return;
       }
+      // The rail is the consumer's: its keys are its own. A field, a control's Space
+      // and Enter, a popup's arrows never reach here at all: `ownedHere` is asked
+      // before a press is offered to the lightbox.
       if (target?.closest(".ag-lb-rail")) return;
-      if (target?.closest(TYPING)) return;
-      e.stopPropagation();
       if (key === null) return;
-      if ((key === " " || key === "Enter") && target?.closest(ACTIVATES))
-        return;
       if (layerSet.has("sheet")) {
         // The sheet owns the keyboard: registry keys are inert behind it, and the
         // keys that scroll or tab through the sheet itself keep their default.
@@ -2493,8 +2510,29 @@ function Stage(props: StageProps) {
     rootEl.addEventListener("pointerup", onUp);
     rootEl.addEventListener("pointercancel", onCancel);
     rootEl.addEventListener("wheel", onWheel, { passive: false });
-    document.addEventListener("keydown", onKey, { capture: true });
-    document.addEventListener("keyup", onKeyUp, { capture: true });
+    // ITS KEYS, in the bubble phase on its own element: a press a control inside it
+    // owns (a field in the rail, a button's Space) is that control's (key-router's
+    // `ownedHere`), and a consumer's popup over a slide, portalled outside it, gets
+    // its keys without the lightbox ever seeing them. On the element and not the
+    // document, because Base UI's dialog popup stops the arrows' propagation on its way
+    // up. And on the page's key router as a MODAL: while it is open nothing behind it
+    // hears a key (a press from outside it, focus having strayed, is still its).
+    const onOwnKey = (e: KeyboardEvent) => {
+      if (ownedHere(e, rootEl, OWN_ROLES)) return;
+      onKey(e);
+    };
+    rootEl.addEventListener("keydown", onOwnKey);
+    const offKeys = registerKeys({
+      root: () => rootEl,
+      modal: true,
+      own: OWN_ROLES,
+      onKey: (e) => {
+        if (rootEl.contains(e.target as Node)) return false;
+        onKey(e);
+        return e.defaultPrevented;
+      },
+    });
+    document.addEventListener("keyup", onKeyUp);
     window.addEventListener("blur", releaseAllPan);
     document.addEventListener("fullscreenchange", onFullscreen);
     const vv = window.visualViewport;
@@ -2591,8 +2629,9 @@ function Stage(props: StageProps) {
       rootEl.removeEventListener("pointerup", onUp);
       rootEl.removeEventListener("pointercancel", onCancel);
       rootEl.removeEventListener("wheel", onWheel);
-      document.removeEventListener("keydown", onKey, { capture: true });
-      document.removeEventListener("keyup", onKeyUp, { capture: true });
+      rootEl.removeEventListener("keydown", onOwnKey);
+      offKeys();
+      document.removeEventListener("keyup", onKeyUp);
       window.removeEventListener("blur", releaseAllPan);
       if (panRaf) cancelAnimationFrame(panRaf);
       watcher?.destroy();
@@ -2757,11 +2796,10 @@ function Stage(props: StageProps) {
           )}
           {status && <span className="ag-lb-status">{status}</span>}
           {stripOn ? (
-            <Strip
-              ids={ids}
+            <ThumbStrip
+              items={thumbs}
               index={shown}
-              entryOf={entryOf}
-              jump={(to) => engine.current?.jump(to)}
+              onJump={(to) => engine.current?.jump(to)}
             />
           ) : (
             <span className="ag-lb-spacer" />
@@ -2783,30 +2821,22 @@ function Stage(props: StageProps) {
             </svg>
           </Button>
         </div>
-        <Button
-          id="prev"
-          dispatch={dispatch}
-          unavailable={unavailable}
-          absent={absent}
-          className="ag-lb-nav"
-          data-side="left"
-        >
-          <svg viewBox="0 0 16 16" aria-hidden="true">
-            <path d="M10 3L5 8l5 5" />
-          </svg>
-        </Button>
-        <Button
-          id="next"
-          dispatch={dispatch}
-          unavailable={unavailable}
-          absent={absent}
-          className="ag-lb-nav"
-          data-side="right"
-        >
-          <svg viewBox="0 0 16 16" aria-hidden="true">
-            <path d="M6 3l5 5-5 5" />
-          </svg>
-        </Button>
+        {!absent.has("prev") && (
+          <EdgeArrow
+            side="left"
+            enabled={!unavailable.has("prev")}
+            onClick={() => dispatch("prev")}
+            {...actionAria("prev")}
+          />
+        )}
+        {!absent.has("next") && (
+          <EdgeArrow
+            side="right"
+            enabled={!unavailable.has("next")}
+            onClick={() => dispatch("next")}
+            {...actionAria("next")}
+          />
+        )}
         <div className="ag-lb-caption">{caption}</div>
       </div>
       <div className="ag-lb-live" aria-live="polite">
@@ -2932,84 +2962,6 @@ function Debug({
   );
 }
 
-/** Every slide as a thumbnail, the one on stage lit and kept in view (the cursor
- *  law: the strip scrolls so the active thumb is centered). A click cuts to the
- *  slide. The page's own rendition is the thumb; a frame has none and shows its
- *  title. */
-function Strip({
-  ids,
-  index,
-  entryOf,
-  jump,
-}: {
-  ids: string[];
-  index: number;
-  entryOf: (id: string) => Entry;
-  jump: (to: number) => void;
-}) {
-  const nav = React.useRef<HTMLElement>(null);
-  const active = React.useRef<HTMLButtonElement>(null);
-  // The active thumb is kept centered INSTANTLY. A smooth scroll is a second
-  // animation racing the slide, and a reader holding an arrow key outruns it: the
-  // strip spends the whole run behind, pointing at a slide that already left.
-  // biome-ignore lint/correctness/useExhaustiveDependencies: the active thumb moves with index
-  React.useLayoutEffect(() => {
-    active.current?.scrollIntoView({
-      block: "nearest",
-      inline: "center",
-      behavior: "instant",
-    });
-  }, [index]);
-  // Edge fades only when the row is longer than the strip: a signal, never chrome.
-  React.useLayoutEffect(() => {
-    const el = nav.current;
-    assert(el, "strip rendered nothing");
-    const measure = () =>
-      el.toggleAttribute("data-overflow", el.scrollWidth > el.clientWidth + 1);
-    const ro = new ResizeObserver(measure);
-    ro.observe(el);
-    measure();
-    return () => ro.disconnect();
-  }, []);
-  return (
-    <nav ref={nav} className="ag-lb-strip" aria-label="thumbnails">
-      <div className="ag-lb-strip-row">
-        {ids.map((id, i) => {
-          const m = entryOf(id).media;
-          const thumb =
-            m.kind === "image" || m.kind === "gif"
-              ? m.source
-              : m.kind === "video"
-                ? m.poster
-                : null;
-          const box = boxOf(m);
-          const w = Math.round((THUMB_H * box.w) / box.h);
-          return (
-            <button
-              key={id}
-              ref={i === index ? active : undefined}
-              type="button"
-              className="ag-lb-thumb"
-              data-kind={m.kind}
-              aria-current={i === index ? "true" : undefined}
-              aria-label={`${i + 1} of ${ids.length} · ${altOf(m)}`}
-              style={{ width: Math.min(w, THUMB_H * 2), height: THUMB_H }}
-              onClick={() => jump(i)}
-            >
-              {thumb ? (
-                // biome-ignore lint/performance/noImgElement: the page's own rendition
-                <img src={thumb.src} alt="" draggable={false} loading="lazy" />
-              ) : (
-                <span>{altOf(m)}</span>
-              )}
-            </button>
-          );
-        })}
-      </div>
-    </nav>
-  );
-}
-
 /** The consumer's rail. Focus inside it goes back to the stage before the aside
  *  is detached: an element removed under focus fires no focusout, and a focus left
  *  on body is a dead keyboard. */
@@ -3059,6 +3011,16 @@ function factsLine(f: Facts): string {
   return parts.join(" · ");
 }
 
+/** A control's name, keys and tooltip, from the action table. */
+function actionAria(id: ActionId) {
+  const a: Action = action(id);
+  return {
+    "aria-label": a.label,
+    "aria-keyshortcuts": keyshortcuts(a),
+    title: `${a.label} · ${a.keys.map(keycap).join(" ")}`,
+  };
+}
+
 function Button({
   id,
   dispatch,
@@ -3079,15 +3041,12 @@ function Button({
   children: React.ReactNode;
 } & Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, "id" | "children">) {
   if (absent?.has(id)) return null;
-  const a: Action = action(id);
   return (
     <button
       type="button"
       className={`ag-lb-btn${className ? ` ${className}` : ""}`}
-      aria-label={a.label}
-      aria-keyshortcuts={keyshortcuts(a)}
+      {...actionAria(id)}
       aria-pressed={pressed}
-      title={`${a.label} · ${a.keys.map(keycap).join(" ")}`}
       aria-disabled={unavailable.has(id) || undefined}
       onClick={() => dispatch(id)}
       {...rest}
@@ -3242,45 +3201,30 @@ function Still({
   );
 }
 
-/** The one <video>: mounted on the active slide only, released once, on unmount.
- *  `src` is owned by the effect so setup and cleanup are symmetric (StrictMode runs
- *  the pair once on mount). No `poster`: the Still under it is the poster, and a
- *  <video> with no decoded frame is transparent until the first frame arrives. The
- *  native controls are the seek bar; the engine leaves the pointers in their strip
- *  to them (CONTROLS_H) and keeps the keys (space, k, j, l, m). */
-function Video({
+/** The slide's video (ui/video): mounted on the active slide only, released when it
+ *  leaves. No `poster`: the Still under it is the poster, and a video with no
+ *  decoded frame is transparent until the first frame arrives. The browser's bar
+ *  is the seek bar; the engine leaves the pointers in its strip to it (CONTROLS_H)
+ *  and keeps the keys (space, k, j, l, m) through `video`. */
+function SlideVideo({
   m,
   video,
 }: {
   m: VideoMedia;
   video: React.RefObject<HTMLVideoElement | null>;
 }) {
-  const el = React.useRef<HTMLVideoElement>(null);
-  React.useEffect(() => {
-    const v = el.current;
-    assert(v, "video rendered nothing");
-    v.src = m.src;
-    video.current = v;
-    return () => {
-      v.pause();
-      v.removeAttribute("src");
-      v.load();
-      video.current = null;
-    };
-  }, [video, m.src]);
   return (
-    <video
-      ref={el}
-      className="ag-lb-video"
-      aria-label={m.title}
-      preload="metadata"
+    <Video
+      ref={video}
+      src={m.src}
+      label={m.title}
       controls
-      playsInline
+      preload="metadata"
       muted={m.muted}
       loop={m.loop}
-      onLoadedMetadata={(e) => {
-        if (m.start) e.currentTarget.currentTime = m.start;
-      }}
+      start={m.start === undefined ? undefined : m.start * 1000}
+      className="ag-lb-video"
+      videoClassName="object-contain"
     />
   );
 }
@@ -3316,7 +3260,7 @@ function Content({
           fitted={fitted}
           upgrades
         />
-        {active && <Video m={m} video={video} />}
+        {active && <SlideVideo m={m} video={video} />}
       </>
     );
   return active ? (

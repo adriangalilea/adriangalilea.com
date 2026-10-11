@@ -1,4 +1,5 @@
 import { Avatar } from "@/components/ui/avatar";
+import { AvatarPortrait } from "@/components/ui/avatar-portrait";
 import {
   ATTRIB_GAP,
   assert,
@@ -152,27 +153,31 @@ export function Quote({
   // dark ground reads smaller still, so one step up is what keeps the quote legible in
   // an article. The mark, sized in em, scales with it; the attribution is metadata and
   // keeps the metadata size.
+  // EVERY SIZE IN EM of the quote's own type, which is one step up from the page's
+  // (1.125em): the same quote in an article and in a page set small (a file's face) is
+  // one quote made small, never a small quote in a large frame. At a 16 px page it is
+  // the 18 px quote with 16 px padding it was drawn as.
   if (variant === "prose")
     return (
       <figure
         data-slot="quote"
         data-variant="prose"
         className={cn(
-          "relative m-0 py-4 pr-5 pl-[0.9rem] text-lg",
+          "relative m-0 py-[0.889em] pr-[1.111em] pl-[0.8em] text-[1.125em]",
           STEP,
           className,
         )}
         style={{ "--ag-quote-ink": ink } as React.CSSProperties}
       >
-        <Mark className="left-[0.9rem] top-[calc(1rem+0.2em)] h-[0.95em] opacity-30" />
+        <Mark className="left-[0.8em] top-[1.089em] h-[0.95em] opacity-30" />
         <blockquote
           data-slot="quote-body"
-          className={cn(WORDS, "ms-[1.35rem] text-foreground/92")}
+          className={cn(WORDS, "ms-[1.2em] text-foreground/92")}
         >
           {body}
         </blockquote>
         <By
-          className={cn(BY, "mt-3 gap-2 text-xs")}
+          className={cn(BY, "mt-[0.667em] gap-[0.444em] text-[0.667em]")}
           author={author}
           date={date}
           source={source}
@@ -423,19 +428,29 @@ function By({
   if (!author && !date && !source) return null;
   return (
     <figcaption data-slot="quote-by" className={className}>
-      {face && author?.avatar && (
+      {face &&
+        author?.avatar &&
         // The same face as everywhere else on a page, from the same two facts the card
-        // reads: positioned on the subject, ringed in the picture's colour — and a
+        // reads: positioned on the subject, ringed in the picture's colour; and a
         // lightbox trigger when the portrait is worth a look.
-        <Avatar
-          src={author.avatar}
-          alt={author.name}
-          size={face}
-          focus={focus}
-          tone={tone}
-          full={author.full}
-        />
-      )}
+        (author.full ? (
+          <AvatarPortrait
+            src={author.avatar}
+            alt={author.name}
+            size={face}
+            focus={focus}
+            tone={tone}
+            full={author.full}
+          />
+        ) : (
+          <Avatar
+            src={author.avatar}
+            alt={author.name}
+            size={face}
+            focus={focus}
+            tone={tone}
+          />
+        ))}
       {author && (
         <cite data-slot="quote-name" className={cn(NAME, nameClassName)}>
           {author.href ? (

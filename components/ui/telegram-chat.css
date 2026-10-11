@@ -192,10 +192,6 @@
     padding: 1.6cqw 8cqw;
     border-radius: 999px;
   }
-  video.tgchat-avatar,
-  video.tgchat-mini {
-    display: block;
-  }
   .tgchat-avatar {
     display: grid;
     width: 10cqw;

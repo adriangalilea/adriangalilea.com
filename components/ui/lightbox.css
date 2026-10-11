@@ -158,13 +158,9 @@
     will-change: transform;
   }
 
-  /* The trigger after a close: focus returns to it. The ring follows the trigger's
-   own corner (give the trigger the radius, it is the source rect) and stays quiet
-   when the close came from a pointer or a finger. */
-  [data-lightbox]:focus-visible {
-    outline: 2px solid var(--ring);
-    outline-offset: 2px;
-  }
+  /* The trigger after a close: focus returns to it, ringed by @ag/tokens' ring,
+   which follows the trigger's own corner (give the trigger the radius, it is the
+   source rect), and stays quiet when the close came from a pointer or a finger. */
   [data-lightbox][data-focus-quiet]:focus-visible {
     outline: none;
   }
@@ -265,10 +261,6 @@
   .ag-lb-btn:focus-visible {
     opacity: var(--alpha-title);
   }
-  .ag-lb-btn:focus-visible {
-    outline: 1px solid currentColor;
-    outline-offset: 2px;
-  }
   /* Unavailable stays focusable (a disabled control drops focus to body and takes
    the keyboard with it); it dims and its dispatch is a no-op. */
   .ag-lb-btn[aria-disabled="true"] {
@@ -287,20 +279,9 @@
     stroke-linecap: round;
     stroke-linejoin: round;
   }
-  .ag-lb-nav {
-    position: absolute;
-    top: 50%;
-    translate: 0 -50%;
-  }
-  .ag-lb-nav[data-side="left"] {
-    left: 8px;
-  }
-  .ag-lb-nav[data-side="right"] {
-    right: 8px;
-  }
   /* Zoomed, the image is the whole stage: the arrows would sit on it unreadable, and
    a drag there pans. Shift+arrow still steps; the strip still jumps. */
-  .ag-lb[data-zoomed] .ag-lb-nav {
+  .ag-lb[data-zoomed] [data-slot="edge-arrow"] {
     visibility: hidden;
   }
   /* Present only when it explains: the figure's caption, hidden while zoomed or flying. */
@@ -439,111 +420,19 @@
     font: inherit;
   }
 
-  /* The thumbnail strip rides the bar, between the counter and the buttons: one row
-   that takes the room left, scrolls sideways with the active thumb kept centered.
-   Monochrome: the alpha ladder alone tells the active one. Gone while zoomed or
-   under a hand, like the caption. */
-  .ag-lb-strip {
-    position: relative;
+  /* The thumbnail strip rides the bar, between the counter and the buttons, taking
+   the room left. The chrome passes the pointer through; the strip takes it back.
+   Not utilities on the strip: the zoomed rule below must be able to undo them. */
+  .ag-lb-bar > [data-slot="thumb-strip"] {
     flex: 1;
-    min-width: 0;
-    height: 48px;
-    overflow-x: auto;
-    overflow-y: hidden;
-    scrollbar-width: none;
     pointer-events: auto;
     transition: opacity var(--dur-2) var(--ease-out);
-  }
-  .ag-lb-strip::-webkit-scrollbar {
-    display: none;
-  }
-  /* Flush with the bar's counter; when the row outgrows the strip it scrolls and the
-   edges fade to say so. */
-  .ag-lb-strip[data-overflow] {
-    mask-image: linear-gradient(
-      to right,
-      transparent,
-      black 24px,
-      black calc(100% - 24px),
-      transparent
-    );
-  }
-  .ag-lb-strip-row {
-    display: flex;
-    gap: 6px;
-    width: max-content;
-    padding: 8px 16px;
-  }
-  .ag-lb-thumb {
-    position: relative;
-    flex: none;
-    padding: 0;
-    border: 0;
-    border-radius: 4px;
-    overflow: hidden;
-    background: color-mix(
-      in oklch,
-      currentColor calc(var(--alpha-wash) * 100%),
-      transparent
-    );
-    color: inherit;
-    cursor: pointer;
-    opacity: var(--alpha-meta);
-    transition: opacity var(--dur-1) var(--ease-out);
-  }
-  .ag-lb-thumb:hover,
-  .ag-lb-thumb:focus-visible {
-    opacity: var(--alpha-body);
-  }
-  .ag-lb-thumb[aria-current="true"] {
-    opacity: 1;
-  }
-  .ag-lb-thumb:focus-visible {
-    outline: 1px solid currentColor;
-    outline-offset: 2px;
-  }
-  .ag-lb-thumb > img {
-    display: block;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-  .ag-lb-thumb > span {
-    display: block;
-    width: 100%;
-    height: 100%;
-    padding: 0 6px;
-    font-family: var(--font-mono);
-    font-size: 0.625rem;
-    text-transform: lowercase;
-    line-height: 32px;
-    text-align: center;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  /* A video thumb says so: one small mark, no second hue. This is ink over MEDIA, not
-   over a surface, so it cannot follow the theme: the photograph under it is the same
-   photograph in light and dark, and a mark that flipped to dark ink would vanish on
-   half the thumbnails. What it can do is stay off the ceiling. Pure #fff is the
-   brightest pixel a screen has, and nothing in this repo needs to be that; the
-   drop-shadow is what makes it legible on a pale still, not the last 3%. */
-  .ag-lb-thumb[data-kind="video"]::after {
-    content: "";
-    position: absolute;
-    right: 3px;
-    bottom: 3px;
-    width: 7px;
-    height: 8px;
-    background: oklch(0.97 0 0);
-    clip-path: polygon(0 0, 100% 50%, 0 100%);
-    filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.6));
   }
   /* Zoomed, the strip gets out of the way. It does NOT hide for a gesture: a swipe
    between slides IS navigation, and the index you are navigating by is the last
    thing that should blink out. A dismiss drag takes it with the rest of the chrome
    through --lb-p, which is where fading belongs. */
-  .ag-lb[data-zoomed] .ag-lb-strip {
+  .ag-lb[data-zoomed] .ag-lb-bar > [data-slot="thumb-strip"] {
     opacity: 0;
     pointer-events: none;
   }
@@ -614,8 +503,7 @@
   @media (prefers-reduced-motion: reduce) {
     .ag-lb-up,
     .ag-lb-caption,
-    .ag-lb-strip,
-    .ag-lb-thumb {
+    .ag-lb-bar > [data-slot="thumb-strip"] {
       transition: none;
     }
   }

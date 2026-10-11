@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 // The one video element. Every `<video>` the registry draws is this one, so the three
 // questions every video answers are answered once:
@@ -25,8 +25,10 @@
 //   WHAT IT SHOWS WHEN IT STOPS: `rest`. "hold" stays on the frame it reached; "poster"
 //     goes back to the start and the poster.
 //
-// And what every video owes the page: one plays with sound at a time (a second one
-// starting with sound pauses the first), and it releases its media when it leaves
+// And what every video owes the page: one voice at a time (lib/audible: a video that
+// starts with sound claims the page's one floor, and whatever held it, another video,
+// a gallery cell, a reading, is silenced; `voice` names the voice a video speaks for,
+// so a reading and its own video claim as one), and it releases its media when it leaves
 // (pause, drop the source, reload empty), because a detached element that was
 // playing keeps its sound by the spec's own rule. The source is set by an effect, not
 // by the attribute, so a remount (React's dev double mount) puts back what the
@@ -39,102 +41,96 @@ import {
   useImperativeHandle,
   useRef,
   useState,
-} from "react"
-import { cn } from "@/lib/utils"
-import { Image, Img } from "@/components/ui/image"
-import { useMediaIntent } from "@/components/ui/image-intent"
+} from "react";
+import { Image, Img } from "@/components/ui/image";
+import { useMediaIntent } from "@/components/ui/image-intent";
+import { claim, type VoiceKey } from "@/lib/audible";
+import { msOf, seekSeconds } from "@/lib/timebase";
+import { cn } from "@/lib/utils";
 
-export type VideoPlay = "manual" | "hover" | "visible" | "once" | "follow"
+export type VideoPlay = "manual" | "hover" | "visible" | "once" | "follow";
 
 export type VideoProps = Omit<
   ComponentProps<"video">,
   "width" | "height" | "className" | "autoPlay" | "src" | "controls" | "poster"
 > & {
-  src: string
+  src: string;
   /** The accessible name. */
-  label: string
+  label: string;
   /** When it plays (see the header). Default "manual". */
-  play?: VideoPlay
+  play?: VideoPlay;
   /** "follow": whether the page wants it playing. */
-  playing?: boolean
+  playing?: boolean;
   /** "follow": the instant it must show, ms. */
-  at?: number
+  at?: number;
   /** What it shows when it stops: the frame it reached, or the poster. Default "hold". */
-  rest?: "hold" | "poster"
+  rest?: "hold" | "poster";
   /** Where it starts, ms. */
-  start?: number
+  start?: number;
   /** The browser's own bar. Default on for "manual". */
-  controls?: boolean
+  controls?: boolean;
   /** A small play/pause button over an automatic play: the person can always stop it. */
-  pauseButton?: boolean
+  pauseButton?: boolean;
   /** The frame's intrinsic size: the space is reserved at its aspect before it loads. */
-  width?: number
-  height?: number
-  poster?: string
+  width?: number;
+  height?: number;
+  poster?: string;
   /** A tiny blurred image of the poster: Image's placeholder when optimized, else
    *  painted under the poster in the first paint until its pixels arrive. */
-  blurDataURL?: string
+  blurDataURL?: string;
   /** Responsive poster width, using the same sizes syntax as Image. */
-  sizes?: string
+  sizes?: string;
   /** Pass the poster through Next's optimizer (default). False for any-origin posters
    *  the optimizer is not configured for (a CDN frame, an avatar). */
-  optimizePoster?: boolean
+  optimizePoster?: boolean;
   /** How an unoptimized poster arrives: "fade" in once decoded (the registry's
    *  picture arrival), or "instant", in the first paint (a still that must stand
    *  for the video from the server's HTML on, like a stage resting mid-clip). */
-  posterArrival?: "fade" | "instant"
-  className?: string
-  videoClassName?: string
+  posterArrival?: "fade" | "instant";
+  className?: string;
+  videoClassName?: string;
   /** The element whose hover and focus count as looking at this video (its card). */
-  interactionRef?: RefObject<HTMLElement | null>
-}
+  interactionRef?: RefObject<HTMLElement | null>;
+  /** The voice it speaks for on the page's one floor (lib/audible): a key shared with
+   *  what it plays for (a reading's), so the two are silenced together, never each
+   *  other. Default: the video alone. */
+  voice?: VoiceKey;
+};
 
 /** How far the video may be from `at` and still be showing it, ms. */
-const FOLLOW_TOLERANCE = 150
-
-const audible = new Set<HTMLVideoElement>()
-/** One video plays with sound at a time: the one that starts silences the rest. */
-function claimSound(video: HTMLVideoElement) {
-  for (const other of audible)
-    if (other !== video && !other.paused) {
-      silenced.add(other)
-      other.pause()
-    }
-  audible.clear()
-  audible.add(video)
-}
+const FOLLOW_TOLERANCE = 150;
 
 /** The pauses and plays a Video makes itself, marked just before it makes them. */
-type Own = { pause: boolean; play: boolean }
+type Own = { pause: boolean; play: boolean };
 /** Marks a pause as ours, only when it will pause something (a mark never outlives
  *  its event). */
 function ownPause(own: Own, el: HTMLVideoElement) {
-  if (!el.paused) own.pause = true
+  if (!el.paused) own.pause = true;
 }
 /** Marks a play as ours, only when it will start something. */
 function ownPlay(own: Own, el: HTMLVideoElement) {
-  if (el.paused) own.play = true
+  if (el.paused) own.play = true;
 }
 
 /** Videos the page silenced for another voice: their pause is the page's, not the
  *  person's, so they still play again when the person comes back to them. */
-const silenced = new WeakSet<HTMLVideoElement>()
+const silenced = new WeakSet<HTMLVideoElement>();
 
 /** Whether the page's automatic videos speak: ONE decision for the page. Unmuting any
  *  of them turns the sound on for all (scrolling on to the next keeps it, without
- *  asking again), muting any turns it off for all. With `claimSound`, one voice at a
- *  time: the one that starts with sound silences the rest. */
-let pageSound = false
-const soundFollowers = new Set<(on: boolean) => void>()
+ *  asking again), muting any turns it off for all. Which one is heard is the floor's
+ *  (lib/audible): the one that starts with sound silences the rest. */
+let pageSound = false;
+const soundFollowers = new Set<(on: boolean) => void>();
 function setPageSound(on: boolean) {
-  if (pageSound === on) return
-  pageSound = on
-  for (const follow of soundFollowers) follow(on)
+  if (pageSound === on) return;
+  pageSound = on;
+  for (const follow of soundFollowers) follow(on);
 }
 
 /** How far ahead of the viewport an automatic video starts loading: a play() on a cold
  *  file drops the poster before a frame is decoded and flashes a half-drawn picture. */
-const WARM_MARGIN = "1200px 0px"
+const WARM_MARGIN = "1200px 0px";
 
 /** A refused or interrupted play is the next decision, not an error: a pause landing
  *  while play() is pending rejects it (AbortError), a low-power mode refuses quiet
@@ -142,38 +138,38 @@ const WARM_MARGIN = "1200px 0px"
 function tolerate(error: unknown) {
   const expected =
     error instanceof DOMException &&
-    (error.name === "AbortError" || error.name === "NotAllowedError")
-  if (!expected) throw error
+    (error.name === "AbortError" || error.name === "NotAllowedError");
+  if (!expected) throw error;
 }
 
 /** Plays a page-driven video. Refused with sound (a page load before any press), the
  *  page's sound turns off until the person turns it on and it plays muted; refused muted
  *  too (a low-power mode), `refused` hands it to the person, the poster standing in. */
 function playOwn(own: Own, el: HTMLVideoElement, refused: () => void) {
-  ownPlay(own, el)
+  ownPlay(own, el);
   el.play().catch((e: unknown) => {
-    tolerate(e)
-    if (!(e instanceof DOMException && e.name === "NotAllowedError")) return
-    if (el.muted) return refused()
-    setPageSound(false)
-    ownPlay(own, el)
+    tolerate(e);
+    if (!(e instanceof DOMException && e.name === "NotAllowedError")) return;
+    if (el.muted) return refused();
+    setPageSound(false);
+    ownPlay(own, el);
     el.play().catch((again: unknown) => {
-      tolerate(again)
-      refused()
-    })
-  })
+      tolerate(again);
+      refused();
+    });
+  });
 }
 
 /** Stops a video the way `rest` says. True when it went back to the poster. */
 function stopAt(el: HTMLVideoElement, rest: "hold" | "poster"): boolean {
-  el.pause()
-  if (rest !== "poster" || el.readyState === 0 || el.ended) return false
-  el.currentTime = 0
-  return true
+  el.pause();
+  if (rest !== "poster" || el.readyState === 0 || el.ended) return false;
+  el.currentTime = 0;
+  return true;
 }
 
 export function Video({ src, ...props }: VideoProps) {
-  return <VideoSource key={src} src={src} {...props} />
+  return <VideoSource key={src} src={src} {...props} />;
 }
 
 function VideoSource({
@@ -196,6 +192,7 @@ function VideoSource({
   className,
   videoClassName,
   interactionRef,
+  voice,
   children,
   onPlaying,
   onPause,
@@ -204,51 +201,65 @@ function VideoSource({
   ref,
   ...props
 }: VideoProps) {
-  const frame = useRef<HTMLDivElement>(null)
-  const video = useRef<HTMLVideoElement>(null)
-  useImperativeHandle(ref, () => video.current as HTMLVideoElement, [])
-  const automatic = play === "hover" || play === "visible" || play === "once"
-  const follows = play === "follow"
+  const frame = useRef<HTMLDivElement>(null);
+  const video = useRef<HTMLVideoElement>(null);
+  useImperativeHandle(ref, () => video.current as HTMLVideoElement, []);
+  // Its claim on the page's one floor while it sounds: given back when it leaves, or
+  // dropped when another voice takes the floor (it pauses then, a pause that is the
+  // page's, not the person's).
+  const floor = useRef<(() => void) | null>(null);
+  const speak = (el: HTMLVideoElement) => {
+    floor.current?.();
+    floor.current = claim(voice ?? el, () => {
+      floor.current = null;
+      if (el.paused) return;
+      silenced.add(el);
+      el.pause();
+    });
+  };
+  const automatic = play === "hover" || play === "visible" || play === "once";
+  const follows = play === "follow";
   // Played by something other than the person: its sound is the page's decision.
-  const pageDriven = automatic || follows
+  const pageDriven = automatic || follows;
   if (follows && wanted === undefined)
-    throw new Error(`Video "${label}": play="follow" needs \`playing\``)
-  const intent = useMediaIntent(frame, interactionRef)
-  const { setManual } = intent
-  const [playing, setPlaying] = useState(false)
-  const [failed, setFailed] = useState(false)
+    throw new Error(`Video "${label}": play="follow" needs \`playing\``);
+  const intent = useMediaIntent(frame, interactionRef);
+  const { setManual } = intent;
+  const [playing, setPlaying] = useState(false);
+  const [failed, setFailed] = useState(false);
   // A frame has been shown: from then on, "hold" keeps the video over the poster.
-  const [shown, setShown] = useState(false)
+  const [shown, setShown] = useState(false);
   // The video knows its size (the empty frame's ground can go), and has decoded a
   // frame (the poster can go, unless the video is held unseen).
-  const [sized, setSized] = useState(false)
-  const [loaded, setLoaded] = useState(false)
+  const [sized, setSized] = useState(false);
+  const [loaded, setLoaded] = useState(false);
   // "follow" with `at`: the video has shown an instant asked of it.
-  const [onInstant, setOnInstant] = useState(false)
-  const [completedAt, setCompletedAt] = useState<number | null>(null)
+  const [onInstant, setOnInstant] = useState(false);
+  const [completedAt, setCompletedAt] = useState<number | null>(null);
   // What the automatic plays want right now.
-  const autoWants = useRef(false)
+  const autoWants = useRef(false);
   // The pauses and plays this component makes itself, marked just before it makes
   // them (only when the call will change anything, so a mark never outlives its
   // event). One it did not make is the person's, and an automatic video takes it as
   // the person's decision: a pause holds (nothing automatic plays it again, not a
   // return to the window, not scrolling back) until they play it again.
-  const own = useRef<Own>({ pause: false, play: false })
+  const own = useRef<Own>({ pause: false, play: false });
   // Whether the play under way was ours.
-  const lastPlayOwn = useRef(false)
+  const lastPlayOwn = useRef(false);
 
   // The source is the effect's to set and to release (see the header).
   useEffect(() => {
-    const el = video.current
-    if (!el) throw new Error(`Video "${label}" rendered no element`)
-    el.src = src
+    const el = video.current;
+    if (!el) throw new Error(`Video "${label}" rendered no element`);
+    el.src = src;
     return () => {
-      audible.delete(el)
-      el.pause()
-      el.removeAttribute("src")
-      el.load()
-    }
-  }, [src, label])
+      floor.current?.();
+      floor.current = null;
+      el.pause();
+      el.removeAttribute("src");
+      el.load();
+    };
+  }, [src, label]);
 
   // Automatic plays: hover, visible, once.
   const trigger =
@@ -258,30 +269,30 @@ function VideoSource({
         : "intent"
       : play === "visible"
         ? "visible"
-        : "intent"
+        : "intent";
   const autoPlay =
     automatic &&
     intent.active(trigger) &&
-    (completedAt === null || intent.activation > completedAt)
+    (completedAt === null || intent.activation > completedAt);
   useEffect(() => {
-    if (!automatic) return
-    const el = video.current
-    if (!el) return
-    autoWants.current = autoPlay
+    if (!automatic) return;
+    const el = video.current;
+    if (!el) return;
+    autoWants.current = autoPlay;
     if (autoPlay) {
-      setFailed(false)
+      setFailed(false);
       playOwn(own.current, el, () => {
-        setFailed(true)
-        setManual(false)
-      })
+        setFailed(true);
+        setManual(false);
+      });
     } else {
-      ownPause(own.current, el)
-      if (stopAt(el, rest)) setShown(false)
+      ownPause(own.current, el);
+      if (stopAt(el, rest)) setShown(false);
     }
     return () => {
-      autoWants.current = false
-    }
-  }, [automatic, autoPlay, setManual, rest])
+      autoWants.current = false;
+    };
+  }, [automatic, autoPlay, setManual, rest]);
 
   // What every page-driven video (automatic or followed) owes the page: the page's one
   // sound decision (the muted property set here, synchronously, since React's `muted`
@@ -289,93 +300,94 @@ function VideoSource({
   // before it is seen, and no voice talking over another window: with sound on, it
   // pauses when the window loses focus and plays on when it returns, if it still should.
   useEffect(() => {
-    if (!pageDriven) return
-    const el = video.current
-    if (!el) return
-    let applying = false
+    if (!pageDriven) return;
+    const el = video.current;
+    if (!el) return;
+    let applying = false;
     const apply = (on: boolean) => {
-      applying = true
-      el.muted = !on
+      applying = true;
+      el.muted = !on;
       queueMicrotask(() => {
-        applying = false
-      })
-    }
-    apply(pageSound)
-    soundFollowers.add(apply)
+        applying = false;
+      });
+    };
+    apply(pageSound);
+    soundFollowers.add(apply);
     const onVolume = () => {
-      if (!applying) setPageSound(!el.muted)
-    }
+      if (!applying) setPageSound(!el.muted);
+    };
     const warm = new IntersectionObserver(
       ([entry]) => {
-        if (!entry?.isIntersecting) return
-        el.preload = "auto"
-        warm.disconnect()
+        if (!entry?.isIntersecting) return;
+        el.preload = "auto";
+        warm.disconnect();
       },
       { rootMargin: WARM_MARGIN },
-    )
-    warm.observe(el)
+    );
+    warm.observe(el);
     // Only what the window's blur paused plays on when it returns: a video the
     // person paused stays paused.
-    let blurred = false
+    let blurred = false;
     const onBlur = () => {
-      if (el.paused || el.muted) return
-      blurred = true
-      ownPause(own.current, el)
-      el.pause()
-    }
+      if (el.paused || el.muted) return;
+      blurred = true;
+      ownPause(own.current, el);
+      el.pause();
+    };
     const onFocus = () => {
-      const resume = blurred && autoWants.current && el.paused
-      blurred = false
-      if (!resume) return
-      ownPlay(own.current, el)
-      el.play().catch(tolerate)
-    }
-    el.addEventListener("volumechange", onVolume)
-    window.addEventListener("blur", onBlur)
-    window.addEventListener("focus", onFocus)
+      const resume = blurred && autoWants.current && el.paused;
+      blurred = false;
+      if (!resume) return;
+      ownPlay(own.current, el);
+      el.play().catch(tolerate);
+    };
+    el.addEventListener("volumechange", onVolume);
+    window.addEventListener("blur", onBlur);
+    window.addEventListener("focus", onFocus);
     return () => {
-      soundFollowers.delete(apply)
-      warm.disconnect()
-      el.removeEventListener("volumechange", onVolume)
-      window.removeEventListener("blur", onBlur)
-      window.removeEventListener("focus", onFocus)
-    }
-  }, [pageDriven])
+      soundFollowers.delete(apply);
+      warm.disconnect();
+      el.removeEventListener("volumechange", onVolume);
+      window.removeEventListener("blur", onBlur);
+      window.removeEventListener("focus", onFocus);
+    };
+  }, [pageDriven]);
 
   // The page's word: play, hold, and (with `at`) the instant to show.
   useEffect(() => {
-    if (!follows) return
-    const el = video.current
-    if (!el) return
-    autoWants.current = wanted === true
+    if (!follows) return;
+    const el = video.current;
+    if (!el) return;
+    autoWants.current = wanted === true;
     if (at !== undefined) {
-      const ms = el.currentTime * 1000
+      const ms = msOf(el.currentTime);
       // Once it has shown an asked instant it stays seen while it seeks to the
       // next: the poster is one still, and flashing it back mid-scrub would show
       // the wrong picture.
-      if (Math.abs(ms - at) > FOLLOW_TOLERANCE) el.currentTime = at / 1000
-      else if (el.readyState >= 2) setOnInstant(true)
+      if (Math.abs(ms - at) > FOLLOW_TOLERANCE)
+        el.currentTime = seekSeconds(at);
+      else if (el.readyState >= 2) setOnInstant(true);
     }
-    if (wanted && el.paused) playOwn(own.current, el, () => setFailed(true))
-    if (!wanted && !el.paused && stopAt(el, rest)) setShown(false)
-  })
+    if (wanted && el.paused) playOwn(own.current, el, () => setFailed(true));
+    if (!wanted && !el.paused && stopAt(el, rest)) setShown(false);
+  });
 
   const onFrameCheck = () => {
-    const el = video.current
-    if (!el || at === undefined) return
+    const el = video.current;
+    if (!el || at === undefined) return;
     if (
       el.readyState >= 2 &&
-      Math.abs(el.currentTime * 1000 - at) <= FOLLOW_TOLERANCE
+      Math.abs(msOf(el.currentTime) - at) <= FOLLOW_TOLERANCE
     )
-      setOnInstant(true)
-  }
+      setOnInstant(true);
+  };
 
   // Unseen until it can honestly stand for the picture: automatic plays until frames
   // come (and again at rest under "poster"), a followed instant until it shows it.
   const hidden =
     follows && at !== undefined
       ? !onInstant
-      : (automatic || follows) && !playing && !shown
+      : (automatic || follows) && !playing && !shown;
 
   return (
     <div
@@ -472,59 +484,60 @@ function VideoSource({
           videoClassName,
         )}
         onLoadedMetadata={(e) => {
-          setSized(true)
-          if (start !== undefined) e.currentTarget.currentTime = start / 1000
-          props.onLoadedMetadata?.(e)
+          setSized(true);
+          if (start !== undefined)
+            e.currentTarget.currentTime = seekSeconds(start);
+          props.onLoadedMetadata?.(e);
         }}
         onLoadedData={(e) => {
-          setLoaded(true)
-          onFrameCheck()
-          props.onLoadedData?.(e)
+          setLoaded(true);
+          onFrameCheck();
+          props.onLoadedData?.(e);
         }}
         onSeeked={(e) => {
-          onFrameCheck()
-          props.onSeeked?.(e)
+          onFrameCheck();
+          props.onSeeked?.(e);
         }}
         onPlay={(e) => {
           // Whose play this is: ours, or the person's (their decision, which an
           // automatic video now follows).
-          lastPlayOwn.current = own.current.play
-          if (automatic && !own.current.play) setManual(true)
-          own.current.play = false
-          props.onPlay?.(e)
+          lastPlayOwn.current = own.current.play;
+          if (automatic && !own.current.play) setManual(true);
+          own.current.play = false;
+          props.onPlay?.(e);
         }}
         onPlaying={(e) => {
-          const el = e.currentTarget
+          const el = e.currentTarget;
           // A start we asked for that landed after the policy changed its mind.
           if (automatic && !autoWants.current && lastPlayOwn.current) {
-            ownPause(own.current, el)
-            el.pause()
-            return
+            ownPause(own.current, el);
+            el.pause();
+            return;
           }
-          if (!el.muted) claimSound(el)
-          setPlaying(true)
-          setShown(true)
-          onPlaying?.(e)
+          if (!el.muted) speak(el);
+          setPlaying(true);
+          setShown(true);
+          onPlaying?.(e);
         }}
         onPause={(e) => {
-          const el = e.currentTarget
+          const el = e.currentTarget;
           // Ours, the page silencing it for another voice, or the video reaching its
           // end (the browser fires a pause there too): none of them the person's.
-          const machine = own.current.pause || silenced.delete(el) || el.ended
-          own.current.pause = false
-          if (automatic && !machine) setManual(false)
-          setPlaying(false)
-          onPause?.(e)
+          const machine = own.current.pause || silenced.delete(el) || el.ended;
+          own.current.pause = false;
+          if (automatic && !machine) setManual(false);
+          setPlaying(false);
+          onPause?.(e);
         }}
         onEnded={(e) => {
-          setPlaying(false)
-          if (play === "once") setCompletedAt(intent.activation)
-          onEnded?.(e)
+          setPlaying(false);
+          if (play === "once") setCompletedAt(intent.activation);
+          onEnded?.(e);
         }}
         onError={(e) => {
-          setFailed(true)
-          setPlaying(false)
-          onError?.(e)
+          setFailed(true);
+          setPlaying(false);
+          onError?.(e);
         }}
       >
         {children}
@@ -536,10 +549,10 @@ function VideoSource({
           aria-label={`${playing ? "Pause" : "Play"} ${label}`}
           aria-pressed={playing}
           onClick={(e) => {
-            e.preventDefault()
-            e.stopPropagation()
-            if (!playing) setCompletedAt(null)
-            setManual(!playing)
+            e.preventDefault();
+            e.stopPropagation();
+            if (!playing) setCompletedAt(null);
+            setManual(!playing);
           }}
           className="absolute right-2 bottom-2 rounded-full bg-black/60 px-3 py-2 text-white text-xs"
         >
@@ -547,5 +560,5 @@ function VideoSource({
         </button>
       )}
     </div>
-  )
+  );
 }
