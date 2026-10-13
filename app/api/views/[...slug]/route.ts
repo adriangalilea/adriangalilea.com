@@ -1,6 +1,6 @@
-import { readViews } from "@adriangalilea/utils/visits";
 import { type NextRequest, NextResponse } from "next/server";
-import { HOST, pathOf, SITE, visitDriver } from "@/lib/visits";
+import { HOST, pathOf, SITE, visitDriver } from "@/lib/visit-store";
+import { readViews } from "@/lib/visits";
 
 // One note's view count (components/view-counter): how many visits opened its page,
 // all time (lib/visits). Counting is the page sensor's; this only reads.

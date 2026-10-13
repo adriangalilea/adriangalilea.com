@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 // What the site keeps and what it never does. Every claim here is what the code does
-// (components/page-sensor and lib/visits over ts-utils' visits module, the layout's
+// (components/page-sensor and lib/visits, the ui registry's, the layout's
 // Vercel Analytics and Speed Insights, lib/auth and the comments); change one, change
 // this page with it.
 

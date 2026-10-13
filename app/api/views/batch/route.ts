@@ -1,6 +1,6 @@
-import { readViews } from "@adriangalilea/utils/visits";
 import { type NextRequest, NextResponse } from "next/server";
-import { HOST, pathOf, SITE, visitDriver } from "@/lib/visits";
+import { HOST, pathOf, SITE, visitDriver } from "@/lib/visit-store";
+import { readViews } from "@/lib/visits";
 
 // Many notes' view counts at once, for a feed (components/view-counter): how many
 // visits opened each note's page, all time (lib/visits). Counting is the page
