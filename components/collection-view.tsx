@@ -4,7 +4,6 @@ import { Card } from "@/components/card";
 import { CommentsFeedProvider } from "@/components/comment-feed";
 import { FilterableGrid, GridFallback } from "@/components/filterable-grid";
 import { TagFilter, TagFilterFallback } from "@/components/tag-filter";
-import { TrackViews } from "@/components/track-view";
 import { ViewCountsProvider } from "@/components/view-counter";
 import type { Content, Folder, Page } from "@/lib/content";
 import {
@@ -155,7 +154,6 @@ export async function CollectionView({ folder, slug }: Props) {
     <ViewCountsProvider slugs={allSlugs}>
       <CommentsFeedProvider slugs={noteSlugs}>
         <div className="mx-auto w-full max-w-[90rem] px-6 pb-6">
-          <TrackViews slugs={noteSlugs} />
           {folder && <h1 className="sr-only">{folder.title}</h1>}
 
           {/* Folder Header */}

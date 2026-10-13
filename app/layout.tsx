@@ -7,6 +7,7 @@ import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { HideOnScroll } from "@/components/hide-on-scroll";
 import { GlassSurface, LiquidGlassFilter } from "@/components/liquid-glass";
 import { NavbarBreadcrumb } from "@/components/navbar-breadcrumb";
+import { SitePageSensor } from "@/components/page-sensor";
 import { ThemeProvider } from "@/components/theme-provider";
 import { FocusSource } from "@/components/ui/focus-source";
 import { socials } from "@/data/site";
@@ -108,6 +109,12 @@ export default function RootLayout({
                     <l.icon size={16} strokeWidth={1.5} />
                   </Link>
                 ))}
+                <Link
+                  href="/privacy"
+                  className="ml-1 font-mono text-xs text-foreground-lowest transition-colors hover:text-accent-pop"
+                >
+                  privacy
+                </Link>
               </div>
             </GlassSurface>
             {/* Bottom fade-out blur mask */}
@@ -116,6 +123,10 @@ export default function RootLayout({
         </ThemeProvider>
         {/* The focus ring answers the keyboard only (ui/focus-source). */}
         <FocusSource />
+        {/* The pages read, as visits (components/page-sensor, lib/visits). */}
+        <SitePageSensor
+          build={process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7)}
+        />
         <Analytics />
         <SpeedInsights />
       </body>

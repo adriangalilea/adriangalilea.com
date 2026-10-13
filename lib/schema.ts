@@ -1,10 +1,4 @@
-import {
-  index,
-  integer,
-  sqliteTable,
-  text,
-  uniqueIndex,
-} from "drizzle-orm/sqlite-core";
+import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
 // Better Auth tables
 export const user = sqliteTable("user", {
@@ -64,21 +58,6 @@ export const verification = sqliteTable("verification", {
   createdAt: integer("created_at", { mode: "timestamp" }),
   updatedAt: integer("updated_at", { mode: "timestamp" }),
 });
-
-// View counter
-export const pageViews = sqliteTable(
-  "page_views",
-  {
-    id: integer("id").primaryKey({ autoIncrement: true }),
-    slug: text("slug").notNull(),
-    visitor: text("visitor").notNull(),
-    viewedAt: text("viewed_at").notNull(),
-  },
-  (t) => [
-    uniqueIndex("uq_view").on(t.slug, t.visitor, t.viewedAt),
-    index("idx_slug").on(t.slug),
-  ],
-);
 
 // Comments
 export const comments = sqliteTable(

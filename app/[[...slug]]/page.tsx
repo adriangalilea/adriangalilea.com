@@ -7,7 +7,6 @@ import { CoverImage } from "@/components/cover-image";
 import { Grid } from "@/components/filterable-grid";
 import { RelatedSection } from "@/components/related-section";
 import { TOC } from "@/components/toc";
-import { TrackView } from "@/components/track-view";
 import { Quote } from "@/components/ui/quote";
 import { VerdictInline } from "@/components/verdict-badge";
 import { ViewCounter } from "@/components/view-counter";
@@ -134,7 +133,6 @@ async function NoteView({ note }: { note: Note }) {
                 <time>{noteDate(note)}</time>
                 <span className="text-muted-foreground">·</span>
                 <ViewCounter slug={note.slug.join("/")} />
-                <TrackView slug={note.slug.join("/")} />
               </div>
             )}
 
@@ -250,7 +248,6 @@ async function PageView({ page }: { page: Page }) {
                   )}
                   <span className="mx-2">·</span>
                   <ViewCounter slug={page.slug.join("/")} />
-                  <TrackView slug={page.slug.join("/")} />
                 </div>
               )}
               {(page.verdict || page.deadline) && (
