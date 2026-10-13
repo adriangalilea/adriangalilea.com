@@ -14,7 +14,7 @@
     "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
-    "@adriangalilea/utils": "^9.12.0",
+    "@adriangalilea/utils": "^9.13.0",
     "@base-ui/react": "^1.7.0",
     "@libsql/client": "^0.17.0",
     "@mdx-js/mdx": "^3.1.1",

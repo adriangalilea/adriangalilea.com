@@ -113,7 +113,9 @@ function NoteCard({
           {picture && <ExpandButton picture={picture} />}
         </div>
       )}
-      <div className="p-4">
+      {/* A note is read in the feed, as a tweet in a timeline: on screen, it is a
+          view of its page (components/page-sensor). */}
+      <div className="p-4" data-view={note.path}>
         {author ? (
           <>
             <Quote

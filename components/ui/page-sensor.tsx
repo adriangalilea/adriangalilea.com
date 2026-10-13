@@ -17,7 +17,9 @@
 // is wired per framework. Restored from the back/forward cache: nav "bfcache". The
 // end carries `reached` (the `data-section` names that came into the upper four
 // fifths of the viewport, in the order first seen) and, on a load's first page, its
-// vitals. A same-origin request is a "fetch" span under the page, its traceparent on
+// vitals. A post shown whole on the page (`data-view="/its/path"`, a note in a feed)
+// is a "view" line once it is half on screen, once per page: read where it was shown,
+// as a tweet in a timeline. A same-origin request is a "fetch" span under the page, its traceparent on
 // the request, so the server's spans join the page's trace (ts-utils log/next); a
 // router's prefetch (`next-router-prefetch`) is not traced, being the router guessing.
 // Uncaught errors and unhandled rejections are error lines of the page.
@@ -125,6 +127,8 @@ interface Shown {
   readonly path: string;
   readonly fields: Fields;
   readonly reached: string[];
+  /** The `data-view` paths this page has shown, each written once. */
+  readonly viewed: Set<string>;
   /** The load's first page: its end carries the vitals. */
   readonly first: boolean;
 }
@@ -240,16 +244,41 @@ function watch(props: React.RefObject<PageSensorProps>): void {
     },
     { rootMargin: "0px 0px -20% 0px" },
   );
+  // --- views: another page's content read here -----------------------------------
+  // A post shown whole in a feed is read there, as a tweet is: an element carrying
+  // `data-view="/its/path"` that is at least half on screen writes the line "view"
+  // with that path, once per page, and the collector counts it as a view of that page.
+  const views = new IntersectionObserver(
+    (entries) => {
+      for (const e of entries) {
+        if (!e.isIntersecting || shown === null) continue;
+        const path = e.target.getAttribute("data-view") as string;
+        if (!path.startsWith("/"))
+          throw new Error(`PageSensor: data-view "${path}" is no path`);
+        if (shown.viewed.has(path)) continue;
+        shown.viewed.add(path);
+        shown.span.info("view", { host: location.host, path });
+      }
+    },
+    { threshold: 0.5 },
+  );
   const scan = () => {
     for (const el of document.querySelectorAll("[data-section]"))
       if (!seen.has(el)) {
         seen.add(el);
         sections.observe(el);
       }
+    for (const el of document.querySelectorAll("[data-view]"))
+      if (!seen.has(el)) {
+        seen.add(el);
+        views.observe(el);
+      }
   };
-  // Re-observed for each page: a section already on screen is reached by the new page too.
+  // Re-observed for each page: a section already on screen is reached by the new page
+  // too, and a post on screen is viewed by it.
   const rescan = () => {
     sections.disconnect();
+    views.disconnect();
     seen.clear();
     scan();
   };
@@ -284,6 +313,7 @@ function watch(props: React.RefObject<PageSensorProps>): void {
       path,
       fields,
       reached: [],
+      viewed: new Set(),
       first,
     };
     first = false;
@@ -430,6 +460,7 @@ function watch(props: React.RefObject<PageSensorProps>): void {
     nav?.removeEventListener("currententrychange", routed);
     if (window.fetch === (traced as typeof fetch)) window.fetch = original;
     sections.disconnect();
+    views.disconnect();
     grows.disconnect();
     last = null;
     stopWatching = null;
