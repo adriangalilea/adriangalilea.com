@@ -11,7 +11,9 @@ import { createClient } from "@libsql/client";
 // page, how many visits read it, with nothing of who.
 
 export const SITE = "adriangalilea.com";
-export const HOST = "adriangalilea.com";
+/** The host the site is served from (the bare domain redirects here): the one its
+ *  pages report, so the one their views are kept under. */
+export const HOST = "www.adriangalilea.com";
 
 let driver: ReturnType<typeof libsqlDriver> | undefined;
 export function visitDriver() {

@@ -45,7 +45,7 @@ for (const r of rows)
 
 await visits.batch(
   rows.map((r) => ({
-    sql: "INSERT INTO visits_views (site, day, host, path, views) VALUES ('adriangalilea.com', ?, 'adriangalilea.com', ?, ?) ON CONFLICT (site, day, host, path) DO UPDATE SET views = views + excluded.views",
+    sql: "INSERT INTO visits_views (site, day, host, path, views) VALUES ('adriangalilea.com', ?, 'www.adriangalilea.com', ?, ?) ON CONFLICT (site, day, host, path) DO UPDATE SET views = views + excluded.views",
     args: [String(r.day), `/${String(r.slug)}`, Number(r.views)],
   })),
   "write",
