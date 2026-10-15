@@ -6,7 +6,7 @@
     "dev": "tsx scripts/generate-blur.mjs && next dev",
     "build": "tsx scripts/generate-blur.mjs && next build",
     "start": "next start",
-    "check": "biome check --write",
+    "fix": "biome check --write",
     "lint": "biome check",
     "format": "biome format --write",
     "embed": "tsx scripts/embed.mts",

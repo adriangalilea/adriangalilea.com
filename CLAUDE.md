@@ -5,8 +5,8 @@ Next.js personal site.
 **Drafts: the split is confidentiality, not draft-ness.** The repo is public but the site keeps drafts unpublished, so WIP that's fine being publicly visible can be committed here as we see fit. **Private drafts go to `~/Documents/drafts/` (iCloud) and never touch this repo.**
 
 `pnpm dev` to run
-`pnpm check`
-`pnpm lint`
+`pnpm lint` (checks, writes nothing; the gate)
+`pnpm fix` (biome's fixes and formatting, written to the files)
 `pnpm format`
 `pnpm build`
 

@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 // Where focus came from, so the focus ring (tokens) answers the keyboard and nothing
 // else. Mount it once, in the root layout.
@@ -14,7 +14,7 @@
 // keeps every ring it should have. Without this mounted, the ring is the browser's
 // `:focus-visible`, as before.
 
-import * as React from "react"
+import * as React from "react";
 
 /** Keys that move focus: after one of them, focus is the keyboard's. */
 const NAVIGATION = new Set([
@@ -27,41 +27,41 @@ const NAVIGATION = new Set([
   "End",
   "PageUp",
   "PageDown",
-])
+]);
 
-const MARK = "data-focus-pointer"
+const MARK = "data-focus-pointer";
 
 export function FocusSource() {
   React.useEffect(() => {
-    let pointer = false
+    let pointer = false;
     const onPointer = (e: PointerEvent) => {
-      pointer = true
+      pointer = true;
       // A press on what already holds focus (reached by Tab, then clicked) moves no
       // focus, so no focusin marks it: mark it here.
-      const held = document.activeElement
+      const held = document.activeElement;
       if (held && e.target instanceof Node && held.contains(e.target))
-        held.setAttribute(MARK, "")
-    }
+        held.setAttribute(MARK, "");
+    };
     const onKey = (e: KeyboardEvent) => {
-      if (NAVIGATION.has(e.key)) pointer = false
-    }
+      if (NAVIGATION.has(e.key)) pointer = false;
+    };
     const onFocusIn = (e: FocusEvent) => {
       if (pointer && e.target instanceof Element)
-        e.target.setAttribute(MARK, "")
-    }
+        e.target.setAttribute(MARK, "");
+    };
     const onFocusOut = (e: FocusEvent) => {
-      if (e.target instanceof Element) e.target.removeAttribute(MARK)
-    }
-    document.addEventListener("pointerdown", onPointer, true)
-    document.addEventListener("keydown", onKey, true)
-    document.addEventListener("focusin", onFocusIn, true)
-    document.addEventListener("focusout", onFocusOut, true)
+      if (e.target instanceof Element) e.target.removeAttribute(MARK);
+    };
+    document.addEventListener("pointerdown", onPointer, true);
+    document.addEventListener("keydown", onKey, true);
+    document.addEventListener("focusin", onFocusIn, true);
+    document.addEventListener("focusout", onFocusOut, true);
     return () => {
-      document.removeEventListener("pointerdown", onPointer, true)
-      document.removeEventListener("keydown", onKey, true)
-      document.removeEventListener("focusin", onFocusIn, true)
-      document.removeEventListener("focusout", onFocusOut, true)
-    }
-  }, [])
-  return null
+      document.removeEventListener("pointerdown", onPointer, true);
+      document.removeEventListener("keydown", onKey, true);
+      document.removeEventListener("focusin", onFocusIn, true);
+      document.removeEventListener("focusout", onFocusOut, true);
+    };
+  }, []);
+  return null;
 }
