@@ -1,5 +1,11 @@
 import { createHash } from "node:crypto";
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  statSync,
+  writeFileSync,
+} from "node:fs";
 import { join } from "node:path";
 import { compile, run } from "@mdx-js/mdx";
 import rehypeShiki from "@shikijs/rehype";
@@ -12,10 +18,40 @@ import type { ShikiTransformer } from "shiki";
 import rehypeFigure from "./rehype-figure";
 import rehypeImageSize from "./rehype-image-size";
 
-// Bump when compile pipeline output shape changes (plugins, themes, MDX major).
-const COMPILER_VERSION = "2";
+const ROOT = process.cwd();
+const CACHE_DIR = join(ROOT, ".next", "cache", "content-mdx");
 
-const CACHE_DIR = join(process.cwd(), ".next", "cache", "content-mdx");
+// A COMPILED BODY IS KEPT BY EVERYTHING IT IS MADE FROM: the source, the pipeline (the
+// packages below and this repo's own plugins, read as files) and the local images
+// rehype-image-size measured into it. Any of them changing compiles it again.
+const PIPELINE = createHash("sha1")
+  .update(
+    ["@mdx-js/mdx", "@shikijs/rehype", "shiki", "remark-gfm", "rehype-slug"]
+      .map(
+        (pkg) =>
+          JSON.parse(
+            readFileSync(
+              join(ROOT, "node_modules", pkg, "package.json"),
+              "utf8",
+            ),
+          ).version,
+      )
+      .join(),
+  )
+  .update(readFileSync(join(ROOT, "lib/mdx.tsx")))
+  .update(readFileSync(join(ROOT, "lib/rehype-figure.ts")))
+  .update(readFileSync(join(ROOT, "lib/rehype-image-size.ts")))
+  .digest("hex");
+
+/** The local files a body names (`](/x)`, `src="/x"`, the forms lib/content rewrites
+ *  `./x` to), as bytes: what rehype-image-size measures. A link to a page names no file
+ *  and is skipped. */
+function namedFiles(source: string): Buffer[] {
+  return [...source.matchAll(/(?:\]\(|src=["'])(\/[^)"'\s]+)/g)]
+    .map((m) => join(ROOT, "content", m[1] ?? ""))
+    .filter((p) => existsSync(p) && statSync(p).isFile())
+    .map((p) => readFileSync(p));
+}
 
 const langAttr: ShikiTransformer = {
   pre(node) {
@@ -43,9 +79,9 @@ const compileOptions = {
 };
 
 function hashSource(source: string): string {
-  return createHash("sha1")
-    .update(`${COMPILER_VERSION}:${source}`)
-    .digest("hex");
+  const h = createHash("sha1").update(PIPELINE).update(source);
+  for (const file of namedFiles(source)) h.update(file);
+  return h.digest("hex");
 }
 
 const memJs = new Map<string, string>();
