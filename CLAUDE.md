@@ -263,8 +263,8 @@ frameless, frozen, via `postScript` from `lib/telegram-chat-post.ts`), a post on
 `@ag/tweet`. `components/embeds.tsx` only reads the facts and places them. Keys and
 paths live in `lib/embeds.ts`.
 
-**`@ag/telegram-chat` and `@ag/chat` are paid items, and this repo is public, so their
-files are committed sealed** (`scripts/sealed.mts`, ui's `@ag/sealed`): each file
+**`@ag/telegram-chat`, `@ag/tweet` and `@ag/github` are paid items (`@ag/chat` is free),
+and this repo is public, so their files are committed sealed** (`scripts/sealed.mts`, ui's `@ag/sealed`): each file
 opening with an @ag paid or studio line is ignored by git and committed encrypted beside
 itself (`<file>.sealed`). `pnpm build` opens them with `SEALED_KEY` (Vercel; 1Password
 "sealed key"), `pnpm lint` fails on a stale copy or a tracked file, and `pnpm seal`
