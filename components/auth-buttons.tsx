@@ -1,7 +1,8 @@
 "use client";
 
-import { Github, Send } from "lucide-react";
+import { Send } from "lucide-react";
 import { useState } from "react";
+import { GithubMark } from "@/components/github-mark";
 import { GlassPill } from "@/components/liquid-glass";
 import { authClient } from "@/lib/auth-client";
 
@@ -10,7 +11,7 @@ export function GitHubButton() {
     <GlassPill
       as="button"
       variant="full"
-      icon={Github}
+      icon={GithubMark}
       label="GitHub"
       onClick={() => authClient.signIn.social({ provider: "github" })}
     />

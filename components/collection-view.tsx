@@ -1,8 +1,9 @@
-import { ExternalLink, Github } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 import { Suspense } from "react";
 import { Card } from "@/components/card";
 import { CommentsFeedProvider } from "@/components/comment-feed";
 import { FilterableGrid, GridFallback } from "@/components/filterable-grid";
+import { GithubMark } from "@/components/github-mark";
 import { TagFilter, TagFilterFallback } from "@/components/tag-filter";
 import { ViewCountsProvider } from "@/components/view-counter";
 import type { Content, Folder, Page } from "@/lib/content";
@@ -115,7 +116,7 @@ function sortByRelevancy(items: Content[]): Content[] {
 
 function LinkIcon({ linkKey }: { linkKey: string }) {
   const k = linkKey.toLowerCase();
-  if (k === "github" || k === "gh") return <Github className="size-3.5" />;
+  if (k === "github" || k === "gh") return <GithubMark className="size-3.5" />;
   return <ExternalLink className="size-3.5" />;
 }
 

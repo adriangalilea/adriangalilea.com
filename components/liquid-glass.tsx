@@ -1,5 +1,9 @@
-import type { LucideIcon } from "lucide-react";
-import type { ComponentPropsWithoutRef, ElementType, ReactNode } from "react";
+import type {
+  ComponentPropsWithoutRef,
+  ComponentType,
+  ElementType,
+  ReactNode,
+} from "react";
 import { cn } from "@/lib/utils";
 
 type Layer = "l0" | "l1" | "scrim";
@@ -125,7 +129,8 @@ type GroupName = keyof typeof HOVER_CLASSES;
 
 type GlassPillProps<T extends ElementType = "span"> = {
   as?: T;
-  icon?: LucideIcon;
+  /** A lucide icon or a brand mark: drawn at the pill's size through its className. */
+  icon?: ComponentType<{ className?: string }>;
   label: string;
   variant?: "collapsible" | "full";
   shadow?: Shadow;

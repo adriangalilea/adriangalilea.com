@@ -113,7 +113,7 @@ export default function RootLayout({
                     className="group/social flex h-8 w-8 items-center justify-center rounded-full text-foreground-lowest transition-colors hover:text-accent-pop hover:bg-accent-pop/10"
                     aria-label={l.label}
                   >
-                    <l.icon size={16} strokeWidth={1.5} />
+                    <l.icon className="size-4 [stroke-width:1.5]" />
                   </Link>
                 ))}
                 <Link
