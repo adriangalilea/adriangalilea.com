@@ -1,3 +1,11 @@
+// The pointer state machine, framework-free. Points in, a new state and effects out;
+// the binder owns capture, the DOM and the clock. `samples` hold ONE trajectory: the
+// finger, or the pinch midpoint; the span is emptied whenever the pointer count
+// changes. `anchor` is the last point the hand was at, relative to the band center:
+// where a rubbered zoom is undone. `raw0` is the grab read back through the pan
+// rubber: a drag offsets it and rubbers the sum, so a grab taken mid-bounce moves
+// under the finger from its first px. `bun scripts/examples/lightbox-gesture.ts`.
+
 import {
   type Band,
   clampPan,
@@ -438,11 +446,10 @@ export function tapIntent(
   ctx: Pick<GestureCtx, "pose"> & { kind: string },
 ): { last: Sample | null; intents: TapIntent[] } {
   const keep = { x: tap.x, y: tap.y, t: tap.t };
-  if (!g.onMedia)
-    return {
-      last: null,
-      intents: [ctx.pose.s <= 1.01 ? { kind: "escape" } : { kind: "settle" }],
-    };
+  // Off the picture a tap is Escape, zoomed or not: the ladder (`escRung`) takes it
+  // a rung down, back to fit when zoomed, closed at fit. Zoomed, it used to do
+  // nothing, and the dark beside a zoomed picture was the one place a click was dead.
+  if (!g.onMedia) return { last: null, intents: [{ kind: "escape" }] };
   // A tap on a video is the video's (its controls, the platform's play toggle); a
   // tap on a frame is the frame's.
   if (ctx.kind === "video" || ctx.kind === "frame")

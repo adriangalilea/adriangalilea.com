@@ -1,20 +1,17 @@
-export interface Unfurl {
-  url: string;
-  /** The site's own name (og:site_name), else its host. */
-  site: string;
-  title: string;
-  description?: string;
-  /** Absolute URL of the preview image (og:image, twitter:image). */
-  image?: string;
-  /** Absolute URL of the site's icon, when the page names one. */
-  favicon?: string;
-}
+// THE ONE FETCH THAT READS A LINK'S FACTS (`Unfurl`, web-preview-facts) from its
+// page; nothing else in the family fetches, and the card is a pure function of them.
+//
+// WHERE THE FETCH RUNS is a decision, and it is: at authoring time, on the machine that
+// has the network, the way a portrait's sidecar is written once by `mise portrait`. A
+// browser cannot unfurl a foreign page (CORS), and a build that unfurls on every deploy
+// makes the site depend on YouTube answering at 3 a.m. So a site runs `mise unfurl
+// <url>` once, pastes the JSON beside the link, and ships facts as data; a server that
+// wants to unfurl live imports this same function. A live server fetches what
+// strangers type, so every request goes through `publicFetch`: nothing but the public
+// internet is ever asked, never the server's own network.
 
-/** The host a link is shown as: no scheme, no `www.`, no path. */
-export function hostOf(url: string): string {
-  const u = new URL(/^https?:\/\//.test(url) ? url : `https://${url}`);
-  return u.hostname.replace(/^www\./, "");
-}
+import { publicFetch } from "@/lib/public-fetch";
+import { hostOf, hrefOf, type Unfurl } from "@/lib/web-preview-facts";
 
 const ENTITIES: Record<string, string> = {
   amp: "&",
@@ -69,7 +66,7 @@ function iconOf(html: string, base: string): string | undefined {
  *  nothing to say is not a preview, and a card drawn from an empty fetch is the bug
  *  this refuses to hide. */
 export async function unfurl(url: string): Promise<Unfurl> {
-  const href = /^https?:\/\//.test(url) ? url : `https://${url}`;
+  const href = hrefOf(url);
   // YouTube serves a bot a consent shell with no <title>; it publishes oEmbed for
   // exactly this, so a video's facts come from there: title, channel, thumbnail.
   if (/^(www\.)?(youtube\.com|youtu\.be)$/.test(hostOf(href))) {
@@ -93,7 +90,7 @@ export async function unfurl(url: string): Promise<Unfurl> {
         "https://www.youtube.com/s/desktop/f8c8418d/img/favicon_32x32.png",
     };
   }
-  const res = await fetch(href, {
+  const res = await publicFetch(href, {
     headers: {
       // A browser's document request: the page as a reader is served it, in English.
       "user-agent":
@@ -101,7 +98,6 @@ export async function unfurl(url: string): Promise<Unfurl> {
       accept: "text/html,application/xhtml+xml",
       "accept-language": "en",
     },
-    redirect: "follow",
   });
   if (!res.ok) throw new Error(`unfurl ${href}: HTTP ${res.status}`);
   const html = (await res.text()).slice(0, 512 * 1024);

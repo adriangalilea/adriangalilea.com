@@ -24,6 +24,9 @@
 //     frames arrive. Without them the frame fills a parent the caller sizes.
 //   WHAT IT SHOWS WHEN IT STOPS: `rest`. "hold" stays on the frame it reached; "poster"
 //     goes back to the start and the poster.
+//   WHAT PART OF IT PLAYS: all of it, or `span`: it starts at the span's start and goes
+//     back there at its end, round and round (a tile of a film under the hand), the
+//     start being where it rests under "poster" too.
 //
 // And what every video owes the page: one voice at a time (lib/audible: a video that
 // starts with sound claims the page's one floor, and whatever held it, another video,
@@ -42,9 +45,11 @@ import {
   useRef,
   useState,
 } from "react";
-import { Image, Img } from "@/components/ui/image";
+import { Image } from "@/components/ui/image";
 import { useMediaIntent } from "@/components/ui/image-intent";
+import { useWater } from "@/components/ui/water";
 import { claim, type VoiceKey } from "@/lib/audible";
+import type { Span } from "@/lib/clip";
 import { msOf, seekSeconds } from "@/lib/timebase";
 import { cn } from "@/lib/utils";
 
@@ -67,6 +72,10 @@ export type VideoProps = Omit<
   rest?: "hold" | "poster";
   /** Where it starts, ms. */
   start?: number;
+  /** The part it plays, ms: from the span's start, back there at its end, round and
+   *  round. Not with `start` (the span's start is where it starts) or `at` (the page
+   *  holds the instant then). */
+  span?: Span;
   /** The browser's own bar. Default on for "manual". */
   controls?: boolean;
   /** A small play/pause button over an automatic play: the person can always stop it. */
@@ -75,17 +84,18 @@ export type VideoProps = Omit<
   width?: number;
   height?: number;
   poster?: string;
-  /** A tiny blurred image of the poster: Image's placeholder when optimized, else
-   *  painted under the poster in the first paint until its pixels arrive. */
+  /** A tiny picture of the poster, drawn blurred under it from the first paint
+   *  until its pixels arrive (Image's placeholder). */
   blurDataURL?: string;
   /** Responsive poster width, using the same sizes syntax as Image. */
   sizes?: string;
-  /** Pass the poster through Next's optimizer (default). False for any-origin posters
-   *  the optimizer is not configured for (a CDN frame, an avatar). */
+  /** Pass the poster through the site's image loader (default). False loads it as
+   *  it is, whatever the loader would do (a CDN frame already at its size). */
   optimizePoster?: boolean;
-  /** How an unoptimized poster arrives: "fade" in once decoded (the registry's
-   *  picture arrival), or "instant", in the first paint (a still that must stand
-   *  for the video from the server's HTML on, like a stage resting mid-clip). */
+  /** How the poster arrives: "fade" in once decoded (the registry's picture
+   *  arrival), or "instant", asked for first and in the first paint (a still that
+   *  must stand for the video from the server's HTML on, like a stage resting
+   *  mid-clip; Image's `priority`). */
   posterArrival?: "fade" | "instant";
   className?: string;
   videoClassName?: string;
@@ -160,11 +170,16 @@ function playOwn(own: Own, el: HTMLVideoElement, refused: () => void) {
   });
 }
 
-/** Stops a video the way `rest` says. True when it went back to the poster. */
-function stopAt(el: HTMLVideoElement, rest: "hold" | "poster"): boolean {
+/** Stops a video the way `rest` says, "poster" going back to `home` (seconds: its
+ *  start, or its span's). True when it went back to the poster. */
+function stopAt(
+  el: HTMLVideoElement,
+  rest: "hold" | "poster",
+  home: number,
+): boolean {
   el.pause();
   if (rest !== "poster" || el.readyState === 0 || el.ended) return false;
-  el.currentTime = 0;
+  el.currentTime = home;
   return true;
 }
 
@@ -180,6 +195,7 @@ function VideoSource({
   at,
   rest = "hold",
   start,
+  span,
   controls = play === "manual",
   pauseButton = false,
   width,
@@ -223,6 +239,18 @@ function VideoSource({
   const pageDriven = automatic || follows;
   if (follows && wanted === undefined)
     throw new Error(`Video "${label}": play="follow" needs \`playing\``);
+  if (span && (start !== undefined || at !== undefined))
+    throw new Error(
+      `Video "${label}": \`span\` says where it starts and what it plays; not with \`start\` or \`at\``,
+    );
+  if (span && !(span.to > span.from && span.from >= 0))
+    throw new Error(
+      `Video "${label}": span ${span.from}..${span.to} is no part of a video`,
+    );
+  // Where it starts and rests, seconds: the span's start, else the top.
+  const home = span ? seekSeconds(span.from) : 0;
+  const spanFrom = span?.from;
+  const spanTo = span?.to;
   const intent = useMediaIntent(frame, interactionRef);
   const { setManual } = intent;
   const [playing, setPlaying] = useState(false);
@@ -230,9 +258,14 @@ function VideoSource({
   // A frame has been shown: from then on, "hold" keeps the video over the poster.
   const [shown, setShown] = useState(false);
   // The video knows its size (the empty frame's ground can go), and has decoded a
-  // frame (the poster can go, unless the video is held unseen).
+  // frame (it may be revealed, unless it is held unseen).
   const [sized, setSized] = useState(false);
   const [loaded, setLoaded] = useState(false);
+  // The video stands fully over its poster: revealed, and its fade-in finished. Only
+  // then is the poster hidden, never before (a poster gone while the video still fades
+  // in shows the frame's own ground through it: a dip to black), and it is hidden, not
+  // removed, so it stands again the instant the video is held unseen once more.
+  const [covered, setCovered] = useState(false);
   // "follow" with `at`: the video has shown an instant asked of it.
   const [onInstant, setOnInstant] = useState(false);
   const [completedAt, setCompletedAt] = useState<number | null>(null);
@@ -287,12 +320,28 @@ function VideoSource({
       });
     } else {
       ownPause(own.current, el);
-      if (stopAt(el, rest)) setShown(false);
+      if (stopAt(el, rest, home)) setShown(false);
     }
     return () => {
       autoWants.current = false;
     };
-  }, [automatic, autoPlay, setManual, rest]);
+  }, [automatic, autoPlay, setManual, rest, home]);
+
+  // A span plays round and round: at its end, back to its start. Read on the frames
+  // the browser presents, so it never shows one past the end; `timeupdate` (four a
+  // second) would let a quarter of a second of the next part through.
+  useEffect(() => {
+    const el = video.current;
+    if (!el || spanFrom === undefined || spanTo === undefined) return;
+    let handle = 0;
+    const watch = () => {
+      if (msOf(el.currentTime) >= spanTo)
+        el.currentTime = seekSeconds(spanFrom);
+      handle = el.requestVideoFrameCallback(watch);
+    };
+    handle = el.requestVideoFrameCallback(watch);
+    return () => el.cancelVideoFrameCallback(handle);
+  }, [spanFrom, spanTo]);
 
   // What every page-driven video (automatic or followed) owes the page: the page's one
   // sound decision (the muted property set here, synchronously, since React's `muted`
@@ -369,7 +418,7 @@ function VideoSource({
       else if (el.readyState >= 2) setOnInstant(true);
     }
     if (wanted && el.paused) playOwn(own.current, el, () => setFailed(true));
-    if (!wanted && !el.paused && stopAt(el, rest)) setShown(false);
+    if (!wanted && !el.paused && stopAt(el, rest, home)) setShown(false);
   });
 
   const onFrameCheck = () => {
@@ -388,6 +437,43 @@ function VideoSource({
     follows && at !== undefined
       ? !onInstant
       : (automatic || follows) && !playing && !shown;
+  // The poster goes once the video's own fade-in has run its course, read from the
+  // browser's running transitions (none under reduced motion, or for a video never
+  // held unseen): a timer would guess the duration the stylesheet owns.
+  const revealed = loaded && !hidden;
+  useEffect(() => {
+    const el = video.current;
+    if (!el || !revealed) {
+      setCovered(false);
+      return;
+    }
+    const fading = el
+      .getAnimations()
+      .filter(
+        (a): a is CSSTransition =>
+          a instanceof CSSTransition && a.transitionProperty === "opacity",
+      );
+    if (fading.length === 0) {
+      setCovered(true);
+      return;
+    }
+    let live = true;
+    Promise.all(fading.map((a) => a.finished)).then(
+      () => live && setCovered(true),
+      // Cancelled: held unseen again before it finished; the poster stays.
+      () => {},
+    );
+    return () => {
+      live = false;
+    };
+  }, [revealed]);
+  // Asked to play (by the hand, by sight, by the page it follows) and no frame up yet:
+  // its poster lies under falling water (the registry's water) until the picture
+  // comes in over it. A manual video's own controls say it is loading.
+  const asked = automatic ? autoPlay : follows ? wanted === true : false;
+  const water = useWater<HTMLImageElement>(
+    poster && asked && hidden && !failed ? "falling" : null,
+  );
 
   return (
     <div
@@ -404,57 +490,35 @@ function VideoSource({
         width && height && !poster && !sized && "bg-foreground/4",
         className,
       )}
-      // An unoptimized poster's blur is painted under it in the first paint, for as
-      // long as the poster stands in: the poster's pixels simply cover it.
       style={
-        {
-          ...(width && height
-            ? { "--video-aspect": `${width} / ${height}` }
-            : {}),
-          ...(blurDataURL && !optimizePoster && (hidden || !loaded)
-            ? {
-                backgroundImage: `url(${blurDataURL})`,
-                backgroundSize: "cover",
-              }
-            : {}),
-        } as React.CSSProperties
+        width && height
+          ? ({
+              "--video-aspect": `${width} / ${height}`,
+            } as React.CSSProperties)
+          : undefined
       }
     >
-      {poster &&
-        (hidden || !loaded) &&
-        (optimizePoster ? (
-          <Image
-            src={poster}
-            alt=""
-            fill
-            sizes={sizes}
-            blurDataURL={blurDataURL}
-            className="pointer-events-none absolute inset-0 rounded-[inherit]"
-            imageClassName={cn(
-              "rounded-[inherit] object-cover",
-              videoClassName,
-            )}
-          />
-        ) : posterArrival === "fade" ? (
-          <Img
-            src={poster}
-            alt=""
-            className={cn(
-              "pointer-events-none absolute inset-0 size-full rounded-[inherit] object-cover",
-              videoClassName,
-            )}
-          />
-        ) : (
-          // biome-ignore lint/performance/noImgElement: a still that must be in the first paint, any origin
-          <img
-            src={poster}
-            alt=""
-            className={cn(
-              "pointer-events-none absolute inset-0 size-full rounded-[inherit] object-cover",
-              videoClassName,
-            )}
-          />
-        ))}
+      {poster && (
+        <Image
+          ref={water.ref}
+          style={water.style}
+          src={poster}
+          alt=""
+          fill
+          sizes={sizes}
+          unoptimized={!optimizePoster}
+          priority={posterArrival === "instant"}
+          blurDataURL={blurDataURL}
+          className={cn(
+            "pointer-events-none rounded-[inherit] object-cover",
+            // Hidden at once, never faded: under a painted video it would show
+            // through the rounded edge's anti-aliasing as a light rim.
+            covered && "invisible",
+            videoClassName,
+          )}
+        />
+      )}
+      {water.filter}
       <video
         {...props}
         ref={video}
@@ -485,8 +549,8 @@ function VideoSource({
         )}
         onLoadedMetadata={(e) => {
           setSized(true);
-          if (start !== undefined)
-            e.currentTarget.currentTime = seekSeconds(start);
+          if (start !== undefined || span)
+            e.currentTarget.currentTime = seekSeconds(start ?? span?.from ?? 0);
           props.onLoadedMetadata?.(e);
         }}
         onLoadedData={(e) => {

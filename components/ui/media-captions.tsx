@@ -23,10 +23,10 @@ import {
   type Captions,
   type CaptionsChoice,
   checkCaptions,
-  languageOf,
   linesOf,
   NEVER_CHOSEN,
   shownOf,
+  toggledChoice,
 } from "@/lib/captions";
 import { fields, isBoolean, setting } from "@/lib/remembered-core";
 import { cn } from "@/lib/utils";
@@ -150,17 +150,7 @@ export function useMediaCaptions(
         lang: lang ?? was.lang,
       })),
     toggle: () =>
-      setChoice((was: CaptionsChoice) =>
-        shownOf(offered, was)
-          ? { ...was, on: false }
-          : {
-              on: true,
-              lang:
-                languageOf(offered, was.lang)?.lang ??
-                (offered.find((c) => c.default) ?? offered[0])?.lang ??
-                null,
-            },
-      ),
+      setChoice((was: CaptionsChoice) => toggledChoice(offered, was)),
   };
 }
 

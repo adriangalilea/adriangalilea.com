@@ -1,3 +1,15 @@
+// A quote's RULES, framework-free: the accent it keeps, the size its text is set at,
+// where the lines break, and the SVG still. ONE source feeding two emitters, the web
+// card (ui/quote.tsx) and the social preview a build script rasterizes — the same
+// arrangement the terminal and its session still use, and for the same reason.
+//
+// The reason is worth stating, because a site that draws these twice always ends up
+// with two: a card and its preview drift the first time either is touched, and the
+// drift is invisible until someone shares a link. Here the size ladder, the hue and
+// the wrap are decided once and both emitters read them, so the preview IS the card.
+//
+// Nothing here may import React or touch the DOM. `bun scripts/examples/quote-card.ts`.
+
 export interface QuoteAuthor {
   name: string;
   /** A URL on the web; a data URI in the still, which cannot fetch. */
@@ -273,6 +285,11 @@ export const DISSOLVE: readonly [number, number][] = Array.from(
 export const MARK_PATH =
   "M54.0 227.8Q29.0 227.8 14.5 209.8Q0.0 191.8 0.0 160.8Q0.0 114.8 20.5 76.8Q41.0 38.8 87.0 5.8Q99.0 -3.2 106.0 1.8Q110.0 4.8 110.0 10.3Q110.0 15.8 103.0 20.8Q69.0 49.8 59.5 65.3Q50.0 80.8 50.0 97.8Q50.0 115.8 58.0 125.3Q66.0 134.8 76.0 141.3Q86.0 147.8 94.0 156.8Q102.0 165.8 102.0 183.8Q102.0 201.8 89.5 214.8Q77.0 227.8 54.0 227.8ZM204.0 227.8Q179.0 227.8 164.5 209.8Q150.0 191.8 150.0 160.8Q150.0 114.8 170.5 76.8Q191.0 38.8 237.0 5.8Q249.0 -3.2 256.0 1.8Q260.0 4.8 260.0 10.3Q260.0 15.8 253.0 20.8Q219.0 49.8 209.5 65.3Q200.0 80.8 200.0 97.8Q200.0 115.8 208.0 125.3Q216.0 134.8 226.0 141.3Q236.0 147.8 244.0 156.8Q252.0 165.8 252.0 183.8Q252.0 201.8 239.5 214.8Q227.0 227.8 204.0 227.8Z";
 export const MARK_BOX = { w: 260, h: 228 };
+/** The mark as a CSS mask image, for a page that draws it in its ink through a mask
+ *  instead of printing the outline in every quote. */
+export const MARK_MASK = `url("data:image/svg+xml,${encodeURIComponent(
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${MARK_BOX.w} ${MARK_BOX.h}"><path d="${MARK_PATH}"/></svg>`,
+)}")`;
 /** The ink's height as a share of the frame. It is the one measurement here that is
  *  NOT a rung: the scale governs the gaps between things, and how big a drawing is
  *  belongs to the drawing. Where it sits is a rung, like everything else. */
@@ -600,9 +617,30 @@ const GLOW_LIFT = 4;
 /** GRAIN, because a four-point glow across six hundred pixels is ten RGB levels in eight
  *  bits, and neither a rasterizer nor a browser dithers: the glow came out as concentric
  *  rings. A monochrome noise a few percent strong breaks the rings the way film grain
- *  always has, and reads as texture rather than as a defect. Same numbers on both
- *  emitters — the still as an feTurbulence filter, the web as the same filter in a tiled
- *  data-URI layer over the gradient. */
+ *  always has, and reads as texture rather than as a defect. ONE tile on both emitters:
+ *  the web repeats it as a background layer, the still as a pattern.
+ *
+ *  THE NOISE IS AN IMAGE, NEVER A FILTER ON THE CARD. The tile is a separate SVG document
+ *  behind a data URI, which a browser rasterizes once and composites from then on. The
+ *  same feTurbulence as a `filter` on the still's full-frame rect was recomputed on every
+ *  layout: five inlined stills in Safari burned five cores while the window resized, and
+ *  with the tile about one and a half.
+ *
+ *  ONE TILE PIXEL IS ONE DEVICE PIXEL, or the grain is gone. The grain is a dither of one
+ *  speckle per device pixel, and a tile drawn at any other scale is resampled, which
+ *  averages neighbouring speckles: a still inlined 1366 wide kept two thirds of its
+ *  grain, the glow's 8-bit steps came back as runs of eleven identical pixels, and the
+ *  dissolve banded. The scale a still is SHOWN at is a fact only its page has, so the
+ *  markup is right for the raster (one user unit, one pixel: the link preview) and
+ *  `GRAIN_FIT` is the contract the page uses to put the tile on its own pixels
+ *  (`QuoteStill` in the quote item does it on every resize).
+ *
+ *  THE NOISE IS PAINTED IN A USER SPACE FINER THAN THE STILL'S. WebKit never rasterizes
+ *  a pattern tile finer than one pixel per user unit of the element that paints it, so a
+ *  still shown wider than its own 1200 units got a coarse tile stretched up whatever the
+ *  pattern's transform said. The noise rects are drawn in units of 1/`fine` of the
+ *  still's, which lifts that ceiling to `fine` device pixels per still unit (4: a 1200
+ *  still up to 4800 device pixels wide). */
 /** High frequency and ONE octave: film grain is a fine speckle, and fractal noise at a low
  *  frequency with octaves stacked is weather — soft blotches the size of a thumb that read
  *  as a dirty lens, not as texture. */
@@ -611,16 +649,40 @@ const GLOW_LIFT = 4;
  *  away — the rings came straight back in Telegram. */
 const GRAIN = { frequency: 1.6, octaves: 1, alpha: 0.07, tile: 256 };
 
-/** The grain as SVG filter markup, for a `<filter id="grain">` in either emitter. */
-function grainFilter(): string {
-  return `<feTurbulence type="fractalNoise" baseFrequency="${GRAIN.frequency}" numOctaves="${GRAIN.octaves}" stitchTiles="stitch" result="noise"/><feColorMatrix in="noise" type="saturate" values="0" result="grey"/><feComponentTransfer in="grey"><feFuncA type="table" tableValues="0 ${GRAIN.alpha}"/></feComponentTransfer>`;
-}
+/** What a page needs to put a still's noise on its own pixels: the patterns that carry
+ *  it, and how much finer than the still's units their user space is. The pattern's
+ *  tile is `GRAIN.tile` pattern units; a page sets `patternTransform` to
+ *  `scale(fine × still units per device pixel)`, plus the shift that lands the tile's
+ *  origin on a device pixel. Without it the tile is 1:1 at the still's own size. */
+export const GRAIN_FIT = { selector: "pattern[data-grain]", fine: 4 } as const;
 
-/** The grain as a CSS background layer: one tile of noise, to be repeated over the
- *  ground. A data URI, so a page needs no asset for it. */
+/** A tile of noise, as a data URI: a page and a still need no asset for it. Stitched, so
+ *  it repeats without a seam. `alpha` is the transfer table from the noise to opacity. */
+const noiseTile = (alpha: string): string =>
+  `data:image/svg+xml,${encodeURIComponent(
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${GRAIN.tile}" height="${GRAIN.tile}"><filter id="g" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="${GRAIN.frequency}" numOctaves="${GRAIN.octaves}" stitchTiles="stitch" result="noise"/><feColorMatrix in="noise" type="saturate" values="0" result="grey"/><feComponentTransfer in="grey"><feFuncA type="table" tableValues="${alpha}"/></feComponentTransfer></filter><rect width="100%" height="100%" fill="#fff" filter="url(#g)"/></svg>`,
+  )}`;
+
+const GRAIN_TILE = noiseTile(`0 ${GRAIN.alpha}`);
+
+/** THE PICTURE IS DITHERED BEFORE IT DISSOLVES. The grain lies on the ground, under the
+ *  picture, so across the dissolve it fades out exactly as the picture fades in: where
+ *  the picture is nine tenths there, a tenth of the grain is left, and the last levels of
+ *  the ramp from ground to picture land as bare 8-bit steps, a vertical strip of bands at
+ *  the picture's side of the fade. The full-frame filter had it too (runs of 60 identical
+ *  pixels across Franklin's dark backdrop at 1366 wide, Retina), so it is not the tile's.
+ *
+ *  So the picture carries its own dither, inside the group the dissolve masks: as it
+ *  fades in, its dither fades in with it, and the sum of the two noises never drops out.
+ *  It is the grain's tile with the noise HALF-RECTIFIED (`0 0 a`): half the pixels take
+ *  nothing, so it lifts a dark picture by about one level (Franklin's backdrop +1.0, the
+ *  whole portrait +0.5) while breaking every step. The grain's own table would lift a
+ *  portrait's shadows by five. */
+const DITHER_TILE = noiseTile("0 0 0.07");
+
+/** The grain as a CSS background layer, the tile repeated over the ground. */
 export function grainLayer(): string {
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${GRAIN.tile}" height="${GRAIN.tile}"><filter id="g" x="0" y="0" width="100%" height="100%">${grainFilter()}</filter><rect width="100%" height="100%" fill="#fff" filter="url(#g)"/></svg>`;
-  return `url("data:image/svg+xml,${encodeURIComponent(svg)}") 0 0 / ${GRAIN.tile}px ${GRAIN.tile}px repeat`;
+  return `url("${GRAIN_TILE}") 0 0 / ${GRAIN.tile}px ${GRAIN.tile}px repeat`;
 }
 
 /** The glow's two stops for a ground colour: the centre, lifted, and the ground itself.
@@ -716,6 +778,17 @@ const esc = (s: string) =>
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;");
 
+/** The prefix of a still's ids, named by what its defs hold: the ground and the frame.
+ *  A still is inlined several to a page, and ids are global to the document, so five
+ *  stills each defining `glow` drew all five on the first one's ground in Chromium.
+ *  Two stills share ids only when their defs are the same. FNV-1a, 32 bits. */
+function defsId(key: string): string {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < key.length; i++)
+    h = Math.imul(h ^ key.charCodeAt(i), 0x01000193);
+  return `ag-quote-${(h >>> 0).toString(36)}`;
+}
+
 /** The quote as a social preview: the mark, the words, the attribution, and the
  *  author's face bled into the right edge under a gradient. 1200x630 is the size every
  *  platform crops from, so it is the default and not a parameter anyone should have to
@@ -757,6 +830,7 @@ export function renderQuoteSvg(
   ];
   const fg = esc(foreground);
   const mut = esc(muted);
+  const id = defsId(`${glowCentre}|${width}|${height}`);
   const unit = unitOf(width);
   const pad = Math.round(unit * MARGIN);
   // THE PICTURE IS NEVER CROPPED SIDEWAYS, and it is not aligned either — it is SLID so
@@ -829,7 +903,7 @@ export function renderQuoteSvg(
   const step = Math.round(size * LINE);
   const textH = (lines.length - 1) * step + (CAP + DESC) * size;
   const top = Math.round(markY + (attrTop - markY - textH) * BLOCK_AT);
-  const mark = `<path d="${MARK_PATH}" transform="translate(${pad} ${markY}) scale(${markK.toFixed(4)})" fill="${ink}" opacity="${MARK_OPACITY}" filter="url(#soften)"/>`;
+  const mark = `<path d="${MARK_PATH}" transform="translate(${pad} ${markY}) scale(${markK.toFixed(4)})" fill="${ink}" opacity="${MARK_OPACITY}" filter="url(#${id}-soften)"/>`;
 
   const y = top + CAP * size;
   const rows = lines
@@ -853,30 +927,44 @@ export function renderQuoteSvg(
       ? `<text x="${pad}" y="${Math.round(attrBase)}">${name}${when}</text>`
       : "";
 
-  // The picture dissolves into the flat ground, and there is nothing between them.
+  // Noise is painted in the finer user space GRAIN_FIT names, the full height of the frame.
+  const fine = GRAIN_FIT.fine;
+  const noise = (x: number, w: number, pattern: string) =>
+    `<g transform="scale(${1 / fine})"><rect x="${x * fine}" width="${w * fine}" height="${height * fine}" fill="url(#${id}-${pattern})"/></g>`;
+  const tile = (pattern: string, href: string, shift: number) =>
+    `<pattern id="${id}-${pattern}" data-grain="" patternUnits="userSpaceOnUse" patternTransform="scale(${fine})" x="${shift}" y="${shift}" width="${GRAIN.tile}" height="${GRAIN.tile}">
+      <image href="${href}" width="${GRAIN.tile}" height="${GRAIN.tile}"/>
+    </pattern>`;
+
+  // The picture dissolves into the flat ground, and there is nothing between them but
+  // the picture's own dither, which dissolves with it.
   const face = avatar
-    ? `<image href="${esc(avatar)}" x="${slotX}" y="0" width="${height}" height="${height}" preserveAspectRatio="xMidYMid slice" mask="url(#dissolve)"/>`
+    ? `<g mask="url(#${id}-dissolve)">
+    <image href="${esc(avatar)}" x="${slotX}" y="0" width="${height}" height="${height}" preserveAspectRatio="xMidYMid slice"/>
+    ${noise(faceX, width - faceX, "dither")}
+  </g>`
     : "";
 
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}">
   <defs>
-    <filter id="grain" x="0" y="0" width="100%" height="100%">${grainFilter()}</filter>
-    <radialGradient id="glow" cx="${GLOW.cx}" cy="${GLOW.cy}" r="${GLOW.r}">
+    ${tile("grain", GRAIN_TILE, 0)}
+    ${tile("dither", DITHER_TILE, GRAIN.tile / 2)}
+    <radialGradient id="${id}-glow" cx="${GLOW.cx}" cy="${GLOW.cy}" r="${GLOW.r}">
       <stop offset="0" stop-color="${glowCentre}"/>
       <stop offset="1" stop-color="${glowEdge}"/>
     </radialGradient>
-    <filter id="soften" x="-25%" y="-25%" width="150%" height="150%">
+    <filter id="${id}-soften" x="-25%" y="-25%" width="150%" height="150%">
       <feGaussianBlur stdDeviation="${Math.round(markH * MARK_BLUR)}"/>
     </filter>
-    <linearGradient id="fade" gradientUnits="userSpaceOnUse" x1="${faceX}" x2="${featherX}">
+    <linearGradient id="${id}-fade" gradientUnits="userSpaceOnUse" x1="${faceX}" x2="${featherX}">
       ${DISSOLVE.map(([at, on]) => `<stop offset="${at}" stop-color="#fff" stop-opacity="${on}"/>`).join("\n      ")}
     </linearGradient>
-    <mask id="dissolve" maskUnits="userSpaceOnUse" x="0" y="0" width="${width}" height="${height}">
-      <rect x="${faceX}" y="0" width="${width - faceX}" height="${height}" fill="url(#fade)"/>
+    <mask id="${id}-dissolve" maskUnits="userSpaceOnUse" x="0" y="0" width="${width}" height="${height}">
+      <rect x="${faceX}" y="0" width="${width - faceX}" height="${height}" fill="url(#${id}-fade)"/>
     </mask>
   </defs>
-  <rect width="${width}" height="${height}" fill="url(#glow)"/>
-  <rect width="${width}" height="${height}" fill="#fff" filter="url(#grain)"/>
+  <rect width="${width}" height="${height}" fill="url(#${id}-glow)"/>
+  ${noise(0, width, "grain")}
   ${face}
   ${mark}
   <g font-family="${esc(fontFamily)}" font-size="${size}" xml:space="preserve">

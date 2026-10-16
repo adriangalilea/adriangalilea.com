@@ -1,3 +1,10 @@
+// Keyboard shortcuts as data: a string of keys split into the caps a person presses,
+// in the Mac's own glyphs. It reads the notations people write (`⌃⌥⌘A`,
+// `ctrl+alt+cmd+a`, `⇧⌘F`, `← →`) and refuses anything that is not keys (`awake
+// hotkey`), so a renderer can tell a shortcut from a command without being told.
+// Framework-free.
+
+/** Modifier glyphs, in the order macOS prints them. */
 const MODIFIERS = ["fn", "⌃", "⌥", "⇧", "⌘"] as const;
 const MODIFIER_GLYPHS = "⌃⌥⇧⌘";
 
@@ -242,6 +249,10 @@ const ROLE_KEYS: Record<string, (p: KeyPress) => boolean> = {
   tab: (p) => activates(p) || NAVIGATION.has(p.key),
   tablist: (p) => NAVIGATION.has(p.key),
   slider: (p) => NAVIGATION.has(p.key),
+  // A separator that takes focus is a window splitter (a resizable's handle): the
+  // arrows, Home and End move it, Enter puts it back. One that does not never holds
+  // a key at all.
+  separator: (p) => NAVIGATION.has(p.key) || p.key === "Enter",
   spinbutton: (p) => NAVIGATION.has(p.key),
   scrollbar: (p) => NAVIGATION.has(p.key),
   toolbar: (p) =>

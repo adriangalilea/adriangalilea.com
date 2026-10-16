@@ -15,6 +15,14 @@
 //      first. Each says whether the press was its (`onKey` returns true) and the first
 //      that takes it ends the press: a gallery and a player on one page never both
 //      answer Space.
+//   4. Never an instance or a layer whose root is inside an `inert` subtree: inert is
+//      the platform saying nothing in there takes interaction (a picture of a control,
+//      a page under a modal of its own), and a key is interaction.
+//   5. An instance inside `[data-keys="held"]` only while the hand holds it: focus is
+//      in it, or it was the last thing pressed or focused in. Never for the pointer
+//      resting over it, never page-wide. For a page of live examples (a gallery of
+//      cards, each a real player or list): every example works under the hand, and
+//      the page's own keys stay the page's.
 //
 // THE ESCAPE LADDER is the same listener: the layers open now (a window-filling
 // player, a full view, a sheet of keys) in the order they opened, and Esc closes the
@@ -159,15 +167,29 @@ let touched: Element | null = null;
 const holds = (root: Element | null, el: Element | null) =>
   !!root && !!el && root.contains(el);
 
+/** Inside an `inert` subtree: what the platform says takes no interaction (a picture
+ *  of a control, a page under a modal of its own), so no press is offered to it and
+ *  none of its layers closes on Esc. */
+const asleep = (root: Element | null) => !!root?.closest("[inert]");
+
+/** Inside a region whose instances take a press only while held (rule 5). */
+const heldOnly = (root: Element | null) =>
+  !!root?.closest('[data-keys="held"]');
+
 /** The instances a press is offered to, in order (see the header). */
 function ranked(): Instance[] {
   const focus = document.activeElement;
-  const modal = [...instances].filter((i) => i.modal);
+  const awake = [...instances].filter((i) => {
+    const r = i.root();
+    if (asleep(r)) return false;
+    return !heldOnly(r) || holds(r, focus) || holds(r, touched);
+  });
+  const modal = awake.filter((i) => i.modal);
   const pool = modal.length
-    ? [...instances].filter((i) =>
+    ? awake.filter((i) =>
         modal.some((m) => m === i || holds(m.root(), i.root())),
       )
-    : [...instances];
+    : awake;
   const rank = (i: Instance) => {
     const r = i.root();
     if (holds(r, focus)) return 0;
@@ -204,9 +226,10 @@ function offer(event: KeyboardEvent, list: Instance[]): boolean {
 function onKeyDown(event: KeyboardEvent) {
   if (event.isComposing) return;
   const order = ranked();
+  const open = [...layers].filter((l) => !asleep(l.root()));
   // Esc: a modal first (it is above every layer), then the innermost layer, and only
   // then an instance that answers it itself.
-  if (event.key === "Escape" && layers.size > 0) {
+  if (event.key === "Escape" && open.length > 0) {
     if (event.defaultPrevented) return;
     if (
       offer(
@@ -215,7 +238,7 @@ function onKeyDown(event: KeyboardEvent) {
       )
     )
       return;
-    const top = [...layers].sort((a, b) => b.opened - a.opened)[0] as Layer;
+    const top = open.sort((a, b) => b.opened - a.opened)[0] as Layer;
     if (ownedHere(event, top.root())) return;
     event.preventDefault();
     top.onEscape();

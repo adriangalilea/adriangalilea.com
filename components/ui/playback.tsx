@@ -17,6 +17,7 @@
 
 import * as React from "react";
 import { openLayer } from "@/components/ui/key-router";
+import { PortalTarget, usePortalTarget } from "@/components/ui/portal";
 import { type Clip, type Outline, outlineOf, type Span } from "@/lib/clip";
 import {
   clampRate,
@@ -56,6 +57,14 @@ export function useTimebase(): Timebase {
       "no timebase: place this inside an owner (Playback, Player, VideoPlayback, AudioPlayback)",
     );
   return timebase;
+}
+
+/** The timebase around this component, or null outside any owner: for a follower
+ *  that also stands alone (a film's tiles hand a press to the owner when there is one,
+ *  and play it themselves when there is none). Everything that needs a clock to mean
+ *  anything asks `useTimebase`, which throws. */
+export function useOptionalTimebase(): Timebase | null {
+  return React.useContext(TimebaseContext);
 }
 
 /** A slice of the timebase's state; re-renders only when that slice changes:
@@ -380,9 +389,8 @@ export function usePictureZoomState<T>(select: (s: PictureZoomState) => T): T {
 export const PLAYER_FLASH =
   "pointer-events-none absolute top-3 left-1/2 z-10 -translate-x-1/2 rounded-md bg-black/70 px-2 py-1 font-mono text-white text-xs tabular-nums";
 
-const LayerContext = React.createContext<HTMLElement | null>(null);
-
-/** Where a player's popovers and menus go: an element inside the player, out of its
+/** Where a player's popovers and menus go (declared with portal's `PortalTarget`, so
+ *  every popup item inside finds it with no `container` passed): an element inside the player, out of its
  *  flow (absolute, no size), so a popup moves nothing around it (a portal into the
  *  player's own box was one more child of its layout, and opening a card pushed the
  *  page down) and still shows when the player is fullscreen (one portalled to the
@@ -407,7 +415,7 @@ export function PlayerLayer({
   children: React.ReactNode;
   active?: boolean;
 }) {
-  const outer = React.useContext(LayerContext);
+  const outer = usePortalTarget();
   const [layer, setLayer] = React.useState<HTMLElement | null>(null);
   return (
     <>
@@ -416,16 +424,9 @@ export function PlayerLayer({
         data-slot="player-layer"
         className="contain-layout absolute top-0 left-0 z-50 size-0"
       />
-      <LayerContext.Provider value={active ? layer : outer}>
-        {children}
-      </LayerContext.Provider>
+      <PortalTarget element={active ? layer : outer}>{children}</PortalTarget>
     </>
   );
-}
-
-/** The player's layer for a popup's portal (`container`). */
-export function usePlayerLayer(): HTMLElement | null {
-  return React.useContext(LayerContext);
 }
 
 /** One thing a playlist plays: at least a name; the rest is whatever its player takes
@@ -733,7 +734,16 @@ export function usePlayback(
     },
     [store],
   );
-  React.useEffect(() => () => cancelAnimationFrame(frame.current), []);
+  // Its handle cleared with it: a loop cancelled but still named here (React mounts
+  // an effect twice in development) kept `go` from ever starting another, and a
+  // clock told to play stood still at 0.
+  React.useEffect(
+    () => () => {
+      cancelAnimationFrame(frame.current);
+      frame.current = 0;
+    },
+    [],
+  );
 
   const timebase = React.useMemo<Timebase>(() => {
     const at = () => store.get().at;

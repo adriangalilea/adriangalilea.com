@@ -36,9 +36,10 @@ import {
   MaterialProvider,
   type Scheme,
   useMaterial,
-  useScheme,
+  useSurfaceScheme,
 } from "@/components/ui/material";
 import { glassVariants, schemeOf } from "@/components/ui/material-glass";
+import { usePortalTarget } from "@/components/ui/portal";
 import { cn } from "@/lib/utils";
 
 /** Shares the waiting between the tooltips inside it: after one opens, the next opens
@@ -108,7 +109,10 @@ const PLAIN_FACE =
 const glassFace = (card: boolean) =>
   cn(
     glassVariants({ shape: "surface" }),
-    card ? "rounded-xl" : "rounded-full px-2.5",
+    // A line is one line tall (20 px and 4 px either side): its pill's radius 14 px.
+    card
+      ? "[--glass-radius:--theme(--radius-xl)]"
+      : "px-2.5 [--glass-radius:14px]",
     "[--glass-blur:14px]",
   );
 
@@ -125,12 +129,15 @@ export function TooltipContent({
   material,
   scheme,
   className,
+  ref,
   ...props
 }: TooltipContentProps) {
   const m = useMaterial(material);
-  const s = useScheme(scheme);
+  const target = usePortalTarget();
+  // Over a picture it is read by the part of it under the tooltip.
+  const [s, here] = useSurfaceScheme<HTMLDivElement>(scheme, ref);
   return (
-    <Base.Portal container={container}>
+    <Base.Portal container={container ?? target}>
       <Base.Positioner
         side={side}
         align={align}
@@ -138,6 +145,7 @@ export function TooltipContent({
         className="z-50"
       >
         <Base.Popup
+          ref={here}
           data-slot="tooltip-content"
           data-material={m}
           className={cn(
@@ -146,9 +154,17 @@ export function TooltipContent({
               ? "block p-3"
               : // A name stays on one line; an explanation wraps at a reading width.
                 "flex max-w-72 items-center gap-2 px-2 py-1",
-            "origin-(--transform-origin) transition-[opacity,scale] duration-150 ease-out data-[ending-style]:scale-95 data-[ending-style]:opacity-0 data-[starting-style]:scale-95 data-[starting-style]:opacity-0 motion-reduce:transition-none",
+            "origin-(--transform-origin) data-[ending-style]:scale-95 data-[ending-style]:opacity-0 data-[starting-style]:scale-95 data-[starting-style]:opacity-0",
             schemeOf(s),
-            m === "glass" ? glassFace(card) : PLAIN_FACE,
+            m === "glass"
+              ? [
+                  glassFace(card),
+                  "[--glass-moves:opacity_150ms_var(--ease-out),scale_150ms_var(--ease-out)]",
+                ]
+              : [
+                  PLAIN_FACE,
+                  "transition-[opacity,scale] duration-150 ease-out motion-reduce:transition-none",
+                ],
             className,
           )}
           {...props}

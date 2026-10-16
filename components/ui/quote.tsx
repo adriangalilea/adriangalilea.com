@@ -1,5 +1,38 @@
+// Somebody else's words, on the page, at THREE WEIGHTS — and every one of them reads its
+// numbers from `quote-card`, the same module that draws the social preview, so there is
+// nothing to keep in sync by hand and nothing that can drift when either is touched.
+//
+//   card     the poster: the portrait bleeding out of the right edge, the ghost mark, the
+//            words composed in the band. It IS the link preview, drawn in the DOM.
+//   feature  the page's own weight: no frame, no portrait — the mark, the words set at
+//            display size over it, one line of attribution. What a quote's own page opens
+//            with, and the step the other two left missing.
+//   prose    a quotation inside an article, at the page's own type, marked by a small
+//            mark rather than a rule. What an embed in a feed card is.
+//
+// WHAT THE THREE CANNOT SHARE WITH THE STILL is measurement. A browser knows exactly how
+// wide a character is and the still has no way to find out, so the still estimates `ch`
+// and these state the measure in real `ch` and let the layout engine be right. They agree
+// on how many characters a line carries; they may disagree about which word ends one.
+//
+// It renders a real `<blockquote>` with a real `<cite>`, because that is what this is,
+// and a screen reader announcing "blockquote" is information the styling cannot carry.
+//
+// STYLE IS UTILITIES IN THE JSX, merged with `cn` and `className` last, the way every
+// shadcn item is, so a consumer overrides a padding by passing a class and never fights
+// a stylesheet. The numbers that are not fixed values — everything the card and the
+// feature derive from the module's constants (cqw sizes, shares of the frame, the focus
+// gradient, the dissolve mask) — arrive as custom properties on `style` and LAND through
+// `-(--…)` utilities: `w-(--ag-quote-column)`, `text-(length:--ag-quote-size)`. The
+// property is the seam between the arithmetic and the CSS; the class says which
+// property each number drives. There is no quote.css.
+
 import { Avatar } from "@/components/ui/avatar";
 import { AvatarPortrait } from "@/components/ui/avatar-portrait";
+import { Image } from "@/components/ui/image";
+import type { Material, Scheme } from "@/components/ui/material";
+import { QuoteMarkMask } from "@/components/ui/quote-mark";
+import { QuoteSurface } from "@/components/ui/quote-surface";
 import {
   ATTRIB_GAP,
   assert,
@@ -26,7 +59,6 @@ import {
   MARK_BOX,
   MARK_EM,
   MARK_OPACITY,
-  MARK_PATH,
   NAME_EM,
   QUOTE_CH,
   type Quote as QuoteData,
@@ -63,6 +95,14 @@ export interface QuoteProps extends QuoteData {
    *  condensed face is set a third too small for its measure. Pass the same number the
    *  still gets, so the page and the preview set the same type. */
   ch?: number;
+  /** The surface `prose` and `feature` stand on: plain, one step up from the page, or
+   *  the one glass material (`QuoteSurface`); default the nearest MaterialProvider's.
+   *  The card has no glass face: it is its own link preview, drawn in the DOM, and a
+   *  card in glass would be a card its preview does not match. Asked for one, it
+   *  throws. */
+  material?: Material;
+  /** The colour scheme the surface stands in (material). */
+  scheme?: Scheme;
   className?: string;
   children?: React.ReactNode;
 }
@@ -92,11 +132,6 @@ const FEATURE_FILL = 0.8;
  *  reads as two objects stacked. */
 const FEATURE_CLIMB = 0.25;
 
-/** ONE STEP UP FROM THE PAGE, for prose and feature. An embed is a thing quoted INTO the
- *  article, and a surface is what says so: the same words flat on the page read as the
- *  author's own. A mix off the foreground rather than a theme token, so it is one step up
- *  on any ground — light, dark, tinted — without a variable to wire. */
-const STEP = "rounded-xl bg-foreground/4";
 /** The words are a QUOTATION and take a reading serif: `--font-quote` (tokens) names
  *  the face, the same slot the still fills with its `fontFamily`. NOT `--font-serif`: a
  *  page's serif is usually its heading face, and a display serif drawn for headlines
@@ -130,6 +165,8 @@ export function Quote({
   focus = FOCUS,
   width = QUOTE_WIDTH,
   ch = QUOTE_CH,
+  material,
+  scheme,
   className,
   children,
 }: QuoteProps) {
@@ -159,12 +196,12 @@ export function Quote({
   // the 18 px quote with 16 px padding it was drawn as.
   if (variant === "prose")
     return (
-      <figure
-        data-slot="quote"
-        data-variant="prose"
+      <QuoteSurface
+        variant="prose"
+        material={material}
+        scheme={scheme}
         className={cn(
           "relative m-0 py-[0.889em] pr-[1.111em] pl-[0.8em] text-[1.125em]",
-          STEP,
           className,
         )}
         style={{ "--ag-quote-ink": ink } as React.CSSProperties}
@@ -185,7 +222,7 @@ export function Quote({
           focus={focus}
           face="sm"
         />
-      </figure>
+      </QuoteSurface>
     );
 
   if (variant === "feature") {
@@ -206,10 +243,11 @@ export function Quote({
     // under the mark, and the composition lost its left edge.
     const mark = MARK_EM / aspect;
     return (
-      <figure
-        data-slot="quote"
-        data-variant="feature"
-        className={cn("relative m-0 @container px-8 py-6", STEP, className)}
+      <QuoteSurface
+        variant="feature"
+        material={material}
+        scheme={scheme}
+        className={cn("relative m-0 @container px-8 py-6", className)}
         style={
           {
             "--ag-quote-ink": ink,
@@ -245,9 +283,14 @@ export function Quote({
           focus={focus}
           face="md"
         />
-      </figure>
+      </QuoteSurface>
     );
   }
+
+  assert(
+    material !== "glass",
+    "the quote card is its own link preview and has no glass face; a glass quote is prose or feature",
+  );
 
   // THE CARD. Every number below is the still's, recomputed as a share of the frame
   // rather than in pixels, so one set of constants drives both surfaces at any size.
@@ -341,8 +384,7 @@ export function Quote({
         // indefinite (it collapsed to a strip along the top edge); a square whose side is
         // stated outright is the same number in every engine.
         // Decorative: the name below it is the accessible attribution.
-        // biome-ignore lint/performance/noImgElement: an item cannot assume next/image
-        <img
+        <Image
           data-slot="quote-portrait"
           className="absolute top-0 left-(--ag-quote-slot) size-(--ag-quote-square) max-w-none object-cover mask-(--ag-quote-dissolve)"
           src={author.avatar}
@@ -388,16 +430,25 @@ export function Quote({
 /** THE MARK IS THE SIGNAL AT EVERY WEIGHT, and a rule down the side is not. A rule is
  *  what every blockquote on the web does; the mark is what makes this one the same object
  *  as its card. One drawing, shipped as an outline; each weight places and scales it. */
+/** The mark, painted in the quote's ink through the outline `QuoteMarkMask` sets once
+ *  per page (quote-mark). Printed as an svg in every quote, the 876-byte outline was
+ *  most of a feed of short quotes. */
+const MARK_ASPECT = `${MARK_BOX.w} / ${MARK_BOX.h}`;
+
 function Mark({ className }: { className: string }) {
   return (
-    <svg
-      data-slot="quote-mark"
-      className={cn("absolute w-auto fill-(--ag-quote-ink)", className)}
-      viewBox={`0 0 ${MARK_BOX.w} ${MARK_BOX.h}`}
-      aria-hidden="true"
-    >
-      <path d={MARK_PATH} />
-    </svg>
+    <>
+      <QuoteMarkMask />
+      <span
+        data-slot="quote-mark"
+        aria-hidden="true"
+        className={cn(
+          "absolute w-auto bg-(--ag-quote-ink) [mask:var(--ag-quote-mark-mask)_center/contain_no-repeat]",
+          className,
+        )}
+        style={{ aspectRatio: MARK_ASPECT }}
+      />
+    </>
   );
 }
 

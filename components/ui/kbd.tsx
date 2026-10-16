@@ -4,8 +4,9 @@
 // notation lib/keys reads (`ctrl+alt+cmd+a`, `← →` for keys pressed in turn), and
 // screams when the string is not keys. `<KeysText>` draws a sentence with its
 // shortcuts as keys ("Press ⌃⌥⌘A to …"), for text that comes from somewhere else: a
-// caption, a scene, a changelog. `isKeys` lets a renderer decide between keys and
-// code (`awake hotkey` is a command, not keys). Keys are `not-prose`: inside article
+// caption, a scene, a changelog. A renderer deciding between keys and code (`awake
+// hotkey` is a command, not keys) asks lib/keys, `keys(text) !== null`, which a server
+// component can call and this client module cannot offer it. Keys are `not-prose`: inside article
 // typography they keep their own look, never a frame around the whole shortcut. Two
 // materials (`material`): plain, a key with a deeper foot; glass, a small key of the
 // material's glass (inside a glass tooltip or menu they are glass on their own).
@@ -14,10 +15,6 @@ import { type Material, useMaterial } from "@/components/ui/material";
 import { glassVariants } from "@/components/ui/material-glass";
 import { capLabel, keyName, keys, type Platform, withKeys } from "@/lib/keys";
 import { cn } from "@/lib/utils";
-
-export function isKeys(text: string): boolean {
-  return keys(text) !== null;
-}
 
 /** One key. Every measure is in em, so a cap is the same shape at any size: inline
  *  in a sentence or large over a stage. The Mac's own face draws ⌃⌥⌘ as macOS does. */
@@ -30,7 +27,7 @@ const CAP_FACE: Record<Material, string> = {
   plain: "border border-b-2 border-border bg-muted text-foreground/90",
   glass: cn(
     glassVariants({ shape: "surface" }),
-    "rounded-[0.32em] text-current [--glass-blur:8px]",
+    "text-current [--glass-blur:8px] [--glass-radius:0.32em]",
   ),
 };
 

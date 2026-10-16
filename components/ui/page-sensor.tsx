@@ -1,8 +1,9 @@
 "use client";
 
 // PAGE SENSOR: a site's pages in the event stream (the utils contract, "Web pages"),
-// written through ts-utils' logger and shipped to the site's own route, where ts-utils'
-// visits module composes visits from them (the server alone sees the caller).
+// written through ts-utils' logger and shipped to the site's own route, where visits
+// (lib/visits, this item's server half) composes visits from them (the server alone
+// sees the caller), and user-flows draws them.
 //
 //   <PageSensor service="garden-web" collector="/api/events"
 //               build={sha} place={placeOf} />          once, in the root layout
@@ -54,7 +55,7 @@ export interface PageSensorProps {
   /** The program in every event: `garden-web`. */
   service: string;
   /** Where batches go, a URL or a path on this site (`/api/events`, a route of
-   *  ts-utils' `visitsRoute`); without one the stream stays in the console. */
+   *  lib/visits' `visitsRoute`); without one the stream stays in the console. */
   collector?: string;
   /** The deploy that served the page, a git sha. */
   build?: string;

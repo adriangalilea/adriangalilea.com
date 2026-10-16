@@ -1,3 +1,12 @@
+/* lightbox: the root is Base UI's popup, fixed over the viewport. Its z-index is a
+   function of phase: under the page's chrome while flying (--lb-z-fly), over
+   everything once it owns the screen (--lb-z); consumers set both beside their nav.
+   --lb-p (0 at the source, 1 at rest) is the one number the engine writes per frame
+   besides the active layer's transform. It does not inherit: the engine sets it on
+   its three readers (the scrim, the chrome group, the active layer), so the rail's
+   subtree and the sheet never restyle per frame. The scroll lock and its gutter are
+   Base UI's (useScrollLock); no token rule duplicates them. */
+
 @property --lb-p {
   syntax: "<number>";
   inherits: false;
@@ -153,6 +162,16 @@
     height: 100%;
     border: 0;
   }
+  /* After the rule it shares with the media (its `display` wins) and before the
+   frame layer's (more specific, which it must not follow). */
+  .ag-lb-frame-ghost {
+    display: grid;
+    place-items: center;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    text-transform: lowercase;
+    opacity: var(--alpha-meta);
+  }
   .ag-lb-layer[data-active] .ag-lb-crop,
   .ag-lb-layer[data-active] .ag-lb-media {
     will-change: transform;
@@ -169,14 +188,6 @@
   .ag-lb-layer[data-kind="frame"] iframe,
   .ag-lb-layer[data-kind="frame"] .ag-lb-frame-ghost {
     background: var(--sidebar);
-  }
-  .ag-lb-frame-ghost {
-    display: grid;
-    place-items: center;
-    font-family: var(--font-mono);
-    font-size: 0.75rem;
-    text-transform: lowercase;
-    opacity: var(--alpha-meta);
   }
   /* The frame owns its own pointer, except while a drag crosses it. */
   .ag-lb[data-gesture] iframe {

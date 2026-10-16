@@ -1,3 +1,19 @@
+// PREPARE A FILE ONCE, for the web: its facts (`MediaAsset`) and the files a page shows
+// (the source made web-ready, a poster, stills along a clip), content-addressed, with
+// no storage, credentials or database: the host writes the files where it keeps them
+// and stores the asset beside them.
+//
+// What comes in: bytes (an upload), a path (a file on disk) or a URL (a file on
+// another host, read by ranges: ffmpeg seeks, so a span of a long video costs that
+// span). Images go through sharp, untouched but measured; video and sound through
+// ffmpeg, opt-in. What a gallery needs beyond a player is asked for, not assumed: a
+// `span` of the source, `frames` along it (a still every so many seconds, what a cell
+// scrubs and a hover lands on), sound alone (`audioOnly`, a speech kept as audio), and
+// always the picture's `average` colour.
+//
+// The asset is the contract (lib/media-asset): a Mac app making the same JSON with
+// AVFoundation is read by the same gallery.
+
 import { execFile } from "node:child_process";
 import { createHash } from "node:crypto";
 import {
@@ -87,20 +103,32 @@ async function preview(
     .resize({ width: 16, height: 16, fit: "inside", withoutEnlargement: true })
     .png()
     .toBuffer();
-  // The mean colour, flattened over black: what a cell shows before the picture.
-  // A true mean of every pixel (a 1×1 resize only estimates one), so the Swift
-  // preparer's CIAreaAverage gives the same colour.
-  const { channels } = await image.clone().flatten().stats();
   return {
     poster,
     mime: `image/${format}`,
     ext: format === "jpeg" ? "jpg" : "webp",
     blurDataURL: `data:image/png;base64,${tiny.toString("base64")}`,
-    average: `#${channels
-      .slice(0, 3)
-      .map((c) => Math.round(c.mean).toString(16).padStart(2, "0"))
-      .join("")}`,
+    average: await averageOf(data, maxPixels),
   };
+}
+
+/** A picture's mean colour as `#rrggbb`, flattened over black: what a cell shows
+ *  before the picture, and the colour anything drawn from it is tinted by (a
+ *  quote's ground, a contact's poster). A true mean of every pixel (a 1×1 resize
+ *  only estimates one), so the Swift preparer's CIAreaAverage gives the same
+ *  colour. The one measure of it: a picture that is not prepared (an avatar
+ *  fetched at request time) is measured here too. */
+export async function averageOf(
+  data: Buffer | Uint8Array,
+  maxPixels = 40_000_000,
+): Promise<string> {
+  const { channels } = await sharp(data, { limitInputPixels: maxPixels })
+    .flatten()
+    .stats();
+  return `#${channels
+    .slice(0, 3)
+    .map((c) => Math.round(c.mean).toString(16).padStart(2, "0"))
+    .join("")}`;
 }
 
 /** An input as bytes, for the image path. */
@@ -499,3 +527,13 @@ export function mediaAsset(
       : {}),
   };
 }
+
+/** This preparer's own recipe, what `keep` (prepare-keep) keys every result by beside
+ *  its inputs: the code that prepares (its functions' own source) and sharp's versions
+ *  (libvips and the codecs). Any of them changing prepares everything again. */
+export const RECIPE = [
+  String(preview),
+  String(averageOf),
+  String(prepareMedia),
+  JSON.stringify(sharp.versions),
+].join("\0");

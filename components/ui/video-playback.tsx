@@ -20,7 +20,8 @@
 // picture's stage; and its zoom.
 
 import * as React from "react";
-import { MaterialProvider } from "@/components/ui/material";
+import { useBackdropSource } from "@/components/ui/backdrop";
+import { BackdropScope, MaterialProvider } from "@/components/ui/material";
 import {
   Caption,
   CaptionLines,
@@ -33,6 +34,7 @@ import {
   useStageAwake,
   useStageClicks,
 } from "@/components/ui/media-timebase";
+import { pinchInput } from "@/components/ui/pinch-input";
 import {
   OutlineProvider,
   onScreenChange,
@@ -63,8 +65,6 @@ import {
   FIT_VIEW,
   fitted,
   frameView,
-  PINCH_PER_WHEEL,
-  PINCH_SLOP,
   type PinchRung,
   pinchRaw,
   pinchRung,
@@ -375,11 +375,6 @@ function PictureCaptions() {
   );
 }
 
-/** Quiet that ends a wheel's pinch or pan: browsers report no wheel phases. */
-const WHEEL_END_MS = 150;
-/** px a press travels before it is a pan, not a click. */
-const PAN_SLOP = 4;
-
 /** The picture's zoom from the hand, on the stage: measured (the stage and the
  *  picture's own size, and again when either changes), a pinch (a trackpad's, which
  *  arrives as a ctrl-wheel, or two fingers) on the ladder every player shares
@@ -468,124 +463,50 @@ function useZoomInput(
         "[data-slot=player-chrome] button, [data-slot=player-chrome] [role=slider], [data-slot=player-bar], [data-slot=player-zoom-finder]",
       ) !== null;
 
-    // A wheel: with ctrl (a trackpad's pinch), the ladder at the hand; zoomed, a
-    // scroll pans.
-    let wheel: "pinch" | "pan" | null = null;
-    let stretch = 1;
-    let wheelEnd = 0;
-    const onWheel = (e: WheelEvent) => {
-      if (onChrome(e.target)) return;
-      if (!e.ctrlKey && !zoomed() && wheel === null) return;
-      e.preventDefault();
-      window.clearTimeout(wheelEnd);
-      wheelEnd = window.setTimeout(() => {
-        wheel = null;
-        letGo();
-      }, WHEEL_END_MS);
-      if (e.ctrlKey) {
-        const start = wheel !== "pinch";
-        if (start) {
-          stretch = 1;
-          // A spread is a negative deltaY.
-          begin(e.deltaY < 0);
-        }
-        wheel = "pinch";
-        stretch *= Math.exp(-e.deltaY * PINCH_PER_WHEEL);
-        pinchTo(stretch, fromCentre(e.clientX, e.clientY), start);
-        return;
-      }
-      wheel = "pan";
-      zoom.pan(-e.deltaX, -e.deltaY);
-    };
-
-    // Pointers: a mouse or pen drag pans while zoomed; two fingers pinch, one pans.
-    const points = new Map<number, { x: number; y: number }>();
-    let spread = 0;
-    let pressed: { x: number; y: number } | null = null;
-    const twoFingers = () => {
-      const [a, b] = [...points.values()];
-      if (!a || !b) return null;
-      return {
-        d: Math.hypot(a.x - b.x, a.y - b.y),
-        mid: fromCentre((a.x + b.x) / 2, (a.y + b.y) / 2),
-      };
-    };
-    const onDown = (e: PointerEvent) => {
-      if (onChrome(e.target)) return;
-      if (e.pointerType !== "touch" && (!zoomed() || e.button !== 0)) return;
-      points.set(e.pointerId, { x: e.clientX, y: e.clientY });
-      pressed = { x: e.clientX, y: e.clientY };
-      panned.current = false;
-      const two = twoFingers();
-      if (two) {
-        spread = two.d;
-        rung = null;
-      }
-    };
-    const onMove = (e: PointerEvent) => {
-      const prev = points.get(e.pointerId);
-      if (!prev) return;
-      points.set(e.pointerId, { x: e.clientX, y: e.clientY });
-      const two = twoFingers();
-      if (two) {
+    // The hand (ui/pinch-input): a pinch on the ladder at its centre; zoomed, a wheel,
+    // a drag or one finger pans.
+    const stopReading = pinchInput(box, {
+      accepts: (target) => !onChrome(target),
+      begin: (out) => {
         panned.current = true;
-        if (!(spread > 0)) return;
-        const ratio = two.d / spread;
-        const start = rung === null;
-        if (start) {
-          if (Math.abs(ratio - 1) < PINCH_SLOP) return;
-          begin(ratio > 1);
-        }
-        pinchTo(ratio, two.mid, start);
-        return;
-      }
-      if (!zoomed()) return;
-      if (
-        pressed &&
-        Math.hypot(e.clientX - pressed.x, e.clientY - pressed.y) < PAN_SLOP &&
-        !panned.current
-      )
-        return;
-      panned.current = true;
-      zoom.pan(e.clientX - prev.x, e.clientY - prev.y);
-    };
-    const onUp = (e: PointerEvent) => {
-      if (!points.delete(e.pointerId)) return;
-      if (points.size === 1) {
-        // From two fingers to one: the pinch is over, the pan goes on from here.
-        letGo();
-        spread = 0;
-        return;
-      }
-      if (points.size === 0) {
-        pressed = null;
-        if (panned.current) zoom.end();
-      }
-    };
+        begin(out);
+      },
+      pinch: (stretch, at, start) =>
+        pinchTo(stretch, fromCentre(at.x, at.y), start),
+      end: letGo,
+      wheel: (e) => {
+        if (!zoomed()) return false;
+        zoom.pan(-e.deltaX, -e.deltaY);
+        return true;
+      },
+      wheelEnd: letGo,
+      // A finger is always read (a pinch may leave it zoomed, its pan going on); a
+      // mouse only while zoomed. Whole, a drag is the page's.
+      press: (e) => {
+        panned.current = false;
+        return e.pointerType === "touch" || zoomed();
+      },
+      drag: (dx, dy) => {
+        if (!zoomed()) return;
+        panned.current = true;
+        zoom.pan(dx, dy);
+      },
+      release: () => zoom.end(),
+    });
     // Zoomed, a finger is the picture's on both axes; whole, the page keeps scrolling.
     const touch = () => {
       box.style.touchAction = zoomed() ? "none" : "pan-y";
     };
     touch();
     const unsubscribe = zoom.subscribe(touch);
-    box.addEventListener("wheel", onWheel, { passive: false });
-    box.addEventListener("pointerdown", onDown);
-    window.addEventListener("pointermove", onMove);
-    window.addEventListener("pointerup", onUp);
-    window.addEventListener("pointercancel", onUp);
     return () => {
       resize.disconnect();
       unsubscribe();
+      stopReading();
       box.style.touchAction = "";
       el.removeEventListener("loadedmetadata", measure);
       el.removeEventListener("resize", measure);
-      box.removeEventListener("wheel", onWheel);
-      box.removeEventListener("pointerdown", onDown);
-      window.removeEventListener("pointermove", onMove);
-      window.removeEventListener("pointerup", onUp);
-      window.removeEventListener("pointercancel", onUp);
       offScreen();
-      window.clearTimeout(wheelEnd);
     };
   }, [zoom, stage, el, panned, root]);
 }
@@ -606,10 +527,15 @@ function useZoomInput(
  *
  *  `fullscreen`: the picture, its chrome over it, is what fullscreen fills (the button,
  *  F, a double click, a pinch), not the player's whole root: for a page laid out
- *  around the player, whose root holds the page. Its popups then open inside it. */
+ *  around the player, whose root holds the page. Its popups then open inside it.
+ *
+ *  `clicks={false}`: the picture is a part of something that answers the hand itself
+ *  (film-wall's tile): no play and pause on a click, no fullscreen on a double click,
+ *  no pointer cursor, and the cursor never hides. */
 export function VideoPicture({
   aspect,
   fullscreen = false,
+  clicks: clickable = true,
   className,
   videoClassName,
   inPicture,
@@ -619,6 +545,8 @@ export function VideoPicture({
   aspect?: string;
   /** The picture is what fullscreen fills. */
   fullscreen?: boolean;
+  /** A click plays and pauses, a double click fills the screen. Default true. */
+  clicks?: boolean;
   className?: string;
   videoClassName?: string;
   /** Drawn on the picture itself, moving and scaling with its zoom: boxes around
@@ -640,6 +568,14 @@ export function VideoPicture({
     },
     [attach],
   );
+  // The frame's pixels, read for the surfaces over it, when they can be read: the same
+  // origin, or CORS with `crossOrigin` (the rule the sound's spectrum keeps). The black
+  // stage round a letterboxed frame reads as black.
+  const readable = soundReadable(ctx.picture.src, ctx.picture.crossOrigin);
+  const backdrop = useBackdropSource(readable ? el : null, {
+    fit: "contain",
+    outside: 0,
+  });
   // The picture's own shape, once the video knows it: where `inPicture` is drawn.
   const [frame, setFrame] = React.useState<{ w: number; h: number } | null>(
     null,
@@ -705,14 +641,24 @@ export function VideoPicture({
       // `group/picture`: chrome over it (ui/player's PlayerChrome) shows while it is
       // awake.
       className={cn(
-        "group/picture relative cursor-pointer overflow-hidden rounded-xl bg-black [&:fullscreen]:rounded-none",
+        "group/picture relative overflow-hidden rounded-xl bg-black [&:fullscreen]:rounded-none",
+        clickable && "cursor-pointer",
         zoomed && "cursor-grab active:cursor-grabbing",
-        playing && !awake && "cursor-none",
+        clickable && playing && !awake && "cursor-none",
         !aspect && !(picture.width && picture.height) && "aspect-video",
         className,
       )}
-      style={aspect ? { aspectRatio: aspect } : undefined}
-      {...clicks}
+      // The stage states its shape: the view inside sizes itself to the stage
+      // (`container-type: size`, for what is drawn on the picture), so the video can
+      // never give the stage its height; without a shape the stage was 0 tall.
+      style={{
+        aspectRatio:
+          aspect ??
+          (picture.width && picture.height
+            ? `${picture.width} / ${picture.height}`
+            : undefined),
+      }}
+      {...(clickable ? clicks : {})}
     >
       {/* The view: one transform over the whole picture, from the stage's centre.
           Eased when it settles or steps, never under a hand. */}
@@ -769,18 +715,23 @@ export function VideoPicture({
         )}
       </div>
       {captions?.shown && <PictureCaptions />}
-      {/* What stands over a picture stands in the dark scheme (PlayerChrome and its
-          parts, a zoom finder, their tooltips and menus), in either theme, with no
-          part saying so. Popups open inside the picture only while it is the
-          fullscreen element (the only place they show then); otherwise in the
-          player's layer, unclipped by a picture narrower than they are. */}
-      <MaterialProvider scheme="dark">
-        {fullscreen ? (
-          <PlayerLayer active={full}>{children}</PlayerLayer>
-        ) : (
-          children
-        )}
-      </MaterialProvider>
+      {/* What stands over a picture (PlayerChrome and its parts, a zoom finder, their
+          tooltips and menus) wears the scheme the frame under it asks for, read
+          live (ui/backdrop): light glass over snow, dark over night, with no part
+          saying so. A picture whose pixels cannot be read (another origin, no
+          CORS) stands it all in the dark scheme. Popups open inside the picture
+          only while it is the fullscreen element (the only place they show then);
+          otherwise in the player's layer, unclipped by a picture narrower than
+          they are. */}
+      <BackdropScope source={backdrop}>
+        <MaterialProvider scheme={readable ? "backdrop" : "dark"}>
+          {fullscreen ? (
+            <PlayerLayer active={full}>{children}</PlayerLayer>
+          ) : (
+            children
+          )}
+        </MaterialProvider>
+      </BackdropScope>
       {zoom && (
         <span role="status" className="sr-only">
           {said ? `zoom ${said.text}` : ""}
@@ -793,6 +744,15 @@ export function VideoPicture({
       )}
     </div>
   );
+}
+
+/** The video element of the VideoPlayback around, once its VideoPicture has attached
+ *  it; null before. For what acts on the element itself (film-wall gives a tile's its
+ *  voice under the hand); time is the timebase's, never read off it. */
+export function useVideoElement(): HTMLVideoElement | null {
+  const ctx = React.useContext(PictureContext);
+  if (!ctx) throw new Error("useVideoElement: place it inside a VideoPlayback");
+  return ctx.element;
 }
 
 /** Where one person's face is in the picture over a span of time: a shot (ms) and the

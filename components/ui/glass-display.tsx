@@ -1,7 +1,12 @@
 "use client";
 
 import * as React from "react";
-import { GlassEdge } from "@/components/ui/material-glass";
+import {
+  bendLayers,
+  GLASS_BEND,
+  GlassEdge,
+  glassLight,
+} from "@/components/ui/material-glass";
 import { Playback } from "@/components/ui/playback";
 import { Scrims } from "@/components/ui/scrims";
 import { Video } from "@/components/ui/video";
@@ -11,8 +16,9 @@ import { cn } from "@/lib/utils";
 // A glass frame for media (GlassFrame), and the display made of it that is a
 // door (GlassDisplay) with what plays inside it while it is looked at.
 // The media fills the display to the edge and the glass is only that edge: the
-// material's half-pixel rim and inner light (`GlassEdge`, material-glass), laid
-// over the media's border, with no fill, no blur and no frame around it. A caption
+// material's soft rim and inner light (`GlassEdge`, material-glass), laid
+// over the media's border, and the bend just inside it (the picture refracted under
+// the curve, `bendLayers`), with no fill and no frame around it. A caption
 // sits at the foot on the scrim (scrims); `cover` makes the whole display one target.
 // Its own item, not a part of `video`: the media inside is anything (a picture, a
 // clip on a playhead, a terminal session), and a frame round a picture installs no
@@ -93,14 +99,31 @@ export type GlassDisplayProps = {
   scrim?: boolean;
   /** How far up the scrim rises, any CSS length (default 60%). */
   scrimHeight?: string;
-  /** The edge's brightness, a multiple of the glass default (default 1.3). It
-   *  rises while the display is looked at. */
+  /** The edge's brightness, a multiple of the glass's own (default 1: the edge
+   *  every glass wears was set on these frames). It rises a quarter while the
+   *  display is looked at. */
   rim?: number;
-  /** The corner radius, any CSS length (default 1.25rem): the box, its clip and
-   *  the rim all read it, so they cannot disagree. */
-  radius?: string;
+  /** How far the frame's curved edge bends the picture under it (material's
+   *  `GLASS_BEND`, a multiple, default 0.6; 0 none): the depth a frame has, with no
+   *  glass body to give it. */
+  bend?: number;
+  /** The corner radius in px (default 20): the box, its clip, the edge, its light
+   *  and the bend's outline all read it, so they cannot disagree. A number, since
+   *  the bend's mask is drawn at it. */
+  radius?: number;
   className?: string;
 } & Omit<React.ComponentPropsWithoutRef<"div">, "children">;
+
+/** The frame's computed properties: its radius, its light, its scrim's height, and
+ *  each bend layer's filter (`GLASS_BEND` reads it). */
+type FrameStyle = React.CSSProperties & {
+  "--glass-display-radius"?: string;
+  "--glass-display-rim"?: number;
+  "--glass-display-scrim"?: string;
+  "--glass-bend-filter"?: string;
+};
+/** A frame's style, its custom properties checked by name. */
+const frameStyle = (style: FrameStyle): React.CSSProperties => style;
 
 /** The frame alone: the media to the edge, the glass only that edge, a scrim
  *  and caption at the foot, `cover` over it. It never moves and never
@@ -114,12 +137,16 @@ export function GlassFrame({
   cover,
   scrim = caption !== undefined,
   scrimHeight = "60%",
-  rim = 1.3,
-  radius = "1.25rem",
+  rim = 1,
+  bend = 0.6,
+  radius = 20,
   className,
   style,
   ...props
 }: GlassDisplayProps & { ref?: React.Ref<HTMLDivElement> }) {
+  if (!(radius >= 0))
+    throw new Error(`glass-display: radius is px, at least 0 (got ${radius})`);
+  const layers = bend > 0 ? bendLayers(radius, bend) : null;
   return (
     <div
       data-slot="glass-frame"
@@ -127,14 +154,12 @@ export function GlassFrame({
         "group/display relative rounded-(--glass-display-radius) shadow-[0_6px_16px_-10px_rgb(0_0_0/0.5)]",
         className,
       )}
-      style={
-        {
-          "--glass-display-radius": radius,
-          "--glass-display-rim": rim,
-          "--glass-display-scrim": scrimHeight,
-          ...style,
-        } as React.CSSProperties
-      }
+      style={frameStyle({
+        "--glass-display-radius": `${radius}px`,
+        "--glass-display-rim": rim,
+        "--glass-display-scrim": scrimHeight,
+        ...style,
+      })}
       {...props}
     >
       {/* The body's own fill is the page's: media with a transparent ground
@@ -143,6 +168,30 @@ export function GlassFrame({
           the corners, the fill showing round it. */}
       <div className="absolute inset-0 isolate clip-rounded rounded-[inherit] bg-background">
         <div className="absolute inset-0">{children}</div>
+        {/* The bend (material's GLASS_BEND, its layers from `bendLayers`, each
+            masked by the frame's own rounded outline): the picture refracted
+            under the frame's curved edge, steepening into it, here inside the
+            clip so the blur reads picture at the corners, never the page beyond
+            them. */}
+        {layers?.map(({ slot, filter, mask, lit }) => (
+          <span
+            key={slot}
+            aria-hidden
+            data-slot={`glass-frame-${slot}`}
+            className={cn(
+              "absolute inset-0",
+              lit && [glassLight, FRAME_LIGHT],
+              GLASS_BEND,
+            )}
+            style={frameStyle({
+              "--glass-bend-filter": filter,
+              maskImage: mask,
+              WebkitMaskImage: mask,
+              maskSize: "100% 100%",
+              WebkitMaskSize: "100% 100%",
+            })}
+          />
+        ))}
         {cover}
         {/* The scrim is its gradient alone, no backdrop blur: Chrome clips a
             backdrop blur to rounded corners without anti-aliasing, so the
@@ -162,27 +211,23 @@ export function GlassFrame({
           </div>
         )}
       </div>
-      {/* The edge: the material's light (GlassEdge), drawn where it stays smooth. Its
-          inner light is the material's own inset shadows. Its specular rim
-          (light catching at the top-left corner, fading along the sides, a
-          softer catch at the bottom-right: the material's 135° gradient,
-          same stops) is an SVG stroke, the one hairline a browser always
-          anti-aliases round a curve; glass draws it with a masked ring, and a
-          mask steps on the corners. It lies OUTSIDE the clipped body, one
-          pixel wide entirely inside the edge (inset half a pixel, its corner
-          radius less the same), at half the light: clipped by the body, its
-          outer half was cut by a rounded mask whenever the media inside had a
-          layer of its own (a video, a playing stage), and what was left, one
-          device pixel on a 2x screen, stepped round the corners; two device
-          pixels give the curve room to be smoothed. Being looked at fades the
-          edge up, from rim/1.55 to full. */}
-      <GlassEdge
-        radius="var(--glass-display-radius)"
-        className="opacity-(--edge) transition-opacity duration-300 [--edge:calc(var(--glass-display-rim)/1.55)] group-data-[looked]/display:[--edge:1]"
-      />
+      {/* The edge: the material's own (GlassEdge), the same edge every glass
+          wears. It lies OUTSIDE the clipped body: clipped by it, its outer half
+          was cut by a rounded mask whenever the media inside had a layer of its
+          own (a video, a playing stage), and stepped round the corners. It and
+          the bend are one light (FRAME_LIGHT). */}
+      <GlassEdge radius="var(--glass-display-radius)" className={FRAME_LIGHT} />
     </div>
   );
 }
+
+/** The frame's light, ONE value worn by its edge's line and by the bend's layers
+ *  that lift the picture by it (the softening and the crest), so they rise and fall
+ *  together: `rim`, raised a quarter while the display is looked at. Set and eased
+ *  on each element that draws with it (registered `--glass-rim`), never on the
+ *  frame, where the ease would restyle everything the media holds on every frame. */
+const FRAME_LIGHT =
+  "transition-[--glass-rim] duration-300 [--glass-rim:var(--glass-display-rim)] group-data-[looked]/display:[--glass-rim:calc(var(--glass-display-rim)*1.25)] motion-reduce:transition-none";
 
 /** A display that is a door (an index card): the frame (GlassFrame), and
  *  while it is looked at it lifts and what is inside plays. It rises 2px on a
@@ -190,7 +235,7 @@ export function GlassFrame({
  *  light comes up, and it ends the same size it started. It is its own
  *  compositing layer (`will-change: transform`), drawn once as at rest and
  *  moved as a finished picture: redrawn at the positions between pixels a
- *  rise passes through, the hairline, the rounded clip and the scrim's blur
+ *  rise passes through, the hairline, the rounded clip and the bend's blur
  *  would shimmer; a swell (a scale, edges moving out) re-draws them at every
  *  size, so it never swells. Reduced motion keeps the light and the shadow,
  *  not the rise. Never for media with controls of its own: a frame that moves

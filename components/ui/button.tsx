@@ -1,12 +1,13 @@
 "use client";
 
 import { Button as BaseButton } from "@base-ui/react/button";
-import type * as React from "react";
+import { useRender } from "@base-ui/react/use-render";
+import * as React from "react";
 import {
   type Material,
   type Scheme,
   useMaterial,
-  useScheme,
+  useSurfaceScheme,
 } from "@/components/ui/material";
 import {
   glassStyle,
@@ -46,7 +47,16 @@ export type ButtonVariant =
   | "ghost"
   | "destructive"
   | "link";
-export type ButtonSize = "sm" | "md" | "lg" | "icon-sm" | "icon" | "icon-lg";
+export type ButtonSize =
+  | "sm"
+  | "md"
+  | "lg"
+  | "xl"
+  | "2xl"
+  | "3xl"
+  | "icon-sm"
+  | "icon"
+  | "icon-lg";
 export type ButtonCorners = "pill" | "soft";
 
 /** Every button, whatever it wears. An icon inside takes the size's icon size unless
@@ -54,19 +64,47 @@ export type ButtonCorners = "pill" | "soft";
 const BASE =
   "relative inline-flex shrink-0 cursor-pointer items-center justify-center gap-1.5 whitespace-nowrap font-medium select-none data-disabled:cursor-not-allowed data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0";
 
+/** Beside words the icon (`icon`, `iconEnd`) is a step dimmer than them, so the
+ *  words lead and the icon only says what kind of press it is; brighter with the
+ *  words under the hand. An icon alone is the label and stays whole (the `icon-*`
+ *  sizes). */
+const WORDS =
+  "[&>[data-slot=button-icon]]:opacity-60 [&>[data-slot=button-icon]]:transition-opacity hover:[&>[data-slot=button-icon]]:opacity-90";
+
 const SIZE: Record<ButtonSize, string> = {
-  sm: "h-7 px-2.5 text-xs [&_svg:not([class*='size-'])]:size-3.5",
-  md: "h-8 px-3 text-[13px] [&_svg:not([class*='size-'])]:size-4",
-  lg: "h-10 px-4 text-sm [&_svg:not([class*='size-'])]:size-4",
+  sm: `h-7 px-2.5 text-xs [&_svg:not([class*='size-'])]:size-3.5 ${WORDS}`,
+  md: `h-8 px-3 text-[13px] [&_svg:not([class*='size-'])]:size-4 ${WORDS}`,
+  lg: `h-10 px-4 text-sm [&_svg:not([class*='size-'])]:size-4 ${WORDS}`,
+  // Past the input's heights: the one press a section is about (save a contact,
+  // start), a call to action, in Tailwind's steps.
+  xl: `h-12 gap-2 px-5 text-base [&_svg:not([class*='size-'])]:size-5 ${WORDS}`,
+  "2xl": `h-14 gap-2.5 px-6 text-lg [&_svg:not([class*='size-'])]:size-5 ${WORDS}`,
+  "3xl": `h-16 gap-3 px-8 text-xl [&_svg:not([class*='size-'])]:size-6 ${WORDS}`,
   "icon-sm": "size-7 [&_svg:not([class*='size-'])]:size-3.5",
   icon: "size-8 [&_svg:not([class*='size-'])]:size-4",
   "icon-lg": "size-10 [&_svg:not([class*='size-'])]:size-[18px]",
+};
+
+/** A glass pill's radius, half of `SIZE`'s height. */
+const GLASS_PILL: Record<ButtonSize, string> = {
+  sm: "[--glass-radius:14px]",
+  md: "[--glass-radius:16px]",
+  lg: "[--glass-radius:20px]",
+  xl: "[--glass-radius:24px]",
+  "2xl": "[--glass-radius:28px]",
+  "3xl": "[--glass-radius:32px]",
+  "icon-sm": "[--glass-radius:14px]",
+  icon: "[--glass-radius:16px]",
+  "icon-lg": "[--glass-radius:20px]",
 };
 
 const SPINNER: Record<ButtonSize, SpinnerSize> = {
   sm: "sm",
   md: "md",
   lg: "md",
+  xl: "lg",
+  "2xl": "lg",
+  "3xl": "lg",
   "icon-sm": "sm",
   icon: "md",
   "icon-lg": "lg",
@@ -92,24 +130,48 @@ const PLAIN: Record<ButtonVariant, string> = {
  *  glass controls do. Its rim answers to the button alone (set here, not inherited),
  *  so a card that brightens its own edge does not brighten the buttons inside it. */
 const GLASS_LIVE =
-  "transition-[box-shadow,background-color,color,scale,--glass-rim] duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] active:duration-150 [--glass-rim:1] hover:[--glass-rim:1.5] active:scale-[1.06] motion-reduce:active:scale-100";
+  "[--glass-change-ease:cubic-bezier(0.34,1.56,0.64,1)] active:[--glass-change-duration:150ms] [--glass-moves:scale_var(--glass-change)] hover:[--glass-rim:1.5]! active:scale-[1.06] motion-reduce:active:scale-100";
 
 /** On, a glass toggle wears the text's own colour in its glass, faintly, with a
  *  brighter rim: on and off differ in light, never in size. */
 const GLASS_PRESSED =
-  "data-pressed:[--glass-hue-amount:16%] data-pressed:[--glass-hue:currentColor] data-pressed:[--glass-rim:1.8]";
+  "data-pressed:[--glass-stain-amount:16%]! data-pressed:[--glass-stain:currentColor]! data-pressed:[--glass-rim:1.8]!";
 
 /** The glass faces, over the material's surface. A face's dark half is the
  *  scheme's (`scheme-dark:`), never the page's alone, or a dark glass on a light
  *  page would take the light half. */
 const GLASS: Record<ButtonVariant, string> = {
   default: GLASS_PRESSED,
-  secondary: `[--glass-tint:rgb(238_241_245/0.4)] scheme-dark:[--glass-tint:rgb(16_16_18/0.35)] [--glass-rim:0.7] hover:[--glass-rim:1.2] ${GLASS_PRESSED}`,
-  outline: `bg-transparent backdrop-blur-none scheme-dark:bg-transparent scheme-dark:backdrop-blur-none ${GLASS_PRESSED}`,
+  secondary: `[--glass-tint:rgb(238_241_245/0.4)] scheme-dark:[--glass-tint:rgb(16_16_18/0.35)] [--glass-rim:0.7] hover:[--glass-rim:1.2]! ${GLASS_PRESSED}`,
+  // An outline is the glass's edge with no body under it (`edge: "only"`), and a line
+  // all the way round, which the glass's specular edge (a catch of light at a
+  // corner) is not: its own faint ring, in its words' colour.
+  outline: `ring-1 ring-current/25 ring-inset ${GLASS_PRESSED}`,
   ghost: "",
   destructive: `text-tone-bad ${GLASS_PRESSED}`,
   link: "",
 };
+
+const hasHref = (props: unknown): boolean =>
+  typeof props === "object" &&
+  props !== null &&
+  (props as { href?: unknown }).href !== undefined;
+
+/** A link in the button's face: the element it is handed, its own semantics kept. */
+function ButtonLink({
+  render,
+  look,
+  rest,
+  children,
+}: {
+  render: React.ReactElement;
+  look: React.HTMLAttributes<HTMLElement> & Record<`data-${string}`, string>;
+  rest: Record<string, unknown>;
+  children: React.ReactNode;
+}) {
+  const { ref, ...other } = rest as { ref?: React.Ref<HTMLElement> };
+  return useRender({ render, ref, props: { ...other, ...look, children } });
+}
 
 export type ButtonProps = Omit<
   React.ComponentProps<typeof BaseButton>,
@@ -134,8 +196,85 @@ export type ButtonProps = Omit<
   /** The press is being answered: a spinner in its middle, its width kept, no
    *  second press. */
   loading?: boolean;
+  /** What kind of press it is, before the words (`<Download />`): sized by the
+   *  button, a step dimmer than the words. With no words, at an `icon-*` size, it
+   *  is the label and stays whole (give it an `aria-label`). */
+  icon?: React.ReactNode;
+  /** After the words: where the press leads (an arrow, a chevron). */
+  iconEnd?: React.ReactNode;
   className?: string;
 };
+
+/** Inside a glass ButtonGroup: the group is the pane, so a button in it draws none
+ *  of its own. */
+const InGlassGroup = React.createContext(false);
+
+/** A button that is a part of a glass group: no glass of its own, lit under the hand,
+ *  its outer ends rounded as the group's pane is (the group's radius, inherited). */
+const GLASS_PART =
+  "rounded-none first:rounded-l-(--glass-radius) last:rounded-r-(--glass-radius) text-current transition-colors hover:bg-foreground/8 data-pressed:bg-foreground/12";
+
+/** Buttons joined into one: a split button (an action, and its options under a
+ *  chevron), or a run of actions read as one control.
+ *
+ *    <ButtonGroup>
+ *      <Button>Visit</Button>
+ *      <Button size="icon" aria-label="every domain"><ChevronDown /></Button>
+ *    </ButtonGroup>
+ *
+ *  Plain, each button keeps its own face, the corners where two meet square and a
+ *  hairline between them. Glass, the group is ONE pane of glass and its buttons its
+ *  parts, lit under the hand: a glass face states one corner radius, so two joined
+ *  panes could only be two pills touching. */
+export function ButtonGroup({
+  material,
+  scheme,
+  size = "md",
+  className,
+  children,
+  ref,
+  ...props
+}: React.ComponentProps<"div"> & {
+  material?: Material;
+  scheme?: Scheme;
+  /** The size of the buttons it holds, which sets a glass pane's pill radius. */
+  size?: ButtonSize;
+}) {
+  const m = useMaterial(material);
+  const [s, here] = useSurfaceScheme<HTMLDivElement>(scheme, ref);
+  const glass = m === "glass";
+  return (
+    // biome-ignore lint/a11y/useSemanticElements: a fieldset groups form fields; a run of action buttons is a group
+    <div
+      ref={here}
+      role="group"
+      data-slot="button-group"
+      data-material={m}
+      className={cn(
+        "inline-flex items-stretch",
+        schemeOf(s),
+        glass
+          ? [
+              glassVariants({ shape: "surface" }),
+              GLASS_PILL[size],
+              "[&>*+*]:border-current/15 [&>*+*]:border-l",
+            ]
+          : [
+              "[&>*:not(:first-child)]:rounded-l-none [&>*:not(:last-child)]:rounded-r-none",
+              // Outlines draw their own edges: two side by side overlap by one pixel,
+              // so their meeting edges are one line, never two.
+              "[&>[data-variant=outline]+[data-variant=outline]]:-ml-px",
+              // Solid faces meet with a hairline between them.
+              "[&>*+*:not([data-variant=outline])]:border-current/15 [&>*+*:not([data-variant=outline])]:border-l",
+            ],
+        className,
+      )}
+      {...props}
+    >
+      <InGlassGroup.Provider value={glass}>{children}</InGlassGroup.Provider>
+    </div>
+  );
+}
 
 export function Button({
   variant = "default",
@@ -147,16 +286,20 @@ export function Button({
   on,
   off,
   loading = false,
+  icon,
+  iconEnd,
   disabled,
   render,
   nativeButton,
   className,
   style,
   children: words,
+  ref,
   ...props
 }: ButtonProps) {
   const m = useMaterial(material);
-  const s = useScheme(scheme);
+  // Over a picture it is read by the part of it under the button.
+  const [s, own] = useSurfaceScheme<HTMLElement>(scheme, ref);
   const worded = on !== undefined && off !== undefined;
   const face = (node: React.ReactNode, shown: boolean) => (
     <span
@@ -169,7 +312,7 @@ export function Button({
       {node}
     </span>
   );
-  const children = worded ? (
+  const label = worded ? (
     <span className="grid gap-[inherit]">
       {face(on, pressed === true)}
       {face(off, pressed !== true)}
@@ -177,18 +320,92 @@ export function Button({
   ) : (
     words
   );
-  const glass = m === "glass" && variant !== "link" && variant !== "ghost";
-  const round =
-    (corners ?? (m === "glass" ? "pill" : "soft")) === "pill"
-      ? "rounded-full"
-      : m === "glass"
-        ? "rounded-[10px]"
-        : "rounded-md";
+  // The icons in their slots, so what dims (`WORDS`) is the icon and never an
+  // image that is part of the words.
+  const children = (
+    <>
+      {icon && (
+        <span data-slot="button-icon" className="inline-flex">
+          {icon}
+        </span>
+      )}
+      {label}
+      {iconEnd && (
+        <span data-slot="button-icon" className="inline-flex">
+          {iconEnd}
+        </span>
+      )}
+    </>
+  );
+  const part = React.useContext(InGlassGroup);
+  const glass =
+    !part && m === "glass" && variant !== "link" && variant !== "ghost";
+  const pill = (corners ?? (m === "glass" ? "pill" : "soft")) === "pill";
+  // Glass states its radius, which places its light too: a pill's is half its
+  // height (an icon size is square, its pill a circle).
+  const round = part
+    ? undefined
+    : glass
+      ? pill
+        ? GLASS_PILL[size]
+        : "[--glass-radius:10px]"
+      : pill
+        ? "rounded-full"
+        : m === "glass"
+          ? "rounded-[10px]"
+          : "rounded-md";
+  const look = {
+    "data-slot": "button",
+    "data-variant": variant,
+    "data-material": m,
+    style:
+      variant === "destructive" && m === "glass"
+        ? {
+            ...glassStyle({ tint: "var(--tone-bad)" }),
+            ...style,
+          }
+        : style,
+    className: cn(
+      BASE,
+      SIZE[size],
+      schemeOf(s),
+      variant !== "link" && round,
+      glass && [
+        glassVariants({
+          shape: "surface",
+          edge: variant === "outline" ? "only" : true,
+        }),
+        GLASS_LIVE,
+      ],
+      part
+        ? GLASS_PART
+        : m === "glass"
+          ? variant === "ghost"
+            ? "text-current transition-colors hover:bg-foreground/8 data-pressed:bg-foreground/12"
+            : GLASS[variant]
+          : ["transition-[color,background-color,box-shadow]", PLAIN[variant]],
+      variant === "link" && PLAIN.link,
+      className,
+    ),
+  };
+  // A link wearing the button's look stays a link: Base UI's button gives anything
+  // that is not a <button> `role="button"`, and a screen reader then calls the hero's
+  // "read the essay" a button. It is never disabled, loading or a toggle; asked to be,
+  // it screams.
+  if (React.isValidElement(render) && hasHref(render.props)) {
+    if (disabled || loading || pressed !== undefined || on || off)
+      throw new Error(
+        "Button: a link (render with an href) is never disabled, loading or a toggle",
+      );
+    return (
+      <ButtonLink render={render} look={look} rest={{ ...props, ref: own }}>
+        {children}
+      </ButtonLink>
+    );
+  }
   return (
     <BaseButton
-      data-slot="button"
-      data-variant={variant}
-      data-material={m}
+      {...look}
       data-loading={loading || undefined}
       data-pressed={pressed || undefined}
       aria-pressed={worded ? undefined : pressed}
@@ -199,29 +416,8 @@ export function Button({
       focusableWhenDisabled={loading}
       render={render}
       nativeButton={nativeButton ?? render === undefined}
-      style={
-        variant === "destructive" && m === "glass"
-          ? {
-              ...glassStyle({ tint: "var(--tone-bad)", tintAmount: 0.3 }),
-              ...style,
-            }
-          : style
-      }
-      className={cn(
-        BASE,
-        SIZE[size],
-        schemeOf(s),
-        variant !== "link" && round,
-        glass && [glassVariants({ shape: "surface" }), GLASS_LIVE],
-        m === "glass"
-          ? variant === "ghost"
-            ? "text-current transition-colors hover:bg-foreground/8 data-pressed:bg-foreground/12"
-            : GLASS[variant]
-          : ["transition-[color,background-color,box-shadow]", PLAIN[variant]],
-        variant === "link" && PLAIN.link,
-        className,
-      )}
       {...props}
+      ref={own}
     >
       {loading ? (
         // The label stays the button's name (transparent, never `invisible`, which

@@ -15,7 +15,7 @@ import {
   type Material,
   type Scheme,
   useMaterial,
-  useScheme,
+  useSurfaceScheme,
 } from "@/components/ui/material";
 import { glassVariants, schemeOf } from "@/components/ui/material-glass";
 import { cn } from "@/lib/utils";
@@ -38,6 +38,7 @@ const HEIGHT = 32;
 /** The widest a thumb gets, as a multiple of its height. */
 const MAX_ASPECT = 2;
 
+// edge: it fades its own sides (the mask below) when the row is longer than it.
 const NAV =
   "relative min-w-0 flex-1 overflow-x-auto overflow-y-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden data-overflow:[mask-image:linear-gradient(to_right,transparent,black_24px,black_calc(100%-24px),transparent)]";
 const ROW = "flex w-max gap-1.5 px-4 py-2";
@@ -46,9 +47,15 @@ const THUMB =
 /** A video thumb says so: one small mark, no second hue. Ink over MEDIA, not over a
  *  surface, so it cannot follow the theme (a photograph is the same in light and
  *  dark); it stays off the screen's ceiling, and the shadow is what makes it legible
- *  on a pale still. */
+ *  on a pale still. The triangle and its shadow are ONE picture (an SVG with 2 px of
+ *  room round the 7 x 8 triangle for the shadow): a drop-shadow filter on a clipped
+ *  box is drawn round the unclipped box in some renderers, a grey square behind the
+ *  triangle. */
+const PLAY = `url("data:image/svg+xml,${encodeURIComponent(
+  '<svg xmlns="http://www.w3.org/2000/svg" width="11" height="12" viewBox="0 0 11 12"><filter id="s" x="-50%" y="-50%" width="200%" height="200%"><feDropShadow dx="0" dy="0" stdDeviation="1" flood-color="#000" flood-opacity="0.6"/></filter><polygon points="2,2 9,6 2,10" fill="#f5f5f5" filter="url(#s)"/></svg>',
+)}")`;
 const VIDEO_MARK =
-  "after:absolute after:right-[3px] after:bottom-[3px] after:h-2 after:w-[7px] after:bg-[oklch(0.97_0_0)] after:[clip-path:polygon(0_0,100%_50%,0_100%)] after:drop-shadow-[0_0_2px_rgb(0_0_0/0.6)] after:content-['']";
+  "after:absolute after:right-px after:bottom-px after:h-3 after:w-[11px] after:bg-(image:--ag-thumb-play) after:content-['']";
 const LABEL =
   "block size-full truncate px-1.5 text-center font-mono text-[0.625rem] lowercase leading-(--ag-thumb-strip-h)";
 const COUNTER = "flex-none opacity-(--alpha-meta) tabular-nums";
@@ -59,7 +66,7 @@ const COUNTER = "flex-none opacity-(--alpha-meta) tabular-nums";
 const FACE: Record<Material, { root: string; thumb: string }> = {
   plain: { root: "", thumb: "" },
   glass: {
-    root: "rounded-[18px] pl-4",
+    root: "pl-4 [--glass-radius:18px]",
     thumb:
       "rounded-[6px] aria-[current=true]:ring-1 aria-[current=true]:ring-white/70",
   },
@@ -88,7 +95,8 @@ export function ThumbStrip({
   className?: string;
 }) {
   const m = useMaterial(material);
-  const s = useScheme(scheme);
+  // Over a picture it is read by the part of it under the strip.
+  const [s, here] = useSurfaceScheme<HTMLDivElement>(scheme);
   const nav = React.useRef<HTMLElement>(null);
   const active = React.useRef<HTMLButtonElement>(null);
   // The strip's own scroll, never scrollIntoView: that moves every scrolling
@@ -112,6 +120,7 @@ export function ThumbStrip({
   }, []);
   return (
     <div
+      ref={here}
       data-slot="thumb-strip"
       data-material={m}
       className={cn(
@@ -121,7 +130,12 @@ export function ThumbStrip({
         FACE[m].root,
         className,
       )}
-      style={{ "--ag-thumb-strip-h": `${height}px` } as React.CSSProperties}
+      style={
+        {
+          "--ag-thumb-strip-h": `${height}px`,
+          "--ag-thumb-play": PLAY,
+        } as React.CSSProperties
+      }
     >
       {counter && (
         <span data-slot="thumb-strip-counter" className={COUNTER}>

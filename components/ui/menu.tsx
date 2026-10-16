@@ -19,9 +19,10 @@ import {
   MaterialProvider,
   type Scheme,
   useMaterial,
-  useScheme,
+  useSurfaceScheme,
 } from "@/components/ui/material";
 import { glassVariants, schemeOf } from "@/components/ui/material-glass";
+import { usePortalTarget } from "@/components/ui/portal";
 import { Shortcut, shortcut, usePlatform } from "@/components/ui/shortcut";
 import { combo, type Platform, type Press, pressed } from "@/lib/keys";
 import { cn } from "@/lib/utils";
@@ -103,7 +104,7 @@ const FACE = {
     line: "bg-foreground/10",
   },
   glass: {
-    popup: "rounded-[14px] [--glass-blur:14px]",
+    popup: "[--glass-radius:14px] [--glass-blur:14px]",
     item: "rounded-[10px] data-[highlighted]:bg-current/12",
     bad: "data-[highlighted]:bg-tone-bad/18",
     line: "bg-current/14",
@@ -130,7 +131,8 @@ export function Menu({
   scheme?: Scheme;
 }) {
   const m = useMaterial(material);
-  const s = useScheme(scheme);
+  // Over a picture it is read by the part of it under the menu.
+  const [s, here] = useSurfaceScheme<HTMLDivElement>(scheme);
   const face = FACE[m];
   const point = anchor !== null && !(anchor instanceof Element) ? anchor : null;
   const at = React.useMemo(
@@ -146,6 +148,7 @@ export function Menu({
   // the dialog had taken it, and a dialog that closes on focus out shut as it opened.
   const picked = React.useRef<(() => void) | null>(null);
   const platform = usePlatform();
+  const target = usePortalTarget();
   return (
     <Base.Root
       modal={false}
@@ -160,7 +163,7 @@ export function Menu({
         run?.();
       }}
     >
-      <Base.Portal>
+      <Base.Portal container={target}>
         <Base.Positioner
           anchor={at ?? (anchor as Element | null)}
           side="bottom"
@@ -169,6 +172,7 @@ export function Menu({
           className="z-50 outline-none"
         >
           <Base.Popup
+            ref={here}
             data-slot="menu"
             finalFocus={returnTo}
             onKeyDown={(event) => {
@@ -252,6 +256,7 @@ export function Menu({
 //     </DropdownMenuContent>
 //   </DropdownMenu>
 //
+// A row is a verb (`DropdownMenuItem`), a link (`DropdownMenuLinkItem`) or a choice.
 // Base UI's menu underneath (keyboard, typeahead, focus given back, an outside press
 // closes it), never modal: a scroll lock rewrites the body's padding and shifts any
 // layout that reserves room with it. It opens at least as wide as its trigger, in the
@@ -274,6 +279,7 @@ export function DropdownMenuContent({
   container,
   className,
   children,
+  ref,
   ...props
 }: Base.Popup.Props &
   Pick<Base.Positioner.Props, "align" | "side" | "sideOffset"> &
@@ -283,9 +289,12 @@ export function DropdownMenuContent({
     scheme?: Scheme;
   }) {
   const m = useMaterial(material);
-  const s = useScheme(scheme);
+  const target = usePortalTarget();
+  // Over a picture (a player's layer, in fullscreen) it is read by the part of it
+  // under the menu; its rows wear what it reads.
+  const [s, here] = useSurfaceScheme<HTMLDivElement>(scheme, ref);
   return (
-    <Base.Portal container={container}>
+    <Base.Portal container={container ?? target}>
       <Base.Positioner
         side={side}
         align={align}
@@ -293,15 +302,21 @@ export function DropdownMenuContent({
         className="z-50 outline-none"
       >
         <Base.Popup
+          ref={here}
           data-slot="dropdown-menu"
           data-material={m}
           className={cn(
-            "min-w-(--anchor-width) p-1 outline-none transition-[opacity,translate] duration-150 ease-out data-[ending-style]:opacity-0 data-[starting-style]:opacity-0 motion-reduce:transition-none",
+            "min-w-(--anchor-width) p-1 outline-none data-[ending-style]:opacity-0 data-[starting-style]:opacity-0",
             side === "top"
               ? "data-[starting-style]:translate-y-1"
               : "data-[starting-style]:-translate-y-1",
             schemeOf(s),
-            m === "glass" && glassVariants({ shape: "surface" }),
+            m === "glass"
+              ? [
+                  glassVariants({ shape: "surface" }),
+                  "[--glass-moves:opacity_150ms_var(--ease-out),translate_150ms_var(--ease-out)]",
+                ]
+              : "transition-[opacity,translate] duration-150 ease-out motion-reduce:transition-none",
             FACE[m].popup,
             className,
           )}
@@ -340,6 +355,26 @@ export function DropdownMenuItem({
         ],
         className,
       )}
+      {...props}
+    />
+  );
+}
+
+/** A row that is a link: it goes where its `href` says, as a link does (a new tab on
+ *  ⌘ click, its address on hover); `render` takes a router's own (`<Link href />`).
+ *  Followed, the menu shuts: a router's navigation keeps the page, and the menu with
+ *  it. */
+export function DropdownMenuLinkItem({
+  className,
+  closeOnClick = true,
+  ...props
+}: Base.LinkItem.Props) {
+  const face = FACE[useMaterial()];
+  return (
+    <Base.LinkItem
+      data-slot="dropdown-menu-link-item"
+      closeOnClick={closeOnClick}
+      className={cn(ROW, face.item, className)}
       {...props}
     />
   );

@@ -14,17 +14,17 @@ import {
   type Material,
   type Scheme,
   useMaterial,
-  useScheme,
+  useSurfaceScheme,
 } from "@/components/ui/material";
 import { glassVariants, schemeOf } from "@/components/ui/material-glass";
 import { cn } from "@/lib/utils";
 
 const ARROW =
   "pointer-events-auto absolute top-1/2 grid -translate-y-1/2 cursor-pointer place-items-center border-0 text-inherit opacity-[var(--ag-edge-rest,var(--alpha-meta))] hover:opacity-(--alpha-title) focus-visible:opacity-(--alpha-title) aria-disabled:cursor-default aria-disabled:opacity-[calc(var(--alpha-meta)*0.4)]";
+/** 32 px in either material: the icon button's own size (button `icon`). */
 const FACE: Record<Material, string> = {
   plain: "size-8 rounded-[8px] bg-transparent",
-  glass:
-    "size-9 rounded-full transition-[opacity,--glass-rim] duration-200 [--glass-rim:1] hover:[--glass-rim:1.6]",
+  glass: `size-8 [--glass-radius:16px] [--glass-moves:opacity_200ms_var(--ease-out)] [--glass-change-duration:200ms] hover:[--glass-rim:1.6]!`,
 };
 const SIDE = { left: "left-2", right: "right-2" } as const;
 const PATH = { left: "M10 3L5 8l5 5", right: "M6 3l5 5-5 5" } as const;
@@ -54,9 +54,11 @@ export function EdgeArrow({
   "onClick" | "children"
 >) {
   const m = useMaterial(material);
-  const s = useScheme(scheme);
+  // Over a picture each arrow is read by the part of it under the arrow.
+  const [s, here] = useSurfaceScheme<HTMLButtonElement>(scheme);
   return (
     <button
+      ref={here}
       type="button"
       data-slot="edge-arrow"
       data-side={side}
