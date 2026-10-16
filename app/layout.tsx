@@ -101,8 +101,11 @@ export default function RootLayout({
           <div className="flex-1 pt-4 sm:pt-6">{children}</div>
           <GlassSurface as="footer" layer="l0" distortion>
             <div className="mx-auto flex h-12 max-w-7xl items-center justify-center gap-3 px-6">
+              {/* Plain anchors: none of these is a page. A Link prefetches what it
+                  points at as a page, so the feed's XML was fetched as RSC by
+                  every reader who reached the footer. */}
               {socialLinks.map((l) => (
-                <Link
+                <a
                   key={l.label}
                   href={l.href}
                   {...(l.external
@@ -112,7 +115,7 @@ export default function RootLayout({
                   aria-label={l.label}
                 >
                   <l.icon className="size-4 [stroke-width:1.5]" />
-                </Link>
+                </a>
               ))}
               <Link
                 href="/privacy"
