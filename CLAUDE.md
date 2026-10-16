@@ -328,7 +328,7 @@ A feed card is ui's `@ag/card-link` through the site's router: a click anywhere 
 
 ## Links prefetch on intent
 
-Every internal link is `Link` from `components/link.tsx` (biome's `noRestrictedImports` refuses `next/link` anywhere else): it prefetches once the pointer rests on it, the keyboard reaches it or a finger lands, never as it scrolls into view. Every page is static, and next/link prefetches a static route whole on sight, so the header's name made every page load fetch the home's feed payload (294 KB uncompressed, 3 requests; a quote page fetched the home, `/quotes` and the author's folder, 570 KB). Now a page load prefetches nothing. Same rule as ui's `app/link.tsx`.
+Every internal link is `Link` from `components/ui/link.tsx`, ui's `link` item (biome's `noRestrictedImports` refuses `next/link` anywhere else): it prefetches once the pointer rests on it, the keyboard reaches it or a finger lands, never as it scrolls into view. Every page is static, and next/link prefetches a static route whole on sight, so the header's name made every page load fetch the home's feed payload (294 KB uncompressed, 3 requests; a quote page fetched the home, `/quotes` and the author's folder, 570 KB). Now a page load prefetches nothing. ui's own site draws its links with the same item.
 
 ## Sitemap and robots
 

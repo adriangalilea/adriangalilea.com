@@ -3,7 +3,7 @@
 import { Folder } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { Fragment } from "react";
-import { Link } from "@/components/link";
+import { Link } from "@/components/ui/link";
 
 type Props = {
   folderPaths: string[];

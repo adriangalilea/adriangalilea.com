@@ -37,7 +37,7 @@
           "level": "error",
           "options": {
             "paths": {
-              "next/link": "Link from @/components/link: it prefetches on intent, next/link prefetches every static page whole as it scrolls into view."
+              "next/link": "Link from @/components/ui/link (ui's link item): it prefetches on intent, next/link prefetches every static page whole as it scrolls into view."
             }
           }
         }
@@ -76,7 +76,7 @@
       }
     },
     {
-      "includes": ["components/link.tsx"],
+      "includes": ["components/ui/link.tsx"],
       "linter": {
         "rules": {
           "style": {

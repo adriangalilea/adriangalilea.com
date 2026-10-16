@@ -8,7 +8,7 @@ import {
   useEffect,
   useState,
 } from "react";
-import { Link } from "@/components/link";
+import { Link } from "@/components/ui/link";
 import { useNear } from "@/components/ui/use-on-screen";
 import { type Session, WithSession } from "@/components/with-session";
 import { SignInButtons } from "./auth-buttons";
