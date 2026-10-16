@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { CollectionView, prepareGridItems } from "@/components/collection-view";
 import { Comments } from "@/components/comments";
 import { CoverImage } from "@/components/cover-image";
-import { Grid } from "@/components/filterable-grid";
+import { Lanes } from "@/components/lanes";
 import { RelatedSection } from "@/components/related-section";
 import { TOC } from "@/components/toc";
 import { Quote } from "@/components/ui/quote";
@@ -179,7 +179,7 @@ async function NoteView({ note }: { note: Note }) {
 
       {recs.length > 0 && (
         <RelatedSection>
-          <Grid items={await prepareGridItems(recs)} />
+          <Lanes items={await prepareGridItems(recs)} />
         </RelatedSection>
       )}
     </article>
@@ -274,7 +274,7 @@ async function PageView({ page }: { page: Page }) {
 
       {recs.length > 0 && (
         <RelatedSection>
-          <Grid items={await prepareGridItems(recs)} />
+          <Lanes items={await prepareGridItems(recs)} />
         </RelatedSection>
       )}
     </article>

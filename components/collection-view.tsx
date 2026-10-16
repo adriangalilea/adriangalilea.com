@@ -1,10 +1,9 @@
 import { ExternalLink } from "lucide-react";
-import { Suspense } from "react";
 import { Card } from "@/components/card";
 import { CommentsFeedProvider } from "@/components/comment-feed";
-import { FilterableGrid, GridFallback } from "@/components/filterable-grid";
 import { GithubMark } from "@/components/github-mark";
-import { TagFilter, TagFilterFallback } from "@/components/tag-filter";
+import { type LaneItem, Lanes } from "@/components/lanes";
+import { TagFilter } from "@/components/tag-filter";
 import { ViewCountsProvider } from "@/components/view-counter";
 import type { Content, Folder, Page } from "@/lib/content";
 import {
@@ -20,32 +19,8 @@ import {
 import { renderMDX } from "@/lib/mdx";
 import { getMDXComponents } from "@/mdx-components";
 
-/** A card's height guess for masonry distribution, at the grid's 300px column. A cover
- *  without measured dimensions is assumed 16:9. */
-function getCoverHeight(w: number | null, h: number | null): number {
-  if (w && h) return 300 / (w / h);
-  return 170;
-}
-
-function getItemHeight(content: Content): number {
-  let h = 80;
-  if (content.cover)
-    h += getCoverHeight(content.coverWidth, content.coverHeight);
-  if (isNote(content)) h += Math.min(content.content.length / 3, 100) + 80;
-  else if (isPage(content) && content.description) h += 40;
-  else if (isFolder(content) && !content.cover) {
-    const pages = getFeaturedChildren(content.slug).filter(isPage) as Page[];
-    if (pages.length > 0) {
-      h += 80;
-      if (pages[0].cover)
-        h += getCoverHeight(pages[0].coverWidth, pages[0].coverHeight) * 0.7;
-    }
-  }
-  return h;
-}
-
 /** Every card in a grid, rendered server-side in the order given. */
-export async function prepareGridItems(items: Content[]) {
+export async function prepareGridItems(items: Content[]): Promise<LaneItem[]> {
   return Promise.all(
     items.map(async (content) => ({
       path: content.path,
@@ -54,8 +29,7 @@ export async function prepareGridItems(items: Content[]) {
         : isFolder(content)
           ? getFolderTags(content)
           : [],
-      height: getItemHeight(content),
-      content: (
+      node: (
         <Card
           content={content}
           renderedNoteContent={
@@ -192,23 +166,13 @@ export async function CollectionView({ folder, slug }: Props) {
             </div>
           )}
 
-          {/* Tag Filter - SSG with client enhancement */}
           {allTags.length > 0 && (
-            <Suspense
-              fallback={
-                <TagFilterFallback tags={allTags} basePath={basePath} />
-              }
-            >
-              <TagFilter tags={allTags} basePath={basePath} />
-            </Suspense>
+            <TagFilter tags={allTags} basePath={basePath} />
           )}
 
-          {/* Grid - SSG with client-side filtering */}
           {items.length > 0 && (
             <section>
-              <Suspense fallback={<GridFallback items={items} />}>
-                <FilterableGrid items={items} />
-              </Suspense>
+              <Lanes items={items} filterable />
             </section>
           )}
         </div>

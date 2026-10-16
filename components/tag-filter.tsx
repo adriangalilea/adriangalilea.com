@@ -1,10 +1,9 @@
 "use client";
 
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import Link from "next/link";
-import { useQueryState } from "nuqs";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { GlassSurface } from "@/components/liquid-glass";
+import { setTag, useTag } from "@/components/tag-query";
 import { cn } from "@/lib/utils";
 
 type Props = {
@@ -56,8 +55,10 @@ function TagPill({
   href: string;
   onClick: (e: React.MouseEvent) => void;
 }) {
+  // A plain anchor: a click filters in place, and without JavaScript the address still
+  // opens the filtered feed. A Link would prefetch the page once per tag on screen.
   return (
-    <Link className="shrink-0" {...props}>
+    <a className="shrink-0" {...props}>
       <GlassSurface
         shadow="md"
         className={cn(
@@ -69,12 +70,12 @@ function TagPill({
       >
         {children}
       </GlassSurface>
-    </Link>
+    </a>
   );
 }
 
 export function TagFilter({ tags, basePath }: Props) {
-  const [currentTag, setTag] = useQueryState("tag");
+  const currentTag = useTag();
   const scrollRef = useRef<HTMLDivElement>(null);
   const { canScrollLeft, canScrollRight } = useScrollState(scrollRef);
 
@@ -140,41 +141,6 @@ export function TagFilter({ tags, basePath }: Props) {
           </GlassSurface>
         </>
       )}
-    </div>
-  );
-}
-
-// Server fallback - static links, all appear inactive
-export function TagFilterFallback({ tags, basePath }: Props) {
-  if (tags.length === 0) return null;
-
-  return (
-    <div className="relative mb-6">
-      <div className="flex gap-2 overflow-x-auto scrollbar-none px-0.5 pr-8">
-        <Link href={basePath} className="shrink-0">
-          <GlassSurface
-            shadow="md"
-            className="block rounded-full px-3 py-1 text-sm whitespace-nowrap !bg-accent-pop-bg text-accent-pop"
-          >
-            All
-          </GlassSurface>
-        </Link>
-        {tags.map((tag) => (
-          <Link
-            key={tag}
-            href={`${basePath}?tag=${encodeURIComponent(tag)}`}
-            className="shrink-0"
-          >
-            <GlassSurface
-              distortion
-              shadow="md"
-              className="block rounded-full px-3 py-1 text-sm whitespace-nowrap text-foreground-low hover:text-foreground transition-colors"
-            >
-              {tag}
-            </GlassSurface>
-          </Link>
-        ))}
-      </div>
     </div>
   );
 }

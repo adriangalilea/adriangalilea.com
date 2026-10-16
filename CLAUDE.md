@@ -289,6 +289,10 @@ is kept under a hash of the image's bytes and the recipe (`lib/prepare-media.ts`
 sharp's versions), never its mtime, which a fresh clone resets: an unchanged image is
 never redone, a changed processor redoes all. Restart dev after adding media.
 
+## Feed lanes
+
+Every grid of cards (a collection, the related grid under a piece) is `components/lanes.tsx`: each card rendered ONCE in date order, placed in lanes by its measured height with the CSS Grid Lanes rule (the lane with the highest bottom, lanes within 0.15 of a lane's width counted level, ties taken in reading order). The lane count is CSS (`--lanes` by breakpoint); the first placement is an inline script run before the page is painted, so nothing moves once shown. The tag filter (`?tag=`) reads and writes the URL through `components/tag-query.ts`, never `useSearchParams`, which would make the whole feed render on the client only.
+
 ## X-ray cards
 
 Folders without a cover render as "x-ray" cards showing a preview of their top child. Folders with a cover render as regular cards.
@@ -378,7 +382,6 @@ These were copied into `content/` and adapted. The originals at source are stale
 
 ## TODO
 
-- Masonry sorting is broken — especially visible at `/quotes`, the ordering algorithm fails
 - Recommendations (`getRecommendations` in `lib/content.ts`) score only folder, tags and type, so they miss connections by meaning. Test case: `ai-as-an-api` should rank `ai-feelings-in-practice` first (both about a model's "feelings"), but every `ai`-tagged Page outranks it because of the same-type bonus. Fix: embeddings (one model call per piece at build, vectors cached in the repo), cosine over them, tags as a minor bonus, no type bonus. A piece's text should include the notes it embeds, and what it embeds or is embedded by is already on screen, so never recommend it. TF-IDF was tried (2026-10-06) and rejected: the note only reached #6 because the link is one shared word, and short quotes (Rumi above all) matched on single words and flooded every list. Judge by listing the top 6 for every piece, not just the test case.
 - Clean up stale duplicates at source locations after confirming site versions are canonical
 - Run `vercel link` — the Vercel project exists and is live (`adriangalilea-com`, team adriangalileas-projects) but this local repo is unlinked, so `vercel env pull` / CLI ops won't work until linked

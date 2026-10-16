@@ -3,7 +3,6 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Instrument_Serif, Tinos } from "next/font/google";
 import Link from "next/link";
-import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { HideOnScroll } from "@/components/hide-on-scroll";
 import { GlassSurface, LiquidGlassFilter } from "@/components/liquid-glass";
 import { NavbarBreadcrumb } from "@/components/navbar-breadcrumb";
@@ -78,55 +77,53 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} ${instrumentSerif.variable} ${tinos.variable} flex min-h-screen flex-col antialiased`}
       >
         <ThemeProvider>
-          <NuqsAdapter>
-            <LiquidGlassFilter />
-            {/* Desktop: full-width bar */}
-            <HideOnScroll className="hidden sm:block sticky top-0 z-50">
-              <GlassSurface as="nav" layer="l0" shadow="sm" distortion>
-                <div className="mx-auto flex h-16 w-full max-w-[90rem] items-center px-6 gap-4">
-                  <NavbarBreadcrumb folderPaths={folderPaths} />
-                </div>
-              </GlassSurface>
-            </HideOnScroll>
-            {/* Mobile: floating pill */}
-            <HideOnScroll className="sm:hidden sticky top-0 z-50 py-3 px-6">
-              <GlassSurface
-                as="nav"
-                layer="l0"
-                shadow="lg"
-                distortion
-                className="w-full rounded-full px-5 py-2"
-              >
+          <LiquidGlassFilter />
+          {/* Desktop: full-width bar */}
+          <HideOnScroll className="hidden sm:block sticky top-0 z-50">
+            <GlassSurface as="nav" layer="l0" shadow="sm" distortion>
+              <div className="mx-auto flex h-16 w-full max-w-[90rem] items-center px-6 gap-4">
                 <NavbarBreadcrumb folderPaths={folderPaths} />
-              </GlassSurface>
-            </HideOnScroll>
-            <div className="flex-1 pt-4 sm:pt-6">{children}</div>
-            <GlassSurface as="footer" layer="l0" distortion>
-              <div className="mx-auto flex h-12 max-w-7xl items-center justify-center gap-3 px-6">
-                {socialLinks.map((l) => (
-                  <Link
-                    key={l.label}
-                    href={l.href}
-                    {...(l.external
-                      ? { target: "_blank", rel: "noopener noreferrer" }
-                      : {})}
-                    className="group/social flex h-8 w-8 items-center justify-center rounded-full text-foreground-lowest transition-colors hover:text-accent-pop hover:bg-accent-pop/10"
-                    aria-label={l.label}
-                  >
-                    <l.icon className="size-4 [stroke-width:1.5]" />
-                  </Link>
-                ))}
-                <Link
-                  href="/privacy"
-                  className="ml-1 font-mono text-xs text-foreground-lowest transition-colors hover:text-accent-pop"
-                >
-                  privacy
-                </Link>
               </div>
             </GlassSurface>
-            {/* Bottom fade-out blur mask */}
-            <div className="fade-out-mask fixed bottom-0 right-0 w-full h-24 z-10 pointer-events-none backdrop-blur-sm" />
-          </NuqsAdapter>
+          </HideOnScroll>
+          {/* Mobile: floating pill */}
+          <HideOnScroll className="sm:hidden sticky top-0 z-50 py-3 px-6">
+            <GlassSurface
+              as="nav"
+              layer="l0"
+              shadow="lg"
+              distortion
+              className="w-full rounded-full px-5 py-2"
+            >
+              <NavbarBreadcrumb folderPaths={folderPaths} />
+            </GlassSurface>
+          </HideOnScroll>
+          <div className="flex-1 pt-4 sm:pt-6">{children}</div>
+          <GlassSurface as="footer" layer="l0" distortion>
+            <div className="mx-auto flex h-12 max-w-7xl items-center justify-center gap-3 px-6">
+              {socialLinks.map((l) => (
+                <Link
+                  key={l.label}
+                  href={l.href}
+                  {...(l.external
+                    ? { target: "_blank", rel: "noopener noreferrer" }
+                    : {})}
+                  className="group/social flex h-8 w-8 items-center justify-center rounded-full text-foreground-lowest transition-colors hover:text-accent-pop hover:bg-accent-pop/10"
+                  aria-label={l.label}
+                >
+                  <l.icon className="size-4 [stroke-width:1.5]" />
+                </Link>
+              ))}
+              <Link
+                href="/privacy"
+                className="ml-1 font-mono text-xs text-foreground-lowest transition-colors hover:text-accent-pop"
+              >
+                privacy
+              </Link>
+            </div>
+          </GlassSurface>
+          {/* Bottom fade-out blur mask */}
+          <div className="fade-out-mask fixed bottom-0 right-0 w-full h-24 z-10 pointer-events-none backdrop-blur-sm" />
         </ThemeProvider>
         {/* The focus ring answers the keyboard only (ui/focus-source). */}
         <FocusSource />
