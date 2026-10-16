@@ -7,9 +7,11 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useRef,
   useState,
 } from "react";
-import { authClient } from "@/lib/auth-client";
+import { useNearViewport } from "@/components/near-viewport";
+import { type Session, WithSession } from "@/components/with-session";
 import { SignInButtons } from "./auth-buttons";
 import {
   CharCounter,
@@ -58,9 +60,42 @@ export function CommentsFeedProvider({
   );
 }
 
+/** A card's comments and its reply field. Who is signed in is asked only once the card
+ *  is near the viewport: until then it draws signed out, which is also what it draws
+ *  while the answer is on its way. */
 export function FeedComments({ slug, path }: { slug: string; path: string }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const near = useNearViewport(ref);
+  return (
+    <div
+      ref={ref}
+      className="mt-3 border-t border-border/30 pt-3"
+      onClick={(e) => e.stopPropagation()}
+      onKeyDown={(e) => e.stopPropagation()}
+    >
+      {near ? (
+        <WithSession>
+          {(session) => (
+            <FeedThread slug={slug} path={path} session={session} />
+          )}
+        </WithSession>
+      ) : (
+        <FeedThread slug={slug} path={path} session={null} />
+      )}
+    </div>
+  );
+}
+
+function FeedThread({
+  slug,
+  path,
+  session,
+}: {
+  slug: string;
+  path: string;
+  session: Session | null;
+}) {
   const ctx = useContext(CommentsFeedContext);
-  const { data: session } = authClient.useSession();
   const [text, setText] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -95,11 +130,7 @@ export function FeedComments({ slug, path }: { slug: string; path: string }) {
   }
 
   return (
-    <div
-      className="mt-3 border-t border-border/30 pt-3"
-      onClick={(e) => e.stopPropagation()}
-      onKeyDown={(e) => e.stopPropagation()}
-    >
+    <>
       {commentsList.length > 0 && (
         <div className="space-y-2">
           {commentsList.map((c) => (
@@ -173,6 +204,6 @@ export function FeedComments({ slug, path }: { slug: string; path: string }) {
           </>
         )}
       </form>
-    </div>
+    </>
   );
 }

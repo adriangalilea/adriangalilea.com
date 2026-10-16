@@ -1,8 +1,9 @@
 "use client";
 
 import { MessageSquare } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
-import { authClient } from "@/lib/auth-client";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useNearViewport } from "@/components/near-viewport";
+import { type Session, WithSession } from "@/components/with-session";
 import { SignInButtons, SignOutButton } from "./auth-buttons";
 import {
   CharCounter,
@@ -140,11 +141,36 @@ function CommentNode({
   );
 }
 
+/** A page's comments, at its foot: read, and who is signed in asked, once a reader is
+ *  within a screen of them. Until then the section draws empty and signed out. */
 export function Comments({ slug }: { slug: string }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const near = useNearViewport(ref);
+  return (
+    <div ref={ref}>
+      {near ? (
+        <WithSession>
+          {(session) => <Thread slug={slug} session={session} live />}
+        </WithSession>
+      ) : (
+        <Thread slug={slug} session={null} live={false} />
+      )}
+    </div>
+  );
+}
+
+function Thread({
+  slug,
+  session,
+  live,
+}: {
+  slug: string;
+  session: Session | null;
+  live: boolean;
+}) {
   const [comments, setComments] = useState<CommentData[]>([]);
   const [text, setText] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const { data: session } = authClient.useSession();
 
   const fetchComments = useCallback(() => {
     fetch(`/api/comments/${slug}`)
@@ -154,8 +180,8 @@ export function Comments({ slug }: { slug: string }) {
   }, [slug]);
 
   useEffect(() => {
-    fetchComments();
-  }, [fetchComments]);
+    if (live) fetchComments();
+  }, [live, fetchComments]);
 
   const overLimit = text.length > MAX_CHARS;
 
