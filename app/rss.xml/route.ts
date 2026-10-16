@@ -1,5 +1,5 @@
 import { SITE_URL } from "@/data/site";
-import { getAllContent, isNote, isPage } from "@/lib/content";
+import { getAllContent, isListed, isPage, isPost } from "@/lib/content";
 
 // Built at deploy, like every page: the feed changes only with the content, and
 // reading content at request time copies media into public/, which a deployed
@@ -8,10 +8,8 @@ export const dynamic = "force-static";
 
 export function GET() {
   const published = getAllContent()
-    .filter(
-      (c): c is typeof c & { publishedAt: string } =>
-        (isPage(c) || isNote(c)) && !!c.publishedAt && !c.isDraft,
-    )
+    .filter(isPost)
+    .filter(isListed)
     .sort(
       (a, b) =>
         new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime(),

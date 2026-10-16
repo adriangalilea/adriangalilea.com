@@ -493,6 +493,18 @@ export function getAllContent(): Content[] {
   return _cachedContent;
 }
 
+/** Finished and public: a `publishedAt`, not a draft, inside no draft folder. The one
+ *  test for what is offered beyond its own page: recommendations, and (pieces only,
+ *  `isPost`) the RSS feed and the sitemap. */
+export function isListed<C extends Content>(
+  c: C,
+): c is C & { publishedAt: Date } {
+  if (!c.publishedAt || c.isDraft) return false;
+  return c.slug
+    .slice(0, -1)
+    .every((_, i) => !getContentByPath(c.slug.slice(0, i + 1))?.isDraft);
+}
+
 export function getContentByPath(slugPath: string[]): Content | null {
   return (
     getAllContent().find((c) => c.slug.join("/") === slugPath.join("/")) ?? null
@@ -668,8 +680,7 @@ export function getRecommendations(content: Content, limit = 3): Content[] {
     // Same type bonus
     if (content.type === c.type) score += 5;
 
-    // Exclude drafts and unpublished
-    if (c.isDraft || !c.publishedAt) score = -1;
+    if (!isListed(c)) score = -1;
 
     return { content: c, score };
   });

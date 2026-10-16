@@ -1,13 +1,18 @@
 import type { MetadataRoute } from "next";
 import { SITE_URL } from "@/data/site";
-import { type Content, getAllContent, isFolder, isPage } from "@/lib/content";
+import {
+  type Content,
+  getAllContent,
+  isFolder,
+  isListed,
+  isPage,
+  isPost,
+} from "@/lib/content";
 
-// Every page a reader can reach from the feed, for crawlers, which until now found the
-// pieces only through the RSS feed and the links inside articles. Built at deploy like
-// every page. Published means on the site and finished: a `publishedAt`, not a draft,
-// inside no draft folder (`isPublished: false` never reaches `getAllContent`). A folder
-// is a page when something published lives in it. The tag filter (`?tag=`) is the same
-// page filtered, never a page of its own, so no tag is listed.
+// Every page offered to crawlers, built at deploy like every page: each listed piece
+// (`isListed`, the same test the RSS feed and recommendations use), and a folder when
+// something listed lives in it. The tag filter (`?tag=`) is the same page filtered,
+// never a page of its own, so no tag is listed.
 
 function date(value: Date | string): Date {
   const d = new Date(value);
@@ -29,19 +34,9 @@ function changedAt(c: Content & { publishedAt: Date }): Date {
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const all = getAllContent();
-  const draftFolders = new Set(
-    all.filter((c) => isFolder(c) && c.isDraft).map((c) => c.slug.join("/")),
-  );
   const ancestors = (c: Content) =>
     c.slug.slice(0, -1).map((_, i) => c.slug.slice(0, i + 1).join("/"));
-
-  const published = all.filter(
-    (c): c is Content & { publishedAt: Date } =>
-      !isFolder(c) &&
-      c.publishedAt !== null &&
-      !c.isDraft &&
-      !ancestors(c).some((a) => draftFolders.has(a)),
-  );
+  const published = all.filter(isPost).filter(isListed);
 
   // A folder changed when the newest piece inside it did.
   const folderChanged = new Map<string, Date>();
