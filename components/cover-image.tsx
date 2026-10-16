@@ -102,7 +102,7 @@ export function CoverImage({
         unoptimized={animated}
         loading={priority ? "eager" : "lazy"}
         fetchPriority={priority ? "high" : undefined}
-        imageClassName={contained ? "object-contain" : "object-cover"}
+        className={contained ? "object-contain" : "object-cover"}
       />
       {grain}
     </div>

@@ -10,12 +10,12 @@
 //    public/og/<slug>.jpg: a static file, so a crawler fetching one runs no function
 //    and reads no ISR cache.
 //
-// Blurs and previews are kept in .next/cache/prepare under a hash of what they are made
-// from, the bytes and the code that draws them, never a file's mtime (a fresh clone
-// touches every file). `next build` keeps .next/cache and Vercel restores it before
-// each deploy, so a deploy draws only what changed.
+// Blurs and previews are kept in .next/cache/prepare by ui's prepare-keep (`keep`),
+// under a hash of what they are made from (the bytes, the code that draws them,
+// prepare-media's own recipe), never a file's mtime (a fresh clone touches every file).
+// `next build` keeps .next/cache and Vercel restores it before each deploy, so a deploy
+// draws only what changed.
 
-import { createHash } from "node:crypto";
 import {
   cpSync,
   existsSync,
@@ -29,24 +29,20 @@ import {
 import { createRequire } from "node:module";
 import { availableParallelism } from "node:os";
 import { dirname, join, relative } from "node:path";
-import sharp from "sharp";
 import { IMAGE_EXTENSIONS, isMedia } from "@/lib/media";
+import { keep, keepOnly } from "@/lib/prepare-keep";
 import { prepareMedia } from "@/lib/prepare-media";
 import { BLUR_MANIFEST, PREPARED_DIR } from "@/lib/prepared";
 
 const ROOT = process.cwd();
 const CONTENT = join(ROOT, "content");
 const PUBLIC = join(ROOT, "public");
+const BLUR_CACHE = join(PREPARED_DIR, "blur");
 const OG_CACHE = join(PREPARED_DIR, "og");
 const OG_PUBLIC = join(PUBLIC, "og");
 const started = performance.now();
 
 const require = createRequire(import.meta.url);
-const sha = (...parts: (string | Buffer)[]) => {
-  const h = createHash("sha256");
-  for (const p of parts) h.update(p).update("\0");
-  return h.digest("hex");
-};
 const source = (path: string) => readFileSync(join(ROOT, path));
 const versionOf = (pkg: string): string =>
   JSON.parse(readFileSync(require.resolve(`${pkg}/package.json`), "utf8"))
@@ -79,41 +75,36 @@ function* filesUnder(dir: string): Generator<string> {
 const media = [...filesUnder(CONTENT)].filter(isMedia);
 
 // 1. BLURS
-const BLUR_KEYS = join(PREPARED_DIR, "blur.keys.json");
-const blurRecipe = sha(
-  source("lib/prepare-media.ts"),
-  JSON.stringify(sharp.versions),
-);
-const readJSON = (path: string): Record<string, string> =>
-  existsSync(path) ? JSON.parse(readFileSync(path, "utf8")) : {};
-const blurs = readJSON(BLUR_MANIFEST);
-const blurKeys = readJSON(BLUR_KEYS);
 const images = media.filter((src) =>
   IMAGE_EXTENSIONS.includes(src.slice(src.lastIndexOf(".")).toLowerCase()),
 );
 const prepared = await inParallel(images, async (src) => {
   const rel = relative(CONTENT, src);
-  const key = sha(blurRecipe, readFileSync(src));
-  const kept = blurKeys[rel] === key ? blurs[rel] : undefined;
-  const blur =
-    kept ?? (await prepareMedia(readFileSync(src))).asset.blurDataURL;
-  if (!blur) throw new Error(`${rel}: prepareMedia made no blur`);
-  return { rel, key, blur, made: !kept };
-});
-const byPath = (pick: (b: (typeof prepared)[number]) => string) =>
-  JSON.stringify(
-    Object.fromEntries(prepared.map((b) => [b.rel, pick(b)])),
-    null,
-    2,
+  const bytes = readFileSync(src);
+  const kept = await keep(
+    BLUR_CACHE,
+    [bytes],
+    async () => {
+      const blur = (await prepareMedia(bytes)).asset.blurDataURL;
+      if (!blur) throw new Error(`${rel}: prepareMedia made no blur`);
+      return blur;
+    },
+    "txt",
   );
+  return { rel, ...kept, blur: readFileSync(kept.path, "utf8") };
+});
+await keepOnly(
+  BLUR_CACHE,
+  prepared.map((b) => b.path),
+);
 mkdirSync(PREPARED_DIR, { recursive: true });
 writeFileSync(
   BLUR_MANIFEST,
-  byPath((b) => b.blur),
-);
-writeFileSync(
-  BLUR_KEYS,
-  byPath((b) => b.key),
+  JSON.stringify(
+    Object.fromEntries(prepared.map((b) => [b.rel, b.blur])),
+    null,
+    2,
+  ),
 );
 
 // lib/content reads blur.json at import, so it is imported after 1.
@@ -139,33 +130,30 @@ for (const src of served) {
   copied++;
 }
 
-// 3. PREVIEWS
-const ogRecipe = sha(
-  source("lib/og.ts"),
-  JSON.stringify(sharp.versions),
-  versionOf("@resvg/resvg-js"),
-);
+// 3. PREVIEWS: what a still is drawn by besides its inputs is lib/og's code and resvg.
+const drawnBy = [source("lib/og.ts"), versionOf("@resvg/resvg-js")];
 rmSync(OG_PUBLIC, { recursive: true, force: true });
-mkdirSync(OG_CACHE, { recursive: true });
 const withPreview = getAllContent().flatMap((content) => {
   const url = ogImagePath(content);
   return url ? [{ content, url }] : [];
 });
 const previews = await inParallel(withPreview, async ({ content, url }) => {
   const still = stillOf(content);
-  const cached = join(OG_CACHE, `${sha(ogRecipe, ...still.inputs)}.jpg`);
-  const made = !existsSync(cached);
-  if (made) writeFileSync(cached, await still.draw());
+  const kept = await keep(
+    OG_CACHE,
+    [...drawnBy, ...still.inputs],
+    still.draw,
+    "jpg",
+  );
   const dest = join(PUBLIC, url);
   mkdirSync(dirname(dest), { recursive: true });
-  cpSync(cached, dest);
-  return { cached, made };
+  cpSync(kept.path, dest);
+  return kept;
 });
-const used = new Set(previews.map((p) => p.cached));
-for (const name of readdirSync(OG_CACHE)) {
-  const path = join(OG_CACHE, name);
-  if (!used.has(path)) rmSync(path);
-}
+await keepOnly(
+  OG_CACHE,
+  previews.map((p) => p.path),
+);
 
 const count = (list: { made: boolean }[]) => list.filter((x) => x.made).length;
 console.log(

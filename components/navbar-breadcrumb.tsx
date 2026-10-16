@@ -4,13 +4,6 @@ import { Folder } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Fragment } from "react";
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
 
 type Props = {
   folderPaths: string[];
@@ -43,40 +36,42 @@ export function NavbarBreadcrumb({ folderPaths }: Props) {
     );
   }
 
-  // Show folders only
+  // Show folders only. Every crumb is a link, the last folder included: an article
+  // inside it is the page, and the header names only the folders above it (ui's
+  // Breadcrumb makes its last crumb the current page, never a link).
   return (
-    <Breadcrumb>
-      <BreadcrumbList className="gap-1 flex-nowrap">
-        <BreadcrumbItem className="shrink-0">
-          <BreadcrumbLink
-            className="font-serif text-xl sm:text-3xl tracking-tight text-foreground hover:text-foreground-low"
-            render={
-              <Link href="/">
-                <span className="sm:hidden">AG</span>
-                <span className="hidden sm:inline">Adrian Galilea</span>
-              </Link>
-            }
-          />
-        </BreadcrumbItem>
+    <nav aria-label="breadcrumb">
+      <ol className="flex flex-nowrap items-center gap-1 text-sm text-muted-foreground break-words sm:gap-2.5">
+        <li className="inline-flex shrink-0 items-center gap-1.5">
+          <Link
+            href="/"
+            className="font-serif text-xl tracking-tight text-foreground transition-colors hover:text-foreground-low sm:text-3xl"
+          >
+            <span className="sm:hidden">AG</span>
+            <span className="hidden sm:inline">Adrian Galilea</span>
+          </Link>
+        </li>
         {folderSegments.map((item) => (
           <Fragment key={item.href}>
-            <BreadcrumbSeparator className="text-foreground-lowest/50 text-sm sm:text-lg font-light shrink-0">
+            <li
+              role="presentation"
+              aria-hidden="true"
+              className="shrink-0 text-sm font-light text-foreground-lowest/50 sm:text-lg"
+            >
               /
-            </BreadcrumbSeparator>
-            <BreadcrumbItem className="min-w-0">
-              <BreadcrumbLink
-                className="font-mono text-sm sm:text-base hover:text-foreground-low truncate"
-                render={
-                  <Link href={item.href} className="flex items-center gap-1.5">
-                    <Folder className="size-4 sm:size-5 shrink-0 text-foreground-low" />
-                    {item.seg}
-                  </Link>
-                }
-              />
-            </BreadcrumbItem>
+            </li>
+            <li className="inline-flex min-w-0 items-center gap-1.5">
+              <Link
+                href={item.href}
+                className="flex items-center gap-1.5 truncate font-mono text-sm transition-colors hover:text-foreground-low sm:text-base"
+              >
+                <Folder className="size-4 shrink-0 text-foreground-low sm:size-5" />
+                {item.seg}
+              </Link>
+            </li>
           </Fragment>
         ))}
-      </BreadcrumbList>
-    </Breadcrumb>
+      </ol>
+    </nav>
   );
 }

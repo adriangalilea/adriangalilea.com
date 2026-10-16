@@ -1,17 +1,8 @@
 import { siGithub } from "simple-icons";
+import { BrandMark } from "@/components/ui/brand-mark";
 
-/** GitHub's mark, filled in the current colour, sized by its className. Lucide carries
- *  no brand marks, so it is drawn from simple-icons' 24-unit path, as ui's
- *  ProviderGlyph draws a provider. */
+/** GitHub's mark as a component, for the slots that take one (the footer's socials, a
+ *  glass pill's icon); drawn by ui's BrandMark. */
 export function GithubMark({ className }: { className?: string }) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      aria-hidden
-      fill="currentColor"
-      className={className}
-    >
-      <path d={siGithub.path} />
-    </svg>
-  );
+  return <BrandMark icon={siGithub} className={className} />;
 }

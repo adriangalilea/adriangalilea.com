@@ -1,8 +1,8 @@
 "use client";
 
 import { MessageSquare } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { useNearViewport } from "@/components/near-viewport";
+import { useCallback, useEffect, useState } from "react";
+import { useNear } from "@/components/ui/use-on-screen";
 import { type Session, WithSession } from "@/components/with-session";
 import { SignInButtons, SignOutButton } from "./auth-buttons";
 import {
@@ -144,10 +144,10 @@ function CommentNode({
 /** A page's comments, at its foot: read, and who is signed in asked, once a reader is
  *  within a screen of them. Until then the section draws empty and signed out. */
 export function Comments({ slug }: { slug: string }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const near = useNearViewport(ref);
+  const [element, setElement] = useState<HTMLDivElement | null>(null);
+  const near = useNear(element);
   return (
-    <div ref={ref}>
+    <div ref={setElement}>
       {near ? (
         <WithSession>
           {(session) => <Thread slug={slug} session={session} live />}

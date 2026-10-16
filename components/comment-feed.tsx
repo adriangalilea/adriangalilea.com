@@ -7,10 +7,9 @@ import {
   useCallback,
   useContext,
   useEffect,
-  useRef,
   useState,
 } from "react";
-import { useNearViewport } from "@/components/near-viewport";
+import { useNear } from "@/components/ui/use-on-screen";
 import { type Session, WithSession } from "@/components/with-session";
 import { SignInButtons } from "./auth-buttons";
 import {
@@ -64,11 +63,11 @@ export function CommentsFeedProvider({
  *  is near the viewport: until then it draws signed out, which is also what it draws
  *  while the answer is on its way. */
 export function FeedComments({ slug, path }: { slug: string; path: string }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const near = useNearViewport(ref);
+  const [element, setElement] = useState<HTMLDivElement | null>(null);
+  const near = useNear(element);
   return (
     <div
-      ref={ref}
+      ref={setElement}
       className="mt-3 border-t border-border/30 pt-3"
       onClick={(e) => e.stopPropagation()}
       onKeyDown={(e) => e.stopPropagation()}

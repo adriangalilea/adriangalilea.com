@@ -9,6 +9,7 @@ import { NavbarBreadcrumb } from "@/components/navbar-breadcrumb";
 import { SitePageSensor } from "@/components/page-sensor";
 import { ThemeProvider } from "@/components/theme-provider";
 import { FocusSource } from "@/components/ui/focus-source";
+import { NextImageLoaderProvider } from "@/components/ui/image";
 import { SITE_URL, socials } from "@/data/site";
 import { getAllFolders } from "@/lib/content";
 import "./globals.css";
@@ -98,7 +99,11 @@ export default function RootLayout({
               <NavbarBreadcrumb folderPaths={folderPaths} />
             </GlassSurface>
           </HideOnScroll>
-          <div className="flex-1 pt-4 sm:pt-6">{children}</div>
+          {/* Every picture is resized by Next's optimizer (ui's Image takes its
+              loader from here; without one it loads the file whole). */}
+          <div className="flex-1 pt-4 sm:pt-6">
+            <NextImageLoaderProvider>{children}</NextImageLoaderProvider>
+          </div>
           <GlassSurface as="footer" layer="l0" distortion>
             <div className="mx-auto flex h-12 max-w-7xl items-center justify-center gap-3 px-6">
               {/* Plain anchors: none of these is a page. A Link prefetches what it

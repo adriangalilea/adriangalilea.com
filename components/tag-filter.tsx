@@ -3,7 +3,7 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { GlassSurface } from "@/components/liquid-glass";
-import { setTag, useTag } from "@/components/tag-query";
+import { setArrangeFilter, useArrangeFilter } from "@/components/ui/arrange";
 import { cn } from "@/lib/utils";
 
 type Props = {
@@ -75,7 +75,7 @@ function TagPill({
 }
 
 export function TagFilter({ tags, basePath }: Props) {
-  const currentTag = useTag();
+  const currentTag = useArrangeFilter("tag");
   const scrollRef = useRef<HTMLDivElement>(null);
   const { canScrollLeft, canScrollRight } = useScrollState(scrollRef);
 
@@ -107,7 +107,7 @@ export function TagFilter({ tags, basePath }: Props) {
           href={basePath}
           onClick={(e) => {
             e.preventDefault();
-            setTag(null);
+            setArrangeFilter("tag", null);
           }}
         >
           All
@@ -119,7 +119,7 @@ export function TagFilter({ tags, basePath }: Props) {
             href={`${basePath}?tag=${encodeURIComponent(tag)}`}
             onClick={(e) => {
               e.preventDefault();
-              setTag(tag);
+              setArrangeFilter("tag", tag);
             }}
           >
             {tag}
