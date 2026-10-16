@@ -29,6 +29,7 @@
     "clsx": "^2.1.1",
     "drizzle-orm": "^0.45.4",
     "geist": "^1.7.2",
+    "github-slugger": "^2.0.0",
     "gray-matter": "^4.0.3",
     "image-size": "^2.0.4",
     "lucide-react": "^1.54.0",

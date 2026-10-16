@@ -1,5 +1,6 @@
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join, parse, relative } from "node:path";
+import GithubSlugger from "github-slugger";
 import matter from "gray-matter";
 import imageSize from "image-size";
 import { toString as mdastToString } from "mdast-util-to-string";
@@ -143,15 +144,6 @@ function urlOf(dir: string): string {
   return rel ? `/${rel}` : "";
 }
 
-function slugify(text: string): string {
-  return text
-    .toLowerCase()
-    .replace(/[^\w\s-]/g, "")
-    .replace(/\s+/g, "-")
-    .replace(/-+/g, "-")
-    .trim();
-}
-
 const mdxParser = unified().use(remarkParse).use(remarkMdx);
 
 const NOTE_EMBED_NAMES = new Set(["ContentQuote"]);
@@ -167,15 +159,17 @@ function analyzeMDX(source: string): MDXAnalysis {
   const tree = mdxParser.parse(source);
   const toc: TOCItem[] = [];
   let embedCount = 0;
+  // A TOC entry links to the id rehype-slug gives its heading (lib/mdx), so it is made
+  // by the same slugger, fed every heading in order: a repeated title numbers the same.
+  const slugger = new GithubSlugger();
 
   function walk(nodes: typeof tree.children) {
     for (const node of nodes) {
       if (node.type === "heading") {
         const depth = (node as { depth: number }).depth;
-        if (depth >= 2 && depth <= 4) {
-          const title = mdastToString(node);
-          toc.push({ depth, title, id: slugify(title) });
-        }
+        const title = mdastToString(node);
+        const id = slugger.slug(title);
+        if (depth >= 2 && depth <= 4) toc.push({ depth, title, id });
       }
       if (
         node.type === "mdxJsxFlowElement" &&
