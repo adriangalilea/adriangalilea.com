@@ -31,7 +31,17 @@
   "linter": {
     "enabled": true,
     "rules": {
-      "preset": "recommended"
+      "preset": "recommended",
+      "style": {
+        "noRestrictedImports": {
+          "level": "error",
+          "options": {
+            "paths": {
+              "next/link": "Link from @/components/link: it prefetches on intent, next/link prefetches every static page whole as it scrolls into view."
+            }
+          }
+        }
+      }
     },
     "domains": {
       "next": "recommended",
@@ -61,6 +71,16 @@
           },
           "suspicious": {
             "noArrayIndexKey": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["components/link.tsx"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": "off"
           }
         }
       }

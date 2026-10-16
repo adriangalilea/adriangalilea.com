@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import {
   createContext,
   type ReactNode,
@@ -9,6 +8,7 @@ import {
   useEffect,
   useState,
 } from "react";
+import { Link } from "@/components/link";
 import { useNear } from "@/components/ui/use-on-screen";
 import { type Session, WithSession } from "@/components/with-session";
 import { SignInButtons } from "./auth-buttons";

@@ -326,6 +326,10 @@ Nothing uses `"use cache"` currently. `getAllContent()` scans once per process (
 
 `<article>` with `onClick` + `onKeyDown` + `tabIndex={0}`. Biome's `noNoninteractiveTabindex` is disabled for this file via overrides because biome has no clean path for clickable cards: `role="link"` triggers `noNoninteractiveElementToInteractiveRole` + `useSemanticElements`. Wrapping the whole card in `<a>` would eliminate the override but changes DOM structure and may break the text-selection / drag-detection logic.
 
+## Links prefetch on intent
+
+Every internal link is `Link` from `components/link.tsx` (biome's `noRestrictedImports` refuses `next/link` anywhere else): it prefetches once the pointer rests on it, the keyboard reaches it or a finger lands, never as it scrolls into view. Every page is static, and next/link prefetches a static route whole on sight, so the header's name made every page load fetch the home's feed payload (294 KB uncompressed, 3 requests; a quote page fetched the home, `/quotes` and the author's folder, 570 KB). Now a page load prefetches nothing. Same rule as ui's `app/link.tsx`.
+
 ## Writing voice
 
 When writing posts on my behalf, match my tone. Reference: `content/shapes-of-knowledge/index.md` (unfinished but representative). Short sentences. Conversational. Bold for emphasis. No em-dashes. No filler. Say things once. If it sounds like a blog post template, rewrite it.

@@ -1,9 +1,9 @@
 "use client";
 
 import { Folder } from "lucide-react";
-import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Fragment } from "react";
+import { Link } from "@/components/link";
 
 type Props = {
   folderPaths: string[];

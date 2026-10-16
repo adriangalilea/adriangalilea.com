@@ -1,9 +1,9 @@
 import type { MDXComponents } from "mdx/types";
-import Link from "next/link";
 import { Children, isValidElement, type ReactElement } from "react";
 import { Card } from "@/components/card";
 import { Pre } from "@/components/code-block";
 import { GitHub, Telegram, Tweet } from "@/components/embeds";
+import { Link } from "@/components/link";
 import { Bars, CompareLines } from "@/components/mdx-lazy";
 import { type Picture, Zoomable } from "@/components/media-lightbox";
 import { Image } from "@/components/ui/image";
