@@ -1,5 +1,5 @@
+import { TelegramChat } from "@/components/mdx-lazy";
 import { Github } from "@/components/ui/github";
-import { TelegramChat } from "@/components/ui/telegram-chat";
 import { Tweet as TweetCard } from "@/components/ui/tweet";
 import { readEmbed } from "@/lib/embeds";
 import type { GithubFacts } from "@/lib/github-data";
