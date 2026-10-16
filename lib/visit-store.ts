@@ -1,6 +1,7 @@
 import "server-only";
 import { libsqlDriver } from "@adriangalilea/utils/metrics/libsql";
 import { createClient } from "@libsql/client";
+import { SITE_URL } from "@/data/site";
 
 // The site's visits, kept by the ui registry's visits (lib/visits) in the shared Turso `metrics`
 // database (the `visits_*` tables, provisioned once with the Turso CLI, never on a
@@ -11,9 +12,9 @@ import { createClient } from "@libsql/client";
 // page, how many visits read it, with nothing of who.
 
 export const SITE = "adriangalilea.com";
-/** The host the site is served from (the bare domain redirects here): the one its
- *  pages report, so the one their views are kept under. */
-export const HOST = "www.adriangalilea.com";
+/** The host the site is served from: the one its pages report, so the one their views
+ *  are kept under. */
+export const HOST = new URL(SITE_URL).host;
 
 let driver: ReturnType<typeof libsqlDriver> | undefined;
 export function visitDriver() {

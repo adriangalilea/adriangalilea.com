@@ -10,7 +10,7 @@ import { NavbarBreadcrumb } from "@/components/navbar-breadcrumb";
 import { SitePageSensor } from "@/components/page-sensor";
 import { ThemeProvider } from "@/components/theme-provider";
 import { FocusSource } from "@/components/ui/focus-source";
-import { socials } from "@/data/site";
+import { SITE_URL, socials } from "@/data/site";
 import { getAllFolders } from "@/lib/content";
 import "./globals.css";
 
@@ -45,7 +45,7 @@ export const metadata: Metadata = {
     template: "%s | Adrian Galilea",
   },
   description: "Adrian Galilea's personal site",
-  metadataBase: new URL("https://adriangalilea.com"),
+  metadataBase: new URL(SITE_URL),
   openGraph: {
     siteName: "Adrian Galilea",
   },

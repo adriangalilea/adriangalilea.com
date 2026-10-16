@@ -1,7 +1,9 @@
 import { Mail, Rss, Send } from "lucide-react";
 import { GithubMark } from "@/components/github-mark";
 
-export const SITE_URL = "https://adriangalilea.com";
+/** The origin the site is served from: the bare domain answers a 307 to it, so every
+ *  absolute URL the site prints (metadata, og:image, the feed) names it directly. */
+export const SITE_URL = "https://www.adriangalilea.com";
 
 export const socials = [
   { label: "Telegram", link: "https://t.me/adriangalilea", icon: Send },
