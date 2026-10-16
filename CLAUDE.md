@@ -248,7 +248,7 @@ behavior; prepare them as video when a finite play-once or boomerang is needed.
 
 ## Media in articles
 
-Place media files next to the `.md` file in the content directory. `scripts/prepare.mts` copies every media file under `content/` to the same path under `public/` before `dev` and `build`, so a file's URL is its path in `content/`: `./x.png` in `content/foo/index.md` becomes `/foo/x.png`. `lib/content.ts` only reads; it writes nothing.
+Place media files next to the `.md` file in the content directory. `scripts/prepare.mts` copies the media beside every published piece to the same path under `public/` before `dev` and `build` (nothing beside an `isPublished: false` piece is served), so a file's URL is its path in `content/`: `./x.png` in `content/foo/index.md` becomes `/foo/x.png`. `lib/content.ts` only reads; it writes nothing.
 
 ## Embeds: posts from Telegram and X
 

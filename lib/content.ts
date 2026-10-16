@@ -18,9 +18,9 @@ import { BLUR_MANIFEST } from "@/lib/prepared";
 import { type QuoteTone, toneFrom } from "@/lib/quote-card";
 import { formatDate } from "@/lib/utils";
 
-// A READER, NOTHING ELSE. Every media file under content/ is served from the same path
-// under public/ (`scripts/prepare.mts` mirrors them before Next runs), so a file's URL
-// is its path in content/ and nothing here writes to disk.
+// A READER, NOTHING ELSE. The media beside a published piece is served from the same
+// path under public/ (`scripts/prepare.mts` mirrors it, by `dir`, before Next runs), so
+// a file's URL is its path in content/ and nothing here writes to disk.
 export const CONTENT_DIR = join(process.cwd(), "content");
 
 // The preparation step creates this input. Missing it is a broken pipeline, not a
@@ -60,6 +60,8 @@ type ContentBase = {
   blurDataURL: string | null;
   publishedAt: Date | null;
   isDraft: boolean;
+  /** The directory under content/ it was read from: the media in it is served. */
+  dir: string;
 };
 
 // Post: all non-folder content
@@ -328,6 +330,7 @@ function parseContent(filePath: string, slug: string[]): Content | null {
       blurDataURL: coverInfo?.blurDataURL ?? null,
       publishedAt: data.publishedAt ?? null,
       isDraft: data.isDraft ?? false,
+      dir,
     };
 
     if (data.type === "folder") {

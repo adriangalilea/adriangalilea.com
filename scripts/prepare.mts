@@ -1,9 +1,11 @@
 // WHAT NEXT IS HANDED READY, run before `next dev` and `next build` (package.json).
 //
-// 1. MEDIA. Every media file under content/ is copied to the same path under public/,
-//    where the CDN serves it as a static file; lib/content names a file by that path.
-// 2. BLURS. A blur data URL for every local image (the ui registry's `prepareMedia`),
+// 1. BLURS. A blur data URL for every local image (the ui registry's `prepareMedia`),
 //    written to .next/cache/prepare/blur.json, which lib/content reads at import.
+// 2. MEDIA. The media beside every published piece (lib/content's `dir`) is copied to
+//    the same path under public/, where the CDN serves it as a static file; lib/content
+//    names a file by that path. A piece with `isPublished: false` is never read, so
+//    nothing beside it is served.
 // 3. PREVIEWS. Every link preview (`ogImagePath`) drawn by lib/og to
 //    public/og/<slug>.jpg: a static file, so a crawler fetching one runs no function
 //    and reads no ISR cache.
@@ -76,24 +78,7 @@ function* filesUnder(dir: string): Generator<string> {
 }
 const media = [...filesUnder(CONTENT)].filter(isMedia);
 
-// 1. MEDIA
-let copied = 0;
-for (const src of media) {
-  const dest = join(PUBLIC, relative(CONTENT, src));
-  const from = statSync(src);
-  if (existsSync(dest)) {
-    const to = statSync(dest);
-    // A copy carries its source's mtime, written back with less than a millisecond's
-    // precision, so equal means within one.
-    if (to.size === from.size && Math.abs(to.mtimeMs - from.mtimeMs) < 1)
-      continue;
-  }
-  mkdirSync(dirname(dest), { recursive: true });
-  cpSync(src, dest, { preserveTimestamps: true });
-  copied++;
-}
-
-// 2. BLURS
+// 1. BLURS
 const BLUR_KEYS = join(PREPARED_DIR, "blur.keys.json");
 const blurRecipe = sha(
   source("lib/prepare-media.ts"),
@@ -131,9 +116,30 @@ writeFileSync(
   byPath((b) => b.key),
 );
 
-// 3. PREVIEWS (lib/content reads blur.json at import, so it is imported after 2)
+// lib/content reads blur.json at import, so it is imported after 1.
 const { getAllContent, ogImagePath } = await import("@/lib/content");
 const { stillOf } = await import("@/lib/og");
+
+// 2. MEDIA
+const published = new Set(getAllContent().map((c) => c.dir));
+const served = media.filter((src) => published.has(dirname(src)));
+let copied = 0;
+for (const src of served) {
+  const dest = join(PUBLIC, relative(CONTENT, src));
+  const from = statSync(src);
+  if (existsSync(dest)) {
+    const to = statSync(dest);
+    // A copy carries its source's mtime, written back with less than a millisecond's
+    // precision, so equal means within one.
+    if (to.size === from.size && Math.abs(to.mtimeMs - from.mtimeMs) < 1)
+      continue;
+  }
+  mkdirSync(dirname(dest), { recursive: true });
+  cpSync(src, dest, { preserveTimestamps: true });
+  copied++;
+}
+
+// 3. PREVIEWS
 const ogRecipe = sha(
   source("lib/og.ts"),
   JSON.stringify(sharp.versions),
@@ -163,5 +169,5 @@ for (const name of readdirSync(OG_CACHE)) {
 
 const count = (list: { made: boolean }[]) => list.filter((x) => x.made).length;
 console.log(
-  `prepare: ${media.length} media (${copied} copied), ${prepared.length} blurs (${count(prepared)} made), ${previews.length} previews (${count(previews)} drawn) in ${Math.round(performance.now() - started)} ms`,
+  `prepare: ${served.length} of ${media.length} media served (${copied} copied), ${prepared.length} blurs (${count(prepared)} made), ${previews.length} previews (${count(previews)} drawn) in ${Math.round(performance.now() - started)} ms`,
 );
