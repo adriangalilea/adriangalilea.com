@@ -25,6 +25,7 @@ import {
   writeFileSync,
 } from "node:fs";
 import { createRequire } from "node:module";
+import { availableParallelism } from "node:os";
 import { dirname, join, relative } from "node:path";
 import sharp from "sharp";
 import { IMAGE_EXTENSIONS, isMedia } from "@/lib/media";
@@ -48,6 +49,22 @@ const source = (path: string) => readFileSync(join(ROOT, path));
 const versionOf = (pkg: string): string =>
   JSON.parse(readFileSync(require.resolve(`${pkg}/package.json`), "utf8"))
     .version;
+
+/** `work` over every item, as many at once as the machine has cores; results in the
+ *  items' order. */
+async function inParallel<T, R>(
+  items: T[],
+  work: (item: T) => Promise<R>,
+): Promise<R[]> {
+  const results: R[] = new Array(items.length);
+  let next = 0;
+  const worker = async () => {
+    for (let i = next++; i < items.length; i = next++)
+      results[i] = await work(items[i] as T);
+  };
+  await Promise.all(Array.from({ length: availableParallelism() }, worker));
+  return results;
+}
 
 function* filesUnder(dir: string): Generator<string> {
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
@@ -86,25 +103,33 @@ const readJSON = (path: string): Record<string, string> =>
   existsSync(path) ? JSON.parse(readFileSync(path, "utf8")) : {};
 const blurs = readJSON(BLUR_MANIFEST);
 const blurKeys = readJSON(BLUR_KEYS);
-const nextBlurs: Record<string, string> = {};
-const nextBlurKeys: Record<string, string> = {};
-let blurred = 0;
-for (const src of media) {
-  if (!IMAGE_EXTENSIONS.includes(src.slice(src.lastIndexOf(".")).toLowerCase()))
-    continue;
+const images = media.filter((src) =>
+  IMAGE_EXTENSIONS.includes(src.slice(src.lastIndexOf(".")).toLowerCase()),
+);
+const prepared = await inParallel(images, async (src) => {
   const rel = relative(CONTENT, src);
-  const bytes = readFileSync(src);
-  const key = sha(blurRecipe, bytes);
+  const key = sha(blurRecipe, readFileSync(src));
   const kept = blurKeys[rel] === key ? blurs[rel] : undefined;
-  const blur = kept ?? (await prepareMedia(bytes)).asset.blurDataURL;
+  const blur =
+    kept ?? (await prepareMedia(readFileSync(src))).asset.blurDataURL;
   if (!blur) throw new Error(`${rel}: prepareMedia made no blur`);
-  nextBlurs[rel] = blur;
-  nextBlurKeys[rel] = key;
-  if (!kept) blurred++;
-}
+  return { rel, key, blur, made: !kept };
+});
+const byPath = (pick: (b: (typeof prepared)[number]) => string) =>
+  JSON.stringify(
+    Object.fromEntries(prepared.map((b) => [b.rel, pick(b)])),
+    null,
+    2,
+  );
 mkdirSync(PREPARED_DIR, { recursive: true });
-writeFileSync(BLUR_MANIFEST, JSON.stringify(nextBlurs, null, 2));
-writeFileSync(BLUR_KEYS, JSON.stringify(nextBlurKeys, null, 2));
+writeFileSync(
+  BLUR_MANIFEST,
+  byPath((b) => b.blur),
+);
+writeFileSync(
+  BLUR_KEYS,
+  byPath((b) => b.key),
+);
 
 // 3. PREVIEWS (lib/content reads blur.json at import, so it is imported after 2)
 const { getAllContent, ogImagePath } = await import("@/lib/content");
@@ -116,29 +141,27 @@ const ogRecipe = sha(
 );
 rmSync(OG_PUBLIC, { recursive: true, force: true });
 mkdirSync(OG_CACHE, { recursive: true });
-const used = new Set<string>();
-let drawn = 0;
-let previews = 0;
-for (const content of getAllContent()) {
+const withPreview = getAllContent().flatMap((content) => {
   const url = ogImagePath(content);
-  if (!url) continue;
+  return url ? [{ content, url }] : [];
+});
+const previews = await inParallel(withPreview, async ({ content, url }) => {
   const still = stillOf(content);
   const cached = join(OG_CACHE, `${sha(ogRecipe, ...still.inputs)}.jpg`);
-  used.add(cached);
-  if (!existsSync(cached)) {
-    writeFileSync(cached, await still.draw());
-    drawn++;
-  }
+  const made = !existsSync(cached);
+  if (made) writeFileSync(cached, await still.draw());
   const dest = join(PUBLIC, url);
   mkdirSync(dirname(dest), { recursive: true });
   cpSync(cached, dest);
-  previews++;
-}
+  return { cached, made };
+});
+const used = new Set(previews.map((p) => p.cached));
 for (const name of readdirSync(OG_CACHE)) {
   const path = join(OG_CACHE, name);
   if (!used.has(path)) rmSync(path);
 }
 
+const count = (list: { made: boolean }[]) => list.filter((x) => x.made).length;
 console.log(
-  `prepare: ${media.length} media (${copied} copied), ${Object.keys(nextBlurs).length} blurs (${blurred} made), ${previews} previews (${drawn} drawn) in ${Math.round(performance.now() - started)} ms`,
+  `prepare: ${media.length} media (${copied} copied), ${prepared.length} blurs (${count(prepared)} made), ${previews.length} previews (${count(previews)} drawn) in ${Math.round(performance.now() - started)} ms`,
 );

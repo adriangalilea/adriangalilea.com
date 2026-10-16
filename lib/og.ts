@@ -1,6 +1,6 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { Resvg } from "@resvg/resvg-js";
+import { renderAsync } from "@resvg/resvg-js";
 import sharp from "sharp";
 import {
   CONTENT_DIR,
@@ -105,17 +105,18 @@ function quoteStill(note: Note): Still {
   );
   return {
     inputs: [svg, ...Object.values(STILL_FONTS).map((f) => readFileSync(f))],
-    draw: () => {
-      const png = new Resvg(svg, {
-        fitTo: { mode: "width", value: W },
-        font: {
-          loadSystemFonts: false,
-          fontFiles: Object.values(STILL_FONTS),
-          defaultFontFamily: "Tinos",
-        },
-      })
-        .render()
-        .asPng();
+    // Off the main thread, so a caller can draw many at once.
+    draw: async () => {
+      const png = (
+        await renderAsync(svg, {
+          fitTo: { mode: "width", value: W },
+          font: {
+            loadSystemFonts: false,
+            fontFiles: Object.values(STILL_FONTS),
+            defaultFontFamily: "Tinos",
+          },
+        })
+      ).asPng();
       return sharp(png).jpeg(JPEG).toBuffer();
     },
   };
