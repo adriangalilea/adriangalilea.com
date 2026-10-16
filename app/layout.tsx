@@ -49,6 +49,13 @@ export const metadata: Metadata = {
   openGraph: {
     siteName: "Adrian Galilea",
   },
+  // The feed, named on every page, where readers (and e-ID's live activity)
+  // look for it.
+  alternates: {
+    types: {
+      "application/rss+xml": [{ url: "/rss.xml", title: "Adrian Galilea" }],
+    },
+  },
 };
 
 const socialLinks = socials.map((s) => ({

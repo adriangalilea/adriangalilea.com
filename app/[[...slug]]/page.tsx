@@ -284,6 +284,12 @@ async function PageView({ page }: { page: Page }) {
 // STATIC PARAMS & METADATA
 // ============================================================================
 
+// Every page is built from content at deploy: an address that was not built is
+// no page, a 404 at once, never a render at request time (reading content then
+// copies its media into public/, which a deployed function cannot write, and
+// every unknown address answered 500).
+export const dynamicParams = false;
+
 export async function generateStaticParams() {
   const all = getAllContent();
   // Include empty slug for root
