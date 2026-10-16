@@ -22,6 +22,7 @@ import {
   isPage,
   type Note,
   noteDate,
+  ogImagePath,
   type Page,
 } from "@/lib/content";
 import { SERIF_CH } from "@/lib/faces";
@@ -326,15 +327,8 @@ export async function generateMetadata({
     description = (content as Page | Folder).description ?? undefined;
   }
 
-  const slugStr = slug.join("/");
-  // Every note has a card now, Adrian's own included; pages and folders need a cover.
-  const hasOG =
-    isNote(content) ||
-    ((isPage(content) || isFolder(content)) && !!content.cover);
-
-  const ogImage = hasOG
-    ? { url: `/og/${slugStr}`, width: 1200, height: 630 }
-    : null;
+  const ogPath = ogImagePath(content);
+  const ogImage = ogPath ? { url: ogPath, width: 1200, height: 630 } : null;
 
   return {
     title,

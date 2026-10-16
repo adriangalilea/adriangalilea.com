@@ -1,16 +1,8 @@
-import {
-  cpSync,
-  existsSync,
-  mkdirSync,
-  readdirSync,
-  readFileSync,
-  statSync,
-} from "node:fs";
+import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join, parse, relative } from "node:path";
 import matter from "gray-matter";
 import imageSize from "image-size";
 import { toString as mdastToString } from "mdast-util-to-string";
-import readingTime from "reading-time";
 import remarkMdx from "remark-mdx";
 import remarkParse from "remark-parse";
 import { unified } from "unified";
@@ -19,22 +11,23 @@ import {
   AVATAR_EXTENSIONS,
   COVER_EXTENSIONS,
   IMAGE_EXTENSIONS,
-  isMedia,
   POSTER_EXTENSIONS,
 } from "@/lib/media";
 import { type QuoteTone, toneFrom } from "@/lib/quote-card";
 import { formatDate } from "@/lib/utils";
 
-const CONTENT_DIR = join(process.cwd(), "content");
-const PUBLIC_DIR = join(process.cwd(), "public");
+// A READER, NOTHING ELSE. Every media file under content/ is served from the same path
+// under public/ (`scripts/prepare.mts` mirrors them before Next runs), so a file's URL
+// is its path in content/ and nothing here writes to disk.
+export const CONTENT_DIR = join(process.cwd(), "content");
+/** Where `scripts/prepare.mts` keeps what it derives; `.next/cache` survives `next
+ *  build` and is kept between deploys. */
+export const PREPARED_DIR = join(process.cwd(), ".next", "cache", "prepare");
 
-// The dev/build preparation step creates this input. Missing it is a broken
-// pipeline, not a reason to silently publish without prepared previews.
+// The preparation step creates this input. Missing it is a broken pipeline, not a
+// reason to silently publish without prepared previews.
 const blurManifest: Record<string, string> = JSON.parse(
-  readFileSync(
-    join(process.cwd(), ".source", "media", "blur-manifest.json"),
-    "utf-8",
-  ),
+  readFileSync(join(PREPARED_DIR, "blur.json"), "utf-8"),
 );
 const NOTE_MAX_CHARS = 280;
 export function imageBlur(src: string): string | undefined {
@@ -56,15 +49,11 @@ export type TOCItem = {
   id: string;
 };
 
-type ReadingTime = { text: string; minutes: number; words: number };
-
 // Shared fields all content has
 type ContentBase = {
   slug: string[];
   path: string;
   content: string;
-  readingTime: ReadingTime;
-  media: string[];
   cover: string | null;
   coverWidth: number | null;
   coverHeight: number | null;
@@ -72,7 +61,6 @@ type ContentBase = {
   blurDataURL: string | null;
   publishedAt: Date | null;
   isDraft: boolean;
-  _dir: string;
 };
 
 // Post: all non-folder content
@@ -151,13 +139,10 @@ export function isFolder(c: Content): c is Folder {
 // HELPERS
 // ============================================================================
 
-function needsCopy(src: string, dest: string): boolean {
-  if (!existsSync(dest)) return true;
-  return statSync(src).size !== statSync(dest).size;
-}
-
-function syncFile(src: string, dest: string): void {
-  if (needsCopy(src, dest)) cpSync(src, dest);
+/** The URL a directory under content/ is served from: its own path. */
+function urlOf(dir: string): string {
+  const rel = relative(CONTENT_DIR, dir);
+  return rel ? `/${rel}` : "";
 }
 
 function slugify(text: string): string {
@@ -215,31 +200,12 @@ function analyzeMDX(source: string): MDXAnalysis {
   };
 }
 
-function copyMedia(dir: string, slug: string[]): string[] {
-  try {
-    const files = readdirSync(dir).filter(isMedia);
-    if (files.length === 0) return [];
-
-    const slugPath = slug.join("/");
-    const destDir = join(PUBLIC_DIR, slugPath);
-    mkdirSync(destDir, { recursive: true });
-
-    for (const file of files) {
-      const src = join(dir, file);
-      const dest = join(destDir, file);
-      syncFile(src, dest);
-    }
-    return files;
-  } catch {
-    return [];
-  }
-}
-
-function rewriteMediaPaths(content: string, slug: string[]): string {
-  const slugPath = slug.join("/");
+/** `./x.png` is a file beside the one that names it, served at its own path. */
+function rewriteMediaPaths(content: string, dir: string): string {
+  const base = urlOf(dir);
   return content
-    .replace(/\]\(\.\//g, `](/${slugPath}/`)
-    .replace(/src=["']\.\//g, `src="/${slugPath}/`);
+    .replace(/\]\(\.\//g, `](${base}/`)
+    .replace(/src=["']\.\//g, `src="${base}/`);
 }
 
 type CoverInfo = {
@@ -250,16 +216,11 @@ type CoverInfo = {
   blurDataURL: string | null;
 } | null;
 
-function resolveCover(dir: string, slug: string[]): CoverInfo {
+function resolveCover(dir: string): CoverInfo {
+  const base = urlOf(dir);
   for (const ext of COVER_EXTENSIONS) {
     const src = join(dir, `cover${ext}`);
     if (existsSync(src)) {
-      const slugPath = slug.join("/");
-      const destDir = join(PUBLIC_DIR, slugPath);
-      const dest = join(destDir, `cover${ext}`);
-      mkdirSync(destDir, { recursive: true });
-      syncFile(src, dest);
-
       // Videos have no dimensions until their poster is measured below.
       let width: number | null = null;
       let height: number | null = null;
@@ -275,9 +236,7 @@ function resolveCover(dir: string, slug: string[]): CoverInfo {
         for (const posterExt of POSTER_EXTENSIONS) {
           const posterSrc = join(dir, `poster${posterExt}`);
           if (existsSync(posterSrc)) {
-            const posterDest = join(destDir, `poster${posterExt}`);
-            syncFile(posterSrc, posterDest);
-            poster = `/${slugPath}/poster${posterExt}`;
+            poster = `${base}/poster${posterExt}`;
             blurDataURL =
               blurManifest[relative(CONTENT_DIR, posterSrc)] ?? null;
 
@@ -290,11 +249,11 @@ function resolveCover(dir: string, slug: string[]): CoverInfo {
           }
         }
         if (!poster) {
-          const warnKey = `poster:${slugPath}`;
+          const warnKey = `poster:${base}`;
           if (!warnedCovers.has(warnKey)) {
             warnedCovers.add(warnKey);
             console.warn(
-              `⚠ ${slugPath} has animated cover but no poster — add poster.webp for crossfade`,
+              `⚠ ${base} has animated cover but no poster: add poster.webp for crossfade`,
             );
           }
         }
@@ -303,7 +262,7 @@ function resolveCover(dir: string, slug: string[]): CoverInfo {
       }
 
       return {
-        url: `/${slugPath}/cover${ext}`,
+        url: `${base}/cover${ext}`,
         width,
         height,
         poster,
@@ -340,30 +299,11 @@ function readPortrait(dir: string, slug: string[]): Folder["portrait"] {
   return { tone: toneFrom(...raw.average), focus: raw.focus, size: raw.size };
 }
 
-function resolveAvatar(dir: string, slug: string[]): string | null {
-  for (const ext of AVATAR_EXTENSIONS) {
-    const src = join(dir, `avatar${ext}`);
-    if (existsSync(src)) {
-      const slugPath = slug.join("/");
-      const destDir = join(PUBLIC_DIR, slugPath);
-      const dest = join(destDir, `avatar${ext}`);
-      mkdirSync(destDir, { recursive: true });
-      syncFile(src, dest);
-      return `/${slugPath}/avatar${ext}`;
-    }
-  }
-  return null;
-}
-
-/** An author-provided `og.png` beside the content wins over the cover as the link
- *  preview (`lib/og.ts`). */
-function syncOGImage(dir: string, slug: string[]): void {
-  const src = join(dir, "og.png");
-  if (!existsSync(src)) return;
-  const slugPath = slug.join("/");
-  const destDir = join(PUBLIC_DIR, slugPath);
-  mkdirSync(destDir, { recursive: true });
-  syncFile(src, join(destDir, "og.png"));
+function resolveAvatar(dir: string): string | null {
+  const ext = AVATAR_EXTENSIONS.find((e) =>
+    existsSync(join(dir, `avatar${e}`)),
+  );
+  return ext ? `${urlOf(dir)}/avatar${ext}` : null;
 }
 
 // ============================================================================
@@ -378,19 +318,17 @@ function parseContent(filePath: string, slug: string[]): Content | null {
     if (data.isPublished === false) return null;
 
     const { textContent, toc, embedCount } = analyzeMDX(content);
-    const stats = readingTime(textContent);
-    const dir = parse(filePath).dir;
-    const media = copyMedia(dir, slug);
-    const coverInfo = resolveCover(dir, slug);
-    syncOGImage(dir, slug);
-    const rewritten = rewriteMediaPaths(content, slug);
+    const { dir, name } = parse(filePath);
+    // A directory's index owns what lies beside it (cover, poster, avatar, og.png); a
+    // sibling file shares the directory and owns none of it.
+    const owner = name === "index";
+    const coverInfo = owner ? resolveCover(dir) : null;
+    const rewritten = rewriteMediaPaths(content, dir);
 
     const base: ContentBase = {
       slug,
       path: `/${slug.join("/")}`,
       content: rewritten,
-      readingTime: stats,
-      media,
       cover: coverInfo?.url ?? null,
       coverWidth: coverInfo?.width ?? null,
       coverHeight: coverInfo?.height ?? null,
@@ -398,7 +336,6 @@ function parseContent(filePath: string, slug: string[]): Content | null {
       blurDataURL: coverInfo?.blurDataURL ?? null,
       publishedAt: data.publishedAt ?? null,
       isDraft: data.isDraft ?? false,
-      _dir: dir,
     };
 
     if (data.type === "folder") {
@@ -410,7 +347,7 @@ function parseContent(filePath: string, slug: string[]): Content | null {
         status: data.status ?? null,
         links: data.links ?? {},
         feedThrough: data.feedThrough ?? false,
-        avatar: resolveAvatar(dir, slug),
+        avatar: resolveAvatar(dir),
         portrait: readPortrait(dir, slug),
       };
     }
@@ -646,6 +583,12 @@ export function getAuthorForContent(c: Content): AuthorInfo | null {
     };
   }
   return null;
+}
+
+/** Where a piece's link preview is served, a static file `scripts/prepare.mts` draws:
+ *  every note gets one, a page or a folder when it has a cover. Null for the rest. */
+export function ogImagePath(c: Content): string | null {
+  return isNote(c) || c.cover ? `/og/${c.slug.join("/")}.jpg` : null;
 }
 
 export function getBacklinks(target: Content): Content[] {

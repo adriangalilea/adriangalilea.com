@@ -33,7 +33,7 @@ A quote is drawn by ONE module at three weights and as a link preview, and all o
 comes from the registry at ui.adriangalilea.com (`components.json` maps `@ag`):
 `components/ui/quote.tsx` + `quote.css` (the web card: `feature` on a quote's own page,
 `prose` inside `Card` in the feed and in `ContentQuote` embeds) and `lib/quote-card.ts`
-(the rules and `renderQuoteSvg`, the 1200×630 still the OG route rasterizes). Refresh a
+(the rules and `renderQuoteSvg`, the 1200×630 still `lib/og.ts` rasterizes). Refresh a
 copy with `mise add quote` run in the ui checkout: it installs the item AND its whole
 dependency tree from the local build, so `quote-card` can never lag behind `quote.tsx`.
 Never edit the copies, fix the registry and re-add. `app/tokens.css` is the `@ag/tokens`
@@ -76,11 +76,20 @@ page), Geist and Geist Mono from the `geist` package. **The quotes' face is Tino
 Instrument Serif**: the heading face is a condensed display serif and was illegible at
 reading size the moment the quote inherited `--font-serif`; the item reads its own
 `--font-quote` token, the site maps it to Tinos (next/font) and `SERIF_CH` in
-`lib/faces.ts` is Tinos's measured advance. resvg is a native addon and is
-listed in `serverExternalPackages`. EVERY note gets an OG card, Adrian's own included,
-on the neutral ground. A page or folder with a cover gets the cover contained over a
-blurred fill of itself, drawn by sharp from the cover file (an `og.png` beside the
-content wins; a video cover previews with its poster).
+`lib/faces.ts` is Tinos's measured advance. EVERY note gets an OG card, Adrian's own
+included, on the neutral ground. A page or folder with a cover gets the cover contained
+over a blurred fill of itself, drawn by sharp from the cover file (an `og.png` beside
+the content wins; a video cover previews with its poster). Which pieces have a card and
+where it is served is `ogImagePath` (`lib/content.ts`), read by the metadata and by the
+preparation step.
+
+**The cards are static files, never a route.** `scripts/prepare.mts` draws every card
+before `next build` to `public/og/<slug>.jpg` (JPEG q85: the grain and the photographs
+made 750 KB PNGs; 50 KB now, indistinguishable at preview size), kept in
+`.next/cache/prepare/og` under a hash of everything drawn, so a deploy draws only what
+changed. A card served by a function or a prerender is a function run or an ISR read per
+crawler fetch, plus Fast Origin Transfer; a file in `public/` is neither. resvg runs only
+there, which is why it is a dev dependency.
 
 ## Content Architecture
 
@@ -225,7 +234,7 @@ Embed in other content with `<ContentQuote slug="quotes/satoshi-nakamoto/on-time
 
 ## Covers
 
-`resolveCover()` scans for `cover.*` in the content directory (not `public/`). Priority: `.png .webp .jpg .jpeg .gif .avif .mp4 .webm .mov`. Auto-copied to `public/` at build.
+`resolveCover()` scans for `cover.*` in the content directory (not `public/`). Priority: `.png .webp .jpg .jpeg .gif .avif .mp4 .webm .mov`. Only a directory's `index.md` owns the cover, poster, avatar and `og.png` beside it; a sibling `.md` in the same directory owns none of them.
 
 For animated covers (gif/video), place a `poster.*` image alongside for the static crossfade preview. Poster priority: `.webp .jpg .jpeg .png .avif`.
 
@@ -239,7 +248,7 @@ behavior; prepare them as video when a finite play-once or boomerang is needed.
 
 ## Media in articles
 
-Images/media referenced with `./filename` get rewritten to `/${slugPath}/filename`. Place media files next to the `.md` file in the content directory; they get copied to `public/` automatically.
+Place media files next to the `.md` file in the content directory. `scripts/prepare.mts` copies every media file under `content/` to the same path under `public/` before `dev` and `build`, so a file's URL is its path in `content/`: `./x.png` in `content/foo/index.md` becomes `/foo/x.png`. `lib/content.ts` only reads; it writes nothing.
 
 ## Embeds: posts from Telegram and X
 
@@ -273,11 +282,12 @@ never listed.
 
 ## Blur placeholders
 
-`scripts/generate-blur.mjs` prepares blur data URLs for local article images and
-cover/poster images into `.source/media/blur-manifest.json`, before `dev` and `build`.
-Generated inputs live outside `.next` so the production build cannot erase them.
-Restart dev after adding media. Its cache includes the preparation recipe, so
-processor changes regenerate placeholders even when original files are unchanged.
+`scripts/prepare.mts` makes a blur data URL for every local image (ui's
+`prepareMedia`) into `.next/cache/prepare/blur.json`, before `dev` and `build`.
+`next build` keeps `.next/cache` and Vercel restores it before each deploy. Each blur
+is kept under a hash of the image's bytes and the recipe (`lib/prepare-media.ts`,
+sharp's versions), never its mtime, which a fresh clone resets: an unchanged image is
+never redone, a changed processor redoes all. Restart dev after adding media.
 
 ## X-ray cards
 
@@ -304,7 +314,7 @@ Client-side fetch is simpler, makes pages truly static (CDN-cacheable, zero serv
 
 ### `cacheComponents` is OFF
 
-Nothing uses `"use cache"` currently. If re-enabled, remember: `getAllContent()` does file copies (`cpSync`/`mkdirSync`) which trigger `Date.now()` internally, causing prerender warnings. The module-level memoization in `lib/content.ts` mitigates this by scanning once.
+Nothing uses `"use cache"` currently. `getAllContent()` scans once per process (module-level memoization in `lib/content.ts`) and writes nothing.
 
 ## Clickable card pattern (`clickable-wrapper.tsx`)
 

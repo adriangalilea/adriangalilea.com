@@ -4,9 +4,10 @@
 // An image's size is a fact about the file, and the layout has to know it: next/image
 // reserves the box before the bytes arrive, and the lightbox sizes and flies the picture
 // by its natural pixels. Guessing 800×450 for every picture was the layout shifting on
-// every load and the lightbox opening a portrait as a landscape. The content loader has
-// already rewritten `./x.png` to `/<slug>/x.png` and copies that file to public/, so the
-// bytes are at content/<slug>/x.png. Remote images are left alone: nothing here fetches.
+// every load and the lightbox opening a portrait as a landscape. A local image's URL is
+// its path under content/ (the content loader rewrote `./x.png` to it, and
+// scripts/prepare.mts serves the same path from public/), so the bytes are at
+// content/<src>. Remote images are left alone: nothing here fetches.
 // A local image that is not on disk is a broken post, and the build says which.
 
 import { existsSync, readFileSync } from "node:fs";
