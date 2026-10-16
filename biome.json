@@ -86,16 +86,6 @@
       }
     },
     {
-      "includes": ["components/clickable-wrapper.tsx"],
-      "linter": {
-        "rules": {
-          "a11y": {
-            "noNoninteractiveTabindex": "off"
-          }
-        }
-      }
-    },
-    {
       "includes": ["components/comment-feed.tsx", "components/ui/lightbox.tsx"],
       "linter": {
         "rules": {

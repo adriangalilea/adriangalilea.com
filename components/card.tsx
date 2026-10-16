@@ -5,9 +5,10 @@ import {
   StickyNote,
 } from "lucide-react";
 import type { ReactNode } from "react";
-import { ClickableWrapper } from "@/components/clickable-wrapper";
+import { ClickableWrapper, OwnLink } from "@/components/clickable-wrapper";
 import { FeedComments } from "@/components/comment-feed";
 import { CoverImage } from "@/components/cover-image";
+import { Link } from "@/components/link";
 import { ExpandButton, type Picture } from "@/components/media-lightbox";
 import { STATUS_CONFIG, StatusBadge } from "@/components/status-badge";
 import { Quote } from "@/components/ui/quote";
@@ -114,7 +115,8 @@ function NoteCard({
         </div>
       )}
       {/* A note is read in the feed, as a tweet in a timeline: on screen, it is a
-          view of its page (components/page-sensor). */}
+          view of its page (components/page-sensor). Its link is the meta line under
+          the words, as a post's is its timestamp. */}
       <div className="p-4" data-view={note.path}>
         {author ? (
           <>
@@ -141,25 +143,35 @@ function NoteCard({
             >
               {body}
             </Quote>
-            <div className="mt-2 flex items-center gap-1.5 text-xs text-foreground-lowest">
+            <OwnLink
+              href={note.path}
+              className="mt-2 flex items-center gap-1.5 text-xs text-foreground-lowest"
+            >
+              {/* The quote draws its own date; the line's name is the page's. */}
+              <span className="sr-only">{author.name} quote</span>
               <FeedViewCount slug={note.slug.join("/")} />
-            </div>
+            </OwnLink>
           </>
         ) : (
           <>
             <div className="prose prose-sm max-w-none prose-p:my-3 prose-p:leading-relaxed">
               {body}
             </div>
-            <div className="mt-3 flex items-center gap-1.5 text-xs text-foreground-lowest">
-              {note.publishedAt && (
+            <OwnLink
+              href={note.path}
+              className="mt-3 flex items-center gap-1.5 text-xs text-foreground-lowest"
+            >
+              {note.publishedAt ? (
                 <>
                   <StickyNote className="size-3" />
                   <time>{formatDate(note.publishedAt)}</time>
                   <span>·</span>
                 </>
+              ) : (
+                <span className="sr-only">note</span>
               )}
               <FeedViewCount slug={note.slug.join("/")} />
-            </div>
+            </OwnLink>
           </>
         )}
         <FeedComments slug={note.slug.join("/")} path={note.path} />
@@ -205,7 +217,7 @@ function PageCard({ page }: { page: Page }) {
       )}
       <div className="p-4">
         <h3 className="text-xl font-semibold leading-tight tracking-tight">
-          {page.title}
+          <OwnLink href={page.path}>{page.title}</OwnLink>
         </h3>
         {page.description && (
           <p className="text-sm text-foreground-low mt-1">{page.description}</p>
@@ -276,7 +288,9 @@ function FolderCard({ folder }: { folder: Folder }) {
       <div className="p-4">
         <div className="flex items-center gap-1.5">
           <FolderIcon className="size-4 text-foreground-lowest" />
-          <span className="font-mono text-sm">{folder.title}</span>
+          <OwnLink href={folder.path} className="font-mono text-sm">
+            {folder.title}
+          </OwnLink>
         </div>
         {folder.description && (
           <p className="text-sm text-foreground-low mt-1">
@@ -318,7 +332,9 @@ function XrayFolderCard({ folder }: { folder: Folder }) {
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1.5">
               <FolderIcon className="size-4 text-foreground-lowest" />
-              <span className="font-mono text-sm">{folder.title}</span>
+              <OwnLink href={folder.path} className="font-mono text-sm">
+                {folder.title}
+              </OwnLink>
             </div>
             {folder.description && (
               <p className="text-sm text-foreground-low mt-1">
@@ -335,12 +351,12 @@ function XrayFolderCard({ folder }: { folder: Folder }) {
             <Card key={item.path} content={item} />
           ))}
           {remaining > 0 && (
-            <ClickableWrapper
+            <Link
               href={folder.path}
               className="mt-2 block text-xs text-foreground-lowest hover:text-foreground-low"
             >
               + {remaining} more
-            </ClickableWrapper>
+            </Link>
           )}
         </div>
       )}
