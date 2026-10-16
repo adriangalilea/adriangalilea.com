@@ -1,5 +1,11 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { HOST, pathOf, SITE, visitDriver } from "@/lib/visit-store";
+import {
+  HOST,
+  pathOf,
+  SITE,
+  VIEWS_CACHE,
+  visitDriver,
+} from "@/lib/visit-store";
 import { readViews } from "@/lib/visits";
 
 // Many notes' view counts at once, for a feed (components/view-counter): how many
@@ -10,7 +16,8 @@ export async function GET(request: NextRequest) {
   const slugs = (request.nextUrl.searchParams.get("slugs") ?? "")
     .split(",")
     .filter(Boolean);
-  if (slugs.length === 0) return NextResponse.json({ counts: {} });
+  if (slugs.length === 0)
+    return NextResponse.json({ counts: {} }, { headers: VIEWS_CACHE });
   const views = await readViews(visitDriver(), {
     site: SITE,
     host: HOST,
@@ -21,5 +28,5 @@ export async function GET(request: NextRequest) {
     const n = views[pathOf(slug)];
     if (n !== undefined) counts[slug] = n;
   }
-  return NextResponse.json({ counts });
+  return NextResponse.json({ counts }, { headers: VIEWS_CACHE });
 }

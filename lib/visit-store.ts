@@ -30,3 +30,12 @@ export function visitDriver() {
 
 /** A note's page: where its views are counted. */
 export const pathOf = (slug: string) => `/${slug}`;
+
+/** A view count is the same for every reader and a few minutes late is still the
+ *  count, so the CDN answers it: five minutes fresh, then served stale while one
+ *  request refreshes it. Every page asks for counts, and without this each ask ran a
+ *  function and a query. */
+export const VIEWS_CACHE = {
+  "Cache-Control":
+    "public, max-age=0, s-maxage=300, stale-while-revalidate=86400",
+};

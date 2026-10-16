@@ -1,5 +1,11 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { HOST, pathOf, SITE, visitDriver } from "@/lib/visit-store";
+import {
+  HOST,
+  pathOf,
+  SITE,
+  VIEWS_CACHE,
+  visitDriver,
+} from "@/lib/visit-store";
 import { readViews } from "@/lib/visits";
 
 // One note's view count (components/view-counter): how many visits opened its page,
@@ -15,5 +21,8 @@ export async function GET(
     host: HOST,
     paths: [path],
   });
-  return NextResponse.json({ views: views[path] ?? 0 });
+  return NextResponse.json(
+    { views: views[path] ?? 0 },
+    { headers: VIEWS_CACHE },
+  );
 }
