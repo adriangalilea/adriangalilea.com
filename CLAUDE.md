@@ -330,6 +330,10 @@ Every card carries ONE real `<a href>` to its own page, `OwnLink`: a page's or f
 
 Every internal link is `Link` from `components/link.tsx` (biome's `noRestrictedImports` refuses `next/link` anywhere else): it prefetches once the pointer rests on it, the keyboard reaches it or a finger lands, never as it scrolls into view. Every page is static, and next/link prefetches a static route whole on sight, so the header's name made every page load fetch the home's feed payload (294 KB uncompressed, 3 requests; a quote page fetched the home, `/quotes` and the author's folder, 570 KB). Now a page load prefetches nothing. Same rule as ui's `app/link.tsx`.
 
+## Sitemap and robots
+
+`app/sitemap.ts` lists the home, every published piece (a `publishedAt`, not a draft, inside no draft folder), every folder something published lives in, and `/privacy`, with `lastModified` from the content's own dates (a page's `updatedAt` when later; a folder's newest piece; the home's newest of all). Tags are a filter of the same page (`?tag=`), never pages, so none is listed. `app/robots.ts` allows everything but `/api/` and points at the sitemap.
+
 ## Writing voice
 
 When writing posts on my behalf, match my tone. Reference: `content/shapes-of-knowledge/index.md` (unfinished but representative). Short sentences. Conversational. Bold for emphasis. No em-dashes. No filler. Say things once. If it sounds like a blog post template, rewrite it.
