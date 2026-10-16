@@ -7,7 +7,8 @@
 // the rect engine below for items whose aspect is known (pictures), and arrange's
 // layout for items measured in the page (cards), which runs it before the first paint
 // as an inline script of its own source. It is self-contained for that reason: no name
-// from outside it.
+// from outside it. So are the other rules arrange inlines: `laneCount`, the rows rule
+// (`breakRows`) and the bento's packing (`pack`).
 //
 // The rect engines. In: every item's aspect (width over height) in set order, and a
 // width. Out: one rect per item, in set order, plus what a grid needs to move around
@@ -28,8 +29,8 @@
 // every container width that keeps the lane count: resizing scales pixels and never
 // moves an item to another lane. The PIXELS are then laid with the real gap.
 //
-// JUSTIFIED is loom's greedy rows: fill a row until its exact-fit height drops to the
-// target, emit it, repeat; the last row never stretches past the target.
+// JUSTIFIED is loom's greedy rows (`breakRows`): fill a row until its exact-fit height
+// drops to the target, emit it, repeat; the last row never stretches past the target.
 //
 // Both are prefix-stable: an item's rect depends only on the items before it, so
 // appending a page never moves an earlier item (justified excepted for its last row,
@@ -209,7 +210,42 @@ export function layoutLanes(
   return finish(out);
 }
 
-/** Justified rows: loom's greedy fill, the last row at most the target height. */
+/** THE ROWS RULE, loom's greedy fill: a row takes items until its exact-fit height
+ *  drops to `rowHeight`, and the last row is never taller than `rowHeight`. In: the
+ *  aspects as they are drawn (clamped by the caller if at all), the width, the gap
+ *  between items in a row, px. Out: each row's end (the index after its last item)
+ *  and its height. Self-contained (no name from outside it): arrange inlines its
+ *  source into the page to lay justified rows before the first paint. */
+export function breakRows(
+  aspects: ArrayLike<number>,
+  width: number,
+  rowHeight: number,
+  gap: number,
+): { end: number; height: number }[] {
+  const rows: { end: number; height: number }[] = [];
+  let start = 0;
+  let sum = 0;
+  for (let i = 0; i < aspects.length; i++) {
+    sum += aspects[i] as number;
+    const h = (width - gap * (i - start)) / sum;
+    if (h <= rowHeight) {
+      rows.push({ end: i + 1, height: h });
+      start = i + 1;
+      sum = 0;
+    }
+  }
+  if (start < aspects.length)
+    rows.push({
+      end: aspects.length,
+      height: Math.min(
+        rowHeight,
+        (width - gap * (aspects.length - 1 - start)) / sum,
+      ),
+    });
+  return rows;
+}
+
+/** Justified rows: the rows rule over the clamped aspects, laid in pixels. */
 export function layoutJustified(
   aspects: ArrayLike<number>,
   options: LayoutOptions,
@@ -218,39 +254,26 @@ export function layoutJustified(
   const target = options.rowHeight ?? ROW_HEIGHT;
   const width = Math.max(0, options.width);
   const out = empty("justified", width, aspects.length);
-  const starts: number[] = [];
+  const drawn = Array.from(aspects, (a) => clampAspect(a, options.clamp));
+  const rows = breakRows(drawn, width, target, gap);
   let top = 0;
   let start = 0;
-  let sum = 0;
-  const emit = (end: number, h: number) => {
+  rows.forEach(({ end, height }, r) => {
     let x = 0;
     for (let j = start; j < end; j++) {
-      const a = clampAspect(aspects[j] as number, options.clamp);
+      const w = (drawn[j] as number) * height;
       out.x[j] = x;
       out.y[j] = top;
-      out.w[j] = a * h;
-      out.h[j] = h;
-      out.line[j] = starts.length;
-      x += a * h + gap;
+      out.w[j] = w;
+      out.h[j] = height;
+      out.line[j] = r;
+      x += w + gap;
     }
-    starts.push(start);
-    top += h + gap;
+    top += height + gap;
     start = end;
-    sum = 0;
-  };
-  for (let i = 0; i < aspects.length; i++) {
-    sum += clampAspect(aspects[i] as number, options.clamp);
-    const h = (width - gap * (i - start)) / sum;
-    if (h <= target) emit(i + 1, h);
-  }
-  if (start < aspects.length)
-    emit(
-      aspects.length,
-      Math.min(target, (width - gap * (aspects.length - 1 - start)) / sum),
-    );
-  starts.push(aspects.length);
-  out.lines = starts.length - 1;
-  out.rowStart = Int32Array.from(starts);
+  });
+  out.lines = rows.length;
+  out.rowStart = Int32Array.from([0, ...rows.map((r) => r.end)]);
   return finish(out);
 }
 
@@ -402,6 +425,9 @@ export function nearest(out: Layout, y: number): number {
 // would leave a column empty beside each of the rest: a wide or large card with no
 // single left at all takes the whole row instead (`across`), as both do at two
 // columns.
+//
+// `pack` is self-contained (no name from outside it): arrange inlines its source into
+// the page to pack a bento before the first paint.
 
 /** The cells a card spans: one, two across, two by two. */
 export type BentoSize = "card" | "wide" | "large";
