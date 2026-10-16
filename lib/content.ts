@@ -13,6 +13,7 @@ import {
   IMAGE_EXTENSIONS,
   POSTER_EXTENSIONS,
 } from "@/lib/media";
+import { BLUR_MANIFEST } from "@/lib/prepared";
 import { type QuoteTone, toneFrom } from "@/lib/quote-card";
 import { formatDate } from "@/lib/utils";
 
@@ -20,14 +21,11 @@ import { formatDate } from "@/lib/utils";
 // under public/ (`scripts/prepare.mts` mirrors them before Next runs), so a file's URL
 // is its path in content/ and nothing here writes to disk.
 export const CONTENT_DIR = join(process.cwd(), "content");
-/** Where `scripts/prepare.mts` keeps what it derives; `.next/cache` survives `next
- *  build` and is kept between deploys. */
-export const PREPARED_DIR = join(process.cwd(), ".next", "cache", "prepare");
 
 // The preparation step creates this input. Missing it is a broken pipeline, not a
 // reason to silently publish without prepared previews.
 const blurManifest: Record<string, string> = JSON.parse(
-  readFileSync(join(PREPARED_DIR, "blur.json"), "utf-8"),
+  readFileSync(BLUR_MANIFEST, "utf-8"),
 );
 const NOTE_MAX_CHARS = 280;
 export function imageBlur(src: string): string | undefined {

@@ -29,12 +29,12 @@ import { dirname, join, relative } from "node:path";
 import sharp from "sharp";
 import { IMAGE_EXTENSIONS, isMedia } from "@/lib/media";
 import { prepareMedia } from "@/lib/prepare-media";
+import { BLUR_MANIFEST, PREPARED_DIR } from "@/lib/prepared";
 
 const ROOT = process.cwd();
 const CONTENT = join(ROOT, "content");
 const PUBLIC = join(ROOT, "public");
-const PREPARED = join(ROOT, ".next", "cache", "prepare");
-const OG_CACHE = join(PREPARED, "og");
+const OG_CACHE = join(PREPARED_DIR, "og");
 const OG_PUBLIC = join(PUBLIC, "og");
 const started = performance.now();
 
@@ -77,15 +77,14 @@ for (const src of media) {
 }
 
 // 2. BLURS
-const BLUR = join(PREPARED, "blur.json");
-const BLUR_KEYS = join(PREPARED, "blur.keys.json");
+const BLUR_KEYS = join(PREPARED_DIR, "blur.keys.json");
 const blurRecipe = sha(
   source("lib/prepare-media.ts"),
   JSON.stringify(sharp.versions),
 );
 const readJSON = (path: string): Record<string, string> =>
   existsSync(path) ? JSON.parse(readFileSync(path, "utf8")) : {};
-const blurs = readJSON(BLUR);
+const blurs = readJSON(BLUR_MANIFEST);
 const blurKeys = readJSON(BLUR_KEYS);
 const nextBlurs: Record<string, string> = {};
 const nextBlurKeys: Record<string, string> = {};
@@ -103,8 +102,8 @@ for (const src of media) {
   nextBlurKeys[rel] = key;
   if (!kept) blurred++;
 }
-mkdirSync(PREPARED, { recursive: true });
-writeFileSync(BLUR, JSON.stringify(nextBlurs, null, 2));
+mkdirSync(PREPARED_DIR, { recursive: true });
+writeFileSync(BLUR_MANIFEST, JSON.stringify(nextBlurs, null, 2));
 writeFileSync(BLUR_KEYS, JSON.stringify(nextBlurKeys, null, 2));
 
 // 3. PREVIEWS (lib/content reads blur.json at import, so it is imported after 2)
