@@ -49,3 +49,13 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# @ag/sealed: committed encrypted beside themselves (scripts/sealed.mts)
+/components/ui/chat.tsx
+/components/ui/telegram-chat-layout.tsx
+/components/ui/telegram-chat-scroll.ts
+/components/ui/telegram-chat.css
+/components/ui/telegram-chat.tsx
+/lib/telegram-chat-framing.ts
+/lib/telegram-chat-post.ts
+# end @ag/sealed

@@ -4,10 +4,11 @@
   "private": true,
   "scripts": {
     "dev": "tsx scripts/generate-blur.mjs && next dev",
-    "build": "tsx scripts/generate-blur.mjs && next build",
+    "build": "node --experimental-strip-types scripts/sealed.mts open && tsx scripts/generate-blur.mjs && next build",
     "start": "next start",
     "fix": "biome check --write",
-    "lint": "biome check",
+    "lint": "node --experimental-strip-types scripts/sealed.mts check && biome check",
+    "seal": "SEALED_KEY=$(op read 'op://Private/sealed key/credential') node --experimental-strip-types scripts/sealed.mts seal",
     "format": "biome format --write",
     "embed": "tsx scripts/embed.mts",
     "db:push": "drizzle-kit push",
