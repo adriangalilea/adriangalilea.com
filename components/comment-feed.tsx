@@ -142,20 +142,20 @@ export function FeedComments({ slug, path }: { slug: string; path: string }) {
             className="flex-1 min-w-0 rounded-md border border-border/50 bg-background px-2.5 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-ring"
           />
         ) : (
-          <div className="group/signin relative flex-1 min-w-0">
+          // One set of buttons, placed by the breakpoint: on a phone in the row beside
+          // the words, from sm over the disabled field, shown on hover. Every note in
+          // a feed carries this, so drawing it twice was a third of the feed's HTML.
+          <div className="group/signin relative flex flex-1 min-w-0 items-center gap-3 sm:block">
             <input
               type="text"
               disabled
               placeholder="Sign in to comment..."
               className="w-full rounded-md border border-border/50 bg-background px-2.5 py-1 text-xs opacity-50 cursor-not-allowed transition-opacity hidden sm:block group-hover/signin:opacity-0"
             />
-            <div className="hidden sm:flex absolute inset-0 items-center justify-center opacity-0 transition-opacity group-hover/signin:opacity-100">
-              <SignInButtons />
-            </div>
-            <div className="flex sm:hidden items-center gap-3">
-              <span className="text-xs text-foreground-low shrink-0">
-                Sign in to comment
-              </span>
+            <span className="text-xs text-foreground-low shrink-0 sm:hidden">
+              Sign in to comment
+            </span>
+            <div className="sm:absolute sm:inset-0 sm:flex sm:items-center sm:justify-center sm:opacity-0 sm:transition-opacity sm:group-hover/signin:opacity-100">
               <SignInButtons />
             </div>
           </div>
