@@ -5,7 +5,7 @@ import {
   StickyNote,
 } from "lucide-react";
 import type { ReactNode } from "react";
-import { ClickableWrapper, OwnLink } from "@/components/clickable-wrapper";
+import { ClickableWrapper } from "@/components/clickable-wrapper";
 import { FeedComments } from "@/components/comment-feed";
 import { CoverImage } from "@/components/cover-image";
 import { Link } from "@/components/link";
@@ -143,21 +143,21 @@ function NoteCard({
             >
               {body}
             </Quote>
-            <OwnLink
+            <Link
               href={note.path}
               className="mt-2 flex items-center gap-1.5 text-xs text-foreground-lowest"
             >
               {/* The quote draws its own date; the line's name is the page's. */}
               <span className="sr-only">{author.name} quote</span>
               <FeedViewCount slug={note.slug.join("/")} />
-            </OwnLink>
+            </Link>
           </>
         ) : (
           <>
             <div className="prose prose-sm max-w-none prose-p:my-3 prose-p:leading-relaxed">
               {body}
             </div>
-            <OwnLink
+            <Link
               href={note.path}
               className="mt-3 flex items-center gap-1.5 text-xs text-foreground-lowest"
             >
@@ -171,7 +171,7 @@ function NoteCard({
                 <span className="sr-only">note</span>
               )}
               <FeedViewCount slug={note.slug.join("/")} />
-            </OwnLink>
+            </Link>
           </>
         )}
         <FeedComments slug={note.slug.join("/")} path={note.path} />
@@ -217,7 +217,7 @@ function PageCard({ page }: { page: Page }) {
       )}
       <div className="p-4">
         <h3 className="text-xl font-semibold leading-tight tracking-tight">
-          <OwnLink href={page.path}>{page.title}</OwnLink>
+          <Link href={page.path}>{page.title}</Link>
         </h3>
         {page.description && (
           <p className="text-sm text-foreground-low mt-1">{page.description}</p>
@@ -288,9 +288,9 @@ function FolderCard({ folder }: { folder: Folder }) {
       <div className="p-4">
         <div className="flex items-center gap-1.5">
           <FolderIcon className="size-4 text-foreground-lowest" />
-          <OwnLink href={folder.path} className="font-mono text-sm">
+          <Link href={folder.path} className="font-mono text-sm">
             {folder.title}
-          </OwnLink>
+          </Link>
         </div>
         {folder.description && (
           <p className="text-sm text-foreground-low mt-1">
@@ -332,9 +332,9 @@ function XrayFolderCard({ folder }: { folder: Folder }) {
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1.5">
               <FolderIcon className="size-4 text-foreground-lowest" />
-              <OwnLink href={folder.path} className="font-mono text-sm">
+              <Link href={folder.path} className="font-mono text-sm">
                 {folder.title}
-              </OwnLink>
+              </Link>
             </div>
             {folder.description && (
               <p className="text-sm text-foreground-low mt-1">
