@@ -38,12 +38,16 @@ import { Check } from "lucide-react";
 import type * as M from "mdast";
 import * as React from "react";
 import { Image } from "@/components/ui/image";
-import { Highlighted } from "@/components/ui/markdown-code";
+import {
+  Highlighted,
+  type HighlightedProps,
+} from "@/components/ui/markdown-code";
 import { Quote, type QuoteProps } from "@/components/ui/quote";
 import { QuoteMarkMask } from "@/components/ui/quote-mark";
 import { YouTube } from "@/components/ui/youtube";
 import {
   anchors,
+  fenceOf,
   parseMarkdown,
   plainOf,
   safeHref,
@@ -143,9 +147,10 @@ type Tags = {
   }>;
   /** Inline code, given its text. */
   code: React.ComponentType<{ children: string }>;
-  /** A code block: its text, its language, and Shiki's markup of it where it was
-   *  coloured ahead (markdown-prepare `highlightTree`), else null. */
-  pre: React.ComponentType<{ text: string; lang: string; html: string | null }>;
+  /** A code block: its text, its language, Shiki's markup of it where it was
+   *  coloured ahead (markdown-prepare `highlightTree`), else null, and what its fence
+   *  asks for (```` ```ts lines {2,4-6} ````). By default `code`'s own block. */
+  pre: React.ComponentType<HighlightedProps>;
   /** A quotation: its words drawn, who said it when the last line names them. */
   blockquote: React.ComponentType<QuoteProps>;
 };
@@ -244,15 +249,6 @@ const PlainLink = (props: React.ComponentProps<"a">) => {
 const PlainCode = ({ children }: { children: string }) => (
   <code>{children}</code>
 );
-const PlainPre = ({
-  text,
-  lang,
-  html,
-}: {
-  text: string;
-  lang: string;
-  html: string | null;
-}) => <Highlighted text={text} lang={lang} html={html} />;
 const PlainFigure = ({
   caption,
   children,
@@ -288,7 +284,7 @@ export function Markdown({
     img: PlainImage,
     figure: PlainFigure,
     code: PlainCode,
-    pre: PlainPre,
+    pre: Highlighted,
     blockquote: Quote,
     ...components,
   };
@@ -570,6 +566,7 @@ function drawer(
             text={node.value}
             lang={node.lang ?? "text"}
             html={dataOf(node).html ?? null}
+            {...fenceOf(node.meta)}
           />
         );
       case "thematicBreak":

@@ -3,7 +3,6 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import imageSize from "image-size";
 import type * as M from "mdast";
-import { bundledLanguages, codeToHtml, type ShikiTransformer } from "shiki";
 import {
   highlightTree,
   type PreparedMarkdown,
@@ -15,8 +14,8 @@ import {
 // image's URL is its path there: lib/content rewrites `./x.png` to it, and
 // scripts/prepare.mts serves the same path from public/), and one that is not on
 // disk is a broken post the build refuses. Its tags are the components a piece may
-// name (TAGS, drawn by components/markdown.tsx). Its code is coloured here, in the
-// site's own themes, so no highlighter loads in a reader's browser.
+// name (TAGS, drawn by components/markdown.tsx). Its code is coloured here, as ui's
+// `code` colours it, so no highlighter loads in a reader's browser.
 
 const ROOT = process.cwd();
 const CONTENT_DIR = join(ROOT, "content");
@@ -57,24 +56,6 @@ export function prepared(source: string): PreparedMarkdown {
   return made;
 }
 
-const langAttr: ShikiTransformer = {
-  pre(node) {
-    node.properties["data-language"] = this.options.lang;
-  },
-};
-
-/** Shiki in the site's two themes, both in one markup (globals.css picks by scheme). */
-async function highlight(text: string, lang: string) {
-  if (lang !== "text" && !(lang in bundledLanguages))
-    throw new Error(`code in ${lang}, a language Shiki does not know`);
-  return codeToHtml(text, {
-    lang,
-    themes: { light: "catppuccin-latte", dark: "catppuccin-mocha" },
-    defaultColor: false,
-    transformers: [langAttr],
-  });
-}
-
 // A DRAWN TREE IS KEPT BY EVERYTHING IT IS MADE FROM: the source, the pipeline (its
 // packages and this file, read as files) and the pictures measured into it. Any of
 // them changing prepares it again.
@@ -94,6 +75,7 @@ const PIPELINE = createHash("sha1")
   )
   .update(readFileSync(join(ROOT, "lib/markdown.ts")))
   .update(readFileSync(join(ROOT, "lib/markdown-prepare.ts")))
+  .update(readFileSync(join(ROOT, "lib/code-highlight.ts")))
   .digest("hex");
 
 const memory = new Map<string, M.Root>();
@@ -114,7 +96,7 @@ export async function treeOf(source: string): Promise<M.Root> {
     memory.set(key, tree);
     return tree;
   }
-  const tree = await highlightTree(read.tree, highlight);
+  const tree = await highlightTree(read.tree);
   mkdirSync(CACHE_DIR, { recursive: true });
   writeFileSync(file, JSON.stringify(tree));
   memory.set(key, tree);

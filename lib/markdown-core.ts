@@ -79,6 +79,21 @@ export function slugOf(text: string): string {
     .replace(/^-|-$/g, "");
 }
 
+/** What a code fence asks for after its language (```` ```ts lines {2,4-6} ````):
+ *  its lines numbered, and the lines to mark. Other words are other tools' (a
+ *  `title="…"`), and text anyone wrote may carry them: they are passed over. */
+export function fenceOf(meta: string | null | undefined): {
+  lines: boolean;
+  highlight?: string;
+} {
+  const words = (meta ?? "").split(/\s+/);
+  const marked = words.find((w) => /^\{\d[\d,-]*\}$/.test(w));
+  return {
+    lines: words.includes("lines"),
+    highlight: marked?.slice(1, -1),
+  };
+}
+
 /** Anchors for one document's headings, asked in their order: a title used twice
  *  takes `-1` the second time, so every anchor is the page's own. */
 export function anchors(): (text: string) => string {

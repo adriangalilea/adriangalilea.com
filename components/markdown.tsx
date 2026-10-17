@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
 import { Card } from "@/components/card";
-import { CodeBlock } from "@/components/code-block";
 import { GitHub, Telegram, Tweet } from "@/components/embeds";
 import { Bars, CompareLines } from "@/components/mdx-lazy";
 import { Zoomable } from "@/components/media-lightbox";
@@ -18,8 +17,8 @@ import { cn } from "@/lib/utils";
 // A PIECE'S BODY: its markdown, prepared once (lib/markdown) and drawn by ui's
 // `markdown` in its look, which is this site's. What is the site's own is how a few
 // things are drawn: a link inside the site through its router, a picture through the
-// site's loader and blur and opening in the lightbox, a code block in the site's frame,
-// a quotation set in the site's serif, and the tags a piece may name (lib/markdown
+// site's loader and blur and opening in the lightbox, a quotation set in the site's
+// serif, and the tags a piece may name (lib/markdown
 // TAGS).
 
 /** A prediction, set apart on a card: its words drawn by the piece, tight. */
@@ -157,7 +156,6 @@ export async function Body({
         a: SiteLink,
         img: SitePicture,
         figure: SiteFigure,
-        pre: CodeBlock,
         blockquote: SiteQuote,
       }}
       // The site's reading measure: its body colour, a little more air between lines.

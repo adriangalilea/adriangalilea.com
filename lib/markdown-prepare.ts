@@ -3,13 +3,13 @@
 // with markdown-core's own syntax and returns the tree `Markdown` draws (`tree`), with
 // what a page around it reads: its headings as a table of contents, its words as plain
 // text (a description, a preview), its pictures measured. `highlightTree` then colours
-// its code blocks with Shiki, so no highlighter loads in the browser.
+// its code blocks as `code` does (the same highlighter and themes, so they are `code`'s
+// blocks), and no highlighter loads in the browser.
 //
 // FACTS COME FROM WHOEVER HOLDS THEM. A picture's size is in its file, and only the
 // host knows where its files are: it passes `measure`, which answers a local picture's
 // size or null for one that is not its own (another site's), and THROWS for one of its
-// own that is missing, the broken post a build should refuse. The highlighter and its
-// themes are the host's too (`highlight`); ui's code themes are the default.
+// own that is missing, the broken post a build should refuse.
 //
 // TAGS ARE DATA. A text that names components (`<Bars unit="s" data={[…]} />`) says
 // which with `tags`; a tag not among them throws, and so does a prop that is not a
@@ -30,8 +30,8 @@ import {
   mdxJsxFromMarkdown,
 } from "mdast-util-mdx-jsx";
 import { mdxJsx } from "micromark-extension-mdx-jsx";
-import { CODE_THEMES } from "@/lib/code-tokens";
-import { anchors, plainOf, SYNTAX } from "@/lib/markdown-core";
+import { codeHtml, knownLanguage } from "@/lib/code-highlight";
+import { anchors, fenceOf, plainOf, SYNTAX } from "@/lib/markdown-core";
 
 /** A heading, as a table of contents lists it: its depth, its words, its anchor. */
 export type Heading = { depth: number; text: string; id: string };
@@ -220,24 +220,11 @@ function literalOf(node: Expression, where: string): unknown {
   );
 }
 
-/** Code as HTML, coloured: Shiki's markup of `text` in `lang`, or null where the
- *  language is not one it knows (the block is drawn plain). */
-export type Highlight = (text: string, lang: string) => Promise<string | null>;
-
-/** Shiki with ui's code themes (code-tokens), both schemes in one markup: what the
- *  browser's highlighter (markdown-code) draws, done ahead. */
-export const highlightCode: Highlight = async (text, lang) => {
-  const { bundledLanguages, codeToHtml } = await import("shiki");
-  if (lang === "text" || !(lang in bundledLanguages)) return null;
-  return codeToHtml(text, { lang, themes: CODE_THEMES, defaultColor: false });
-};
-
-/** The tree with every code block coloured ahead (`data.html`), by `highlight`. A new
- *  tree; the given one is untouched. */
-export async function highlightTree(
-  tree: M.Root,
-  highlight: Highlight = highlightCode,
-): Promise<M.Root> {
+/** The tree with every code block coloured ahead (`data.html`), by `code`'s own
+ *  highlighter (lib/code-highlight), its fence's marked lines marked: what the
+ *  browser would colour, done here. A block in a language Shiki does not know stays
+ *  plain. A new tree; the given one is untouched. */
+export async function highlightTree(tree: M.Root): Promise<M.Root> {
   const copy = structuredClone(tree);
   const blocks: M.Code[] = [];
   const walk = (node: M.Nodes) => {
@@ -247,8 +234,12 @@ export async function highlightTree(
   walk(copy);
   await Promise.all(
     blocks.map(async (block) => {
-      const html = await highlight(block.value, block.lang ?? "text");
-      if (html) annotate(block, { html });
+      const lang = block.lang ?? "text";
+      if (!(await knownLanguage(lang))) return;
+      const { highlight } = fenceOf(block.meta);
+      annotate(block, {
+        html: await codeHtml(block.value, { lang, highlight }),
+      });
     }),
   );
   return copy;
