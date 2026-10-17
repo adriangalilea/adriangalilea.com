@@ -115,8 +115,9 @@ export const MARKDOWN = [
   "[&_td:not(:is([data-embed],[data-slot=quote-by])_*)]:border-b [&_td:not(:is([data-embed],[data-slot=quote-by])_*)]:border-foreground/5 [&_td:not(:is([data-embed],[data-slot=quote-by])_*)]:px-[1em] [&_td:not(:is([data-embed],[data-slot=quote-by])_*)]:py-[0.75em] [&_td:not(:is([data-embed],[data-slot=quote-by])_*)]:align-top [&_tr:last-child>td:not(:is([data-embed],[data-slot=quote-by])_*)]:border-b-0",
   // images and the foot
   "[&_img:not(:is([data-embed],[data-slot=quote-by])_*)]:my-[2em] [&_img:not(:is([data-embed],[data-slot=quote-by])_*)]:h-auto [&_img:not(:is([data-embed],[data-slot=quote-by])_*)]:w-full [&_img:not(:is([data-embed],[data-slot=quote-by])_*)]:rounded-[0.75em]",
-  // a figure: the picture flush in it, its caption small and centred under it
-  "[&_figure:not(:is([data-embed],[data-slot=quote-by])_*)]:my-[2em] [&_figure_img:not(:is([data-embed],[data-slot=quote-by])_*)]:my-0 [&_figcaption:not(:is([data-embed],[data-slot=quote-by])_*)]:mt-[0.75em] [&_figcaption:not(:is([data-embed],[data-slot=quote-by])_*)]:text-center [&_figcaption:not(:is([data-embed],[data-slot=quote-by])_*)]:text-[0.8125em] [&_figcaption:not(:is([data-embed],[data-slot=quote-by])_*)]:text-foreground/50",
+  // a figure: the picture flush in it, its caption small and centred under it (a
+  // picture's figure, never a quote's, which is a figure with a slot of its own)
+  "[&_figure:not([data-slot]):not(:is([data-embed],[data-slot=quote-by])_*)]:my-[2em] [&_figure:not([data-slot])_img:not(:is([data-embed],[data-slot=quote-by])_*)]:my-0 [&_figcaption:not([data-slot]):not(:is([data-embed],[data-slot=quote-by])_*)]:mt-[0.75em] [&_figcaption:not([data-slot]):not(:is([data-embed],[data-slot=quote-by])_*)]:text-center [&_figcaption:not([data-slot]):not(:is([data-embed],[data-slot=quote-by])_*)]:text-[0.8125em] [&_figcaption:not([data-slot]):not(:is([data-embed],[data-slot=quote-by])_*)]:text-foreground/50",
   "[&_[data-footnotes]]:mt-[3em] [&_[data-footnotes]]:border-t [&_[data-footnotes]]:border-foreground/8 [&_[data-footnotes]]:pt-[1em] [&_[data-footnotes]]:text-[0.875em] [&_[data-footnotes]]:text-foreground/50",
 ].join(" ");
 
