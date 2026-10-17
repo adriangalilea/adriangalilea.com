@@ -26,6 +26,7 @@
 
 import { cva, type VariantProps } from "class-variance-authority";
 import * as React from "react";
+import { Image, type ImageProps } from "@/components/ui/image";
 import { type Person, personColors } from "@/lib/person";
 import { cn } from "@/lib/utils";
 
@@ -314,11 +315,11 @@ export function ChatFace({
       }
     >
       {person.avatar ? (
-        // biome-ignore lint/performance/noImgElement: any origin, a small round face
-        <img
+        <Image
           src={person.avatar}
           alt=""
-          className="size-full rounded-full object-cover"
+          sizes={FACE_SIZES[size]}
+          className="size-full rounded-full"
           draggable={false}
         />
       ) : (
@@ -394,16 +395,15 @@ export function ChatPhoto({
   className,
   alt = "",
   ...props
-}: React.ComponentProps<"img"> & { look?: "default" | "none" }) {
+}: ImageProps & { look?: "default" | "none" }) {
   return (
-    // biome-ignore lint/performance/noImgElement: any origin, sized by its own aspect
-    <img
+    <Image
       data-slot="chat-photo"
       alt={alt}
       className={
         look === "none"
           ? className
-          : cn("mt-1 mb-2 block h-auto max-w-full rounded-lg", className)
+          : cn("mt-1 mb-2 block rounded-lg", className)
       }
       {...props}
     />

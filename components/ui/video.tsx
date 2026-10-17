@@ -97,6 +97,13 @@ export type VideoProps = Omit<
    *  must stand for the video from the server's HTML on, like a stage resting
    *  mid-clip; Image's `priority`). */
   posterArrival?: "fade" | "instant";
+  /** How it looks while asked to play with no frame up yet. "water" (default): the
+   *  poster under the registry's falling water, a video on its way, for a video that
+   *  is the picture someone is waiting on. "still": the poster stands sharp as the
+   *  picture itself and the video takes its place with no seam, for a video that is
+   *  one part of a larger picture carrying on without it (a stage's surface resting
+   *  on its own frame), where water would blur a piece of a scene that is not loading. */
+  waiting?: "water" | "still";
   className?: string;
   videoClassName?: string;
   /** The element whose hover and focus count as looking at this video (its card). */
@@ -205,6 +212,7 @@ function VideoSource({
   sizes = "100vw",
   optimizePoster = true,
   posterArrival = "fade",
+  waiting = "water",
   className,
   videoClassName,
   interactionRef,
@@ -469,10 +477,13 @@ function VideoSource({
   }, [revealed]);
   // Asked to play (by the hand, by sight, by the page it follows) and no frame up yet:
   // its poster lies under falling water (the registry's water) until the picture
-  // comes in over it. A manual video's own controls say it is loading.
+  // comes in over it, unless it is `waiting="still"`. A manual video's own controls
+  // say it is loading.
   const asked = automatic ? autoPlay : follows ? wanted === true : false;
   const water = useWater<HTMLImageElement>(
-    poster && asked && hidden && !failed ? "falling" : null,
+    waiting === "water" && poster && asked && hidden && !failed
+      ? "falling"
+      : null,
   );
 
   return (
@@ -542,9 +553,13 @@ function VideoSource({
         // element's own corners smoothly.
         className={cn(
           "relative block size-full rounded-[inherit] object-cover transition-[opacity,filter] duration-300 ease-out motion-reduce:transition-none",
-          // Only where scripts run: without them nothing would ever reveal it.
+          // Only where scripts run: without them nothing would ever reveal it. Out of
+          // water it sharpens as it comes; over a still it only fades, the still
+          // and its first frame being one picture.
+          hidden && "[@media(scripting:enabled)]:opacity-0",
           hidden &&
-            "[@media(scripting:enabled)]:opacity-0 motion-safe:[@media(scripting:enabled)]:blur-sm",
+            waiting === "water" &&
+            "motion-safe:[@media(scripting:enabled)]:blur-sm",
           videoClassName,
         )}
         onLoadedMetadata={(e) => {
