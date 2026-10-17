@@ -1,7 +1,6 @@
 "use client";
 
 import { Check, Clipboard } from "lucide-react";
-import { type ComponentProps, useRef } from "react";
 import { useCopy } from "@/components/ui/copy";
 
 const LANG_NAMES: Record<string, string> = {
@@ -58,29 +57,26 @@ function CopyButton({
   );
 }
 
-export function Pre({ children, style, ...props }: ComponentProps<"pre">) {
-  const ref = useRef<HTMLPreElement>(null);
-  const { copied, copy } = useCopy(
-    () => ref.current?.querySelector("code")?.textContent ?? "",
-  );
-
-  const lang = (props as Record<string, unknown>)["data-language"] as
-    | string
-    | undefined;
-  const label = lang && lang !== "text" ? (LANG_NAMES[lang] ?? lang) : null;
-
-  // Forward shiki bg variables to wrapper so the header can use them
-  const bgVars = style as Record<string, string> | undefined;
-  const wrapperStyle = {
-    "--shiki-light-bg": bgVars?.["--shiki-light-bg"],
-    "--shiki-dark-bg": bgVars?.["--shiki-dark-bg"],
-  } as React.CSSProperties;
+/** A code block of a piece (components/markdown): Shiki's markup of it, coloured as
+ *  the piece was prepared (lib/markdown), under its language and a copy button. */
+export function CodeBlock({
+  text,
+  lang,
+  html,
+}: {
+  text: string;
+  lang: string;
+  html: string | null;
+}) {
+  const { copied, copy } = useCopy(text);
+  if (html === null)
+    throw new Error(`a ${lang} code block reached the page uncoloured`);
+  const label = lang !== "text" ? (LANG_NAMES[lang] ?? lang) : null;
 
   return (
     <div
-      className="code-block not-prose group relative my-6 overflow-hidden rounded-xl"
+      className="code-block group relative my-6 overflow-hidden rounded-xl"
       data-language={lang}
-      style={wrapperStyle}
     >
       {label ? (
         <div className="code-header flex items-center justify-between px-4 py-2">
@@ -94,9 +90,10 @@ export function Pre({ children, style, ...props }: ComponentProps<"pre">) {
           <CopyButton copied={copied} onClick={() => void copy()} />
         </div>
       )}
-      <pre ref={ref} style={style} {...props}>
-        {children}
-      </pre>
+      <div
+        // biome-ignore lint/security/noDangerouslySetInnerHtml: Shiki's own escaped markup of the piece's code
+        dangerouslySetInnerHTML={{ __html: html }}
+      />
     </div>
   );
 }

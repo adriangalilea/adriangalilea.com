@@ -3,6 +3,7 @@ import { Card } from "@/components/card";
 import { CommentsFeedProvider } from "@/components/comment-feed";
 import { GithubMark } from "@/components/github-mark";
 import { type LaneItem, Lanes } from "@/components/lanes";
+import { Body, QUOTED } from "@/components/markdown";
 import { TagFilter } from "@/components/tag-filter";
 import { ViewCountsProvider } from "@/components/view-counter";
 import type { Content, Folder, Page } from "@/lib/content";
@@ -16,8 +17,6 @@ import {
   isPage,
   isPost,
 } from "@/lib/content";
-import { renderMDX } from "@/lib/mdx";
-import { getMDXComponents } from "@/mdx-components";
 
 /** Every card in a grid, rendered server-side in the order given. */
 export async function prepareGridItems(items: Content[]): Promise<LaneItem[]> {
@@ -33,9 +32,9 @@ export async function prepareGridItems(items: Content[]): Promise<LaneItem[]> {
         <Card
           content={content}
           renderedNoteContent={
-            isNote(content)
-              ? await renderMDX(content.content, getMDXComponents())
-              : undefined
+            isNote(content) ? (
+              <Body source={content.content} className={QUOTED} />
+            ) : undefined
           }
         />
       ),
@@ -121,10 +120,6 @@ export async function CollectionView({ folder, slug }: Props) {
 
   const noteSlugs = sortedChildren.filter(isNote).map((n) => n.slug.join("/"));
 
-  const mdxContent = folder?.content.trim()
-    ? await renderMDX(folder.content, getMDXComponents())
-    : null;
-
   return (
     <ViewCountsProvider slugs={allSlugs}>
       <CommentsFeedProvider slugs={noteSlugs}>
@@ -160,10 +155,8 @@ export async function CollectionView({ folder, slug }: Props) {
             )}
 
           {/* MDX Content */}
-          {mdxContent && (
-            <div className="prose prose-p:leading-[1.8] mb-12">
-              {mdxContent}
-            </div>
+          {folder?.content.trim() && (
+            <Body source={folder.content} className="mb-12" />
           )}
 
           {allTags.length > 0 && (

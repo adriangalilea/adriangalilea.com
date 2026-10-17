@@ -1,12 +1,8 @@
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join, parse, relative } from "node:path";
-import GithubSlugger from "github-slugger";
 import matter from "gray-matter";
 import imageSize from "image-size";
-import { toString as mdastToString } from "mdast-util-to-string";
-import remarkMdx from "remark-mdx";
-import remarkParse from "remark-parse";
-import { unified } from "unified";
+import { prepared } from "@/lib/markdown";
 import {
   ANIMATED_EXTENSIONS,
   AVATAR_EXTENSIONS,
@@ -146,53 +142,8 @@ function urlOf(dir: string): string {
   return rel ? `/${rel}` : "";
 }
 
-const mdxParser = unified().use(remarkParse).use(remarkMdx);
-
-const NOTE_EMBED_NAMES = new Set(["ContentQuote"]);
+/** How many notes a note may embed (`<ContentQuote>`) before it is a page. */
 const NOTE_MAX_EMBEDS = 1;
-
-type MDXAnalysis = {
-  textContent: string;
-  toc: TOCItem[];
-  embedCount: number;
-};
-
-function analyzeMDX(source: string): MDXAnalysis {
-  const tree = mdxParser.parse(source);
-  const toc: TOCItem[] = [];
-  let embedCount = 0;
-  // A TOC entry links to the id rehype-slug gives its heading (lib/mdx), so it is made
-  // by the same slugger, fed every heading in order: a repeated title numbers the same.
-  const slugger = new GithubSlugger();
-
-  function walk(nodes: typeof tree.children) {
-    for (const node of nodes) {
-      if (node.type === "heading") {
-        const depth = (node as { depth: number }).depth;
-        const title = mdastToString(node);
-        const id = slugger.slug(title);
-        if (depth >= 2 && depth <= 4) toc.push({ depth, title, id });
-      }
-      if (
-        node.type === "mdxJsxFlowElement" &&
-        NOTE_EMBED_NAMES.has((node as { name: string }).name)
-      ) {
-        embedCount++;
-      }
-      if ("children" in node) {
-        walk((node as { children: typeof tree.children }).children);
-      }
-    }
-  }
-
-  walk(tree.children);
-
-  return {
-    textContent: mdastToString(tree),
-    toc,
-    embedCount,
-  };
-}
 
 /** `./x.png` is a file beside the one that names it, served at its own path. */
 function rewriteMediaPaths(content: string, dir: string): string {
@@ -311,13 +262,21 @@ function parseContent(filePath: string, slug: string[]): Content | null {
 
     if (data.isPublished === false) return null;
 
-    const { textContent, toc, embedCount } = analyzeMDX(content);
     const { dir, name } = parse(filePath);
+    const rewritten = rewriteMediaPaths(content, dir);
+    // Its words, headings and tags, from the one parse the page draws (lib/markdown):
+    // a heading's anchor here is the one on the page, and a picture not on disk
+    // fails the build as content loads.
+    const read = prepared(rewritten);
+    const textContent = read.text;
+    const toc: TOCItem[] = read.headings
+      .filter((h) => h.depth >= 2 && h.depth <= 4)
+      .map((h) => ({ depth: h.depth, title: h.text, id: h.id }));
+    const embedCount = read.tags.ContentQuote ?? 0;
     // A directory's index owns what lies beside it (cover, poster, avatar, og.png); a
     // sibling file shares the directory and owns none of it.
     const owner = name === "index";
     const coverInfo = owner ? resolveCover(dir) : null;
-    const rewritten = rewriteMediaPaths(content, dir);
 
     const base: ContentBase = {
       slug,

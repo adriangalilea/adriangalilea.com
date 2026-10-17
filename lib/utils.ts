@@ -13,10 +13,3 @@ export function formatDate(date: string | Date): string {
     day: "numeric",
   });
 }
-
-export function stripMarkdown(s: string): string {
-  return s
-    .replace(/[*_~`#>[\]()!]/g, "")
-    .replace(/\n+/g, " ")
-    .trim();
-}

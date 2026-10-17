@@ -5,6 +5,7 @@ import { CollectionView, prepareGridItems } from "@/components/collection-view";
 import { Comments } from "@/components/comments";
 import { CoverImage } from "@/components/cover-image";
 import { Lanes } from "@/components/lanes";
+import { Body, QUOTED } from "@/components/markdown";
 import { RelatedSection } from "@/components/related-section";
 import { TOC } from "@/components/toc";
 import { Quote } from "@/components/ui/quote";
@@ -26,9 +27,8 @@ import {
   type Page,
 } from "@/lib/content";
 import { SERIF_CH } from "@/lib/faces";
-import { renderMDX } from "@/lib/mdx";
-import { formatDate, stripMarkdown } from "@/lib/utils";
-import { getMDXComponents } from "@/mdx-components";
+import { prepared } from "@/lib/markdown";
+import { formatDate } from "@/lib/utils";
 
 type Props = {
   params: Promise<{ slug?: string[] }>;
@@ -65,7 +65,6 @@ export default async function ContentPage({ params }: Props) {
 // ============================================================================
 
 async function NoteView({ note }: { note: Note }) {
-  const mdxContent = await renderMDX(note.content, getMDXComponents());
   const recs = getRecommendations(note, 6);
   const author = getAuthorForContent(note);
   const backlinks = getBacklinks(note);
@@ -101,7 +100,7 @@ async function NoteView({ note }: { note: Note }) {
             {author ? (
               <Quote
                 variant="feature"
-                text={stripMarkdown(note.content)}
+                text={prepared(note.content).text}
                 author={{
                   name: author.name,
                   href: author.path,
@@ -121,12 +120,10 @@ async function NoteView({ note }: { note: Note }) {
                 focus={author.portrait?.focus}
                 ch={SERIF_CH}
               >
-                {mdxContent}
+                <Body source={note.content} className={QUOTED} />
               </Quote>
             ) : (
-              <div className="prose prose-p:leading-[1.8] prose-p:my-6">
-                {mdxContent}
-              </div>
+              <Body source={note.content} />
             )}
 
             {noteDate(note) && (
@@ -191,7 +188,6 @@ async function NoteView({ note }: { note: Note }) {
 // ============================================================================
 
 async function PageView({ page }: { page: Page }) {
-  const mdxContent = await renderMDX(page.content, getMDXComponents());
   const recs = getRecommendations(page, 6);
 
   return (
@@ -263,7 +259,7 @@ async function PageView({ page }: { page: Page }) {
               )}
             </header>
 
-            <div className="mt-8 prose prose-p:leading-[1.8]">{mdxContent}</div>
+            <Body source={page.content} className="mt-8" />
           </div>
         </div>
 
@@ -314,7 +310,7 @@ export async function generateMetadata({
   let title: string | undefined;
   let description: string | undefined;
   if (isNote(content)) {
-    const clean = stripMarkdown(content.content);
+    const clean = prepared(content.content).text;
     if (author) {
       title = `${author.name} quote`;
       description = clean.slice(0, 160);

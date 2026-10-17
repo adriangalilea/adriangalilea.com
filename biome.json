@@ -50,19 +50,6 @@
   },
   "overrides": [
     {
-      "includes": ["mdx-components.tsx"],
-      "linter": {
-        "rules": {
-          "performance": {
-            "noImgElement": "off"
-          },
-          "a11y": {
-            "useAltText": "off"
-          }
-        }
-      }
-    },
-    {
       "includes": ["components/ui/chart.tsx"],
       "linter": {
         "rules": {

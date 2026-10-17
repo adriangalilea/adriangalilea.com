@@ -58,13 +58,8 @@ for it. **Every picture on the site opens through `@ag/lightbox`, alone**: artic
 figures and page covers via `Zoomable`, the corner button on a feed card via
 `ExpandButton`, both in `components/media-lightbox.tsx` (a client module, because the
 trigger's `render` element must be made on the client side). The lightbox needs a
-picture's natural size, so `lib/rehype-image-size.ts` measures every local `<img>` at
-compile time from `content/<slug>/<file>` (image-size) and writes width/height into the
-hast; the `img` MDX component reserves the box at those proportions and THROWS for a
-local image that arrives unmeasured, and the plugin throws for a local image that is
-not on disk (that assert found a 404 that had been live for a year). hast serializes
-attributes as strings, so `"1216"` is what reaches the component; `px()` parses it.
-Remote images are shown, not opened. Pull items from the local ui checkout with
+picture's natural size, which the body's preparation measures (below). Remote images
+are shown, not opened. Pull items from the local ui checkout with
 `mise run add <item> <site>`: it serves the local registry to shadcn, which resolves
 the dependency graph. Run the site's formatter on installed files afterward.
 
@@ -249,6 +244,12 @@ behavior; prepare them as video when a finite play-once or boomerang is needed.
 ## Media in articles
 
 Place media files next to the `.md` file in the content directory. `scripts/prepare.mts` copies the media beside every published piece to the same path under `public/` before `dev` and `build` (nothing beside an `isPublished: false` piece is served), so a file's URL is its path in `content/`: `./x.png` in `content/foo/index.md` becomes `/foo/x.png`. `lib/content.ts` only reads; it writes nothing.
+
+## A piece's body: prepared markdown, no MDX runtime
+
+A body is markdown with a few tags, prepared by ui's `markdown-prepare` (`lib/markdown.ts`) and drawn by ui's `markdown` (`components/markdown.tsx`, `Body`). One parse gives everything: the table of contents and the page's anchors (one rule, so they agree), the plain words (a note's description, its OG card, the note length rule), the `<ContentQuote>` count, and every local picture measured from `content/` (a picture not on disk fails the build as content loads, so a broken post never ships). The tags a piece may name are `TAGS` in `lib/markdown.ts`; any other throws, and a tag's props are literals (strings, numbers, arrays and objects of them, `data={[…]}`), read as data, never run. Code is coloured at build in the site's themes (catppuccin, `CodeBlock` in `components/code-block.tsx`), so no highlighter reaches a reader. A drawn tree is kept in `.next/cache/content-markdown` under a hash of its source, the pipeline and the pictures in it.
+
+The look is ui's `markdown` (it was drawn from this site): the site passes only its reading measure (`leading-[1.8]`, its body colour). What the site draws its own way: links inside the site through `Link`, pictures through its loader and blur, a picture alone on its line as a figure (its italics underneath as the caption) opening in the lightbox, code blocks, and quotations in its serif measure. A quotation's last line `- Plato` names who said it. A tag on its own line draws itself, out of the look's reach (`[data-embed]`). A body set inside a quote or a feed card takes `QUOTED`, the words of what holds it.
 
 ## Embeds: posts from Telegram and X
 

@@ -12,9 +12,9 @@ import {
   type Page,
 } from "@/lib/content";
 import { SERIF_CH } from "@/lib/faces";
+import { prepared } from "@/lib/markdown";
 import { isVideo } from "@/lib/media";
 import { renderQuoteSvg } from "@/lib/quote-card";
-import { stripMarkdown } from "@/lib/utils";
 
 const W = 1200;
 const H = 630;
@@ -85,7 +85,7 @@ function quoteStill(note: Note): Still {
 
   const svg = renderQuoteSvg(
     {
-      text: stripMarkdown(note.content),
+      text: prepared(note.content).text,
       author: { name: author?.name ?? "Adrian Galilea" },
       date: year,
     },
