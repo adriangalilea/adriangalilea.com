@@ -79,9 +79,11 @@ export function slugOf(text: string): string {
     .replace(/^-|-$/g, "");
 }
 
-/** What a code fence asks for after its language (```` ```ts lines {2,4-6} ````):
- *  its lines numbered, and the lines to mark. Other words are other tools' (a
- *  `title="…"`), and text anyone wrote may carry them: they are passed over. */
+/** What a code fence asks for after its language
+ *  (```` ```ts showLineNumbers {2,4-6} ````): its lines numbered, and the lines to
+ *  mark, in the words rehype-pretty-code, Docusaurus and MDX sites already write.
+ *  Other words are other tools' (a `title="…"`), and text anyone wrote may carry
+ *  them: they are passed over. */
 export function fenceOf(meta: string | null | undefined): {
   lines: boolean;
   highlight?: string;
@@ -89,7 +91,7 @@ export function fenceOf(meta: string | null | undefined): {
   const words = (meta ?? "").split(/\s+/);
   const marked = words.find((w) => /^\{\d[\d,-]*\}$/.test(w));
   return {
-    lines: words.includes("lines"),
+    lines: words.includes("showLineNumbers"),
     highlight: marked?.slice(1, -1),
   };
 }

@@ -149,7 +149,7 @@ type Tags = {
   code: React.ComponentType<{ children: string }>;
   /** A code block: its text, its language, Shiki's markup of it where it was
    *  coloured ahead (markdown-prepare `highlightTree`), else null, and what its fence
-   *  asks for (```` ```ts lines {2,4-6} ````). By default `code`'s own block. */
+   *  asks for (```` ```ts showLineNumbers {2,4-6} ````). By default `code`'s own block. */
   pre: React.ComponentType<HighlightedProps>;
   /** A quotation: its words drawn, who said it when the last line names them. */
   blockquote: React.ComponentType<QuoteProps>;
