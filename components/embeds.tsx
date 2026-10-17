@@ -10,7 +10,7 @@ import type { Tweet as TweetFacts } from "@/lib/tweet-data";
 export function Telegram({ url }: { url: string }) {
   const post = readEmbed<TelegramPost>("telegram", url);
   return (
-    <div className="not-prose my-8 flex justify-center">
+    <div className="my-8 flex justify-center">
       <TelegramChat
         // Posts are told in the zone they were written in: mine, Madrid.
         script={postScript(post, { timeZone: "Europe/Madrid" })}
@@ -35,7 +35,7 @@ export function Telegram({ url }: { url: string }) {
 export function GitHub({ url, lines }: { url: string; lines?: number }) {
   const facts = readEmbed<GithubFacts>("github", url);
   return (
-    <div className="not-prose my-8">
+    <div className="my-8">
       <Github facts={facts} lines={lines} className="mx-auto max-w-2xl" />
     </div>
   );
@@ -45,7 +45,7 @@ export function GitHub({ url, lines }: { url: string; lines?: number }) {
 export function Tweet({ url }: { url: string }) {
   const tweet = readEmbed<TweetFacts>("tweet", url);
   return (
-    <div className="not-prose my-8">
+    <div className="my-8">
       <TweetCard tweet={tweet} className="mx-auto max-w-xl" />
     </div>
   );

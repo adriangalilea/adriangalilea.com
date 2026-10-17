@@ -45,7 +45,7 @@ function entryOf(p: Picture): Entry {
 }
 
 /** The picture itself is the trigger: an article figure, a page cover. The anchor takes
- *  the picture's own radius (`.prose img` is 0.75rem; a cover passes `rounded-2xl`) so
+ *  the picture's own radius (an article's is 0.75rem; a cover passes `rounded-2xl`) so
  *  the focus ring the browser draws after the lightbox closes on Escape follows the
  *  corners instead of boxing them. The ring stays: it is how a keyboard finds its way
  *  back. */
@@ -65,7 +65,7 @@ export function Zoomable({
       render={
         <a
           href={picture.src}
-          className={`not-prose block cursor-zoom-in outline-offset-2 focus-visible:outline-2 focus-visible:outline-ring ${radius}`}
+          className={`block cursor-zoom-in outline-offset-2 focus-visible:outline-2 focus-visible:outline-ring ${radius}`}
           aria-label={picture.alt || "picture"}
         />
       }

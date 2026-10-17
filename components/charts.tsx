@@ -105,7 +105,7 @@ export function CompareLines({
   );
 
   return (
-    <figure className="not-prose my-8">
+    <figure className="my-8">
       <Legend beforeName={beforeName} afterName={afterName} />
       <ChartContainer config={config} className="aspect-[2/1] w-full">
         <LineChart data={data} margin={{ top: 20, left: 24, right: 24 }}>
@@ -200,7 +200,7 @@ export function Bars({
   };
 
   return (
-    <figure className="not-prose my-8">
+    <figure className="my-8">
       <ChartContainer
         config={config}
         className="w-full"

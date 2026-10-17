@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { MARKDOWN } from "@/components/ui/markdown";
+import { cn } from "@/lib/utils";
 
 // What the site keeps and what it never does. Every claim here is what the code does
 // (components/page-sensor and lib/visits, the ui registry's, the layout's
@@ -14,7 +16,8 @@ export default function PrivacyPage() {
   return (
     <main className="mx-auto max-w-2xl px-6 pb-24">
       <h1 className="font-serif text-4xl">Privacy</h1>
-      <div className="prose prose-p:leading-[1.8] prose-p:my-6 mt-8">
+      {/* The look every piece's body wears (components/markdown), on plain tags. */}
+      <div className={cn(MARKDOWN, "mt-8 leading-[1.8] text-foreground-low")}>
         <p>
           This site keeps a record of how visits move through it and through{" "}
           <a href="https://ui.adriangalilea.com/privacy">
