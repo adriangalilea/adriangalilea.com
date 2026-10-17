@@ -79,6 +79,7 @@ function NoteCard({
   renderedContent?: ReactNode;
 }) {
   const author = getAuthorForContent(note);
+  const date = noteDate(note);
   const picture = coverPicture(note);
   const body = renderedContent ? (
     renderedContent
@@ -136,21 +137,28 @@ function NoteCard({
                       }
                     : null,
               }}
-              date={noteDate(note)}
+              date={date}
+              permalink={date ? <Link href={note.path} /> : undefined}
               tone={author.portrait?.tone}
               focus={author.portrait?.focus}
               ch={SERIF_CH}
             >
               {body}
             </Quote>
-            <Link
-              href={note.path}
-              className="mt-2 flex items-center gap-1.5 text-xs text-foreground-lowest"
-            >
-              {/* The quote draws its own date; the line's name is the page's. */}
-              <span className="sr-only">{author.name} quote</span>
-              <FeedViewCount slug={note.slug.join("/")} />
-            </Link>
+            {date ? (
+              <div className="mt-2 flex items-center gap-1.5 text-xs text-foreground-lowest">
+                <FeedViewCount slug={note.slug.join("/")} />
+              </div>
+            ) : (
+              <Link
+                href={note.path}
+                className="mt-2 flex items-center gap-1.5 text-xs text-foreground-lowest"
+              >
+                {/* No date to carry the quote's link: the line carries it, named. */}
+                <span className="sr-only">{author.name} quote</span>
+                <FeedViewCount slug={note.slug.join("/")} />
+              </Link>
+            )}
           </>
         ) : (
           <>
