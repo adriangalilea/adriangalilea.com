@@ -1,5 +1,5 @@
 import "server-only";
-import { libsqlDriver } from "@adriangalilea/utils/metrics/libsql";
+import { libsqlDriver } from "@adriangalilea/metrics/libsql";
 import { createClient } from "@libsql/client";
 import { SITE_URL } from "@/data/site";
 
