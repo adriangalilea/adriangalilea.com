@@ -336,12 +336,7 @@
     overflow: auto;
     padding: 16px;
     background: var(--sidebar);
-    border-top: 1px solid
-      color-mix(
-        in oklch,
-        currentColor calc(var(--alpha-hairline) * 100%),
-        transparent
-      );
+    border-top: 1px solid var(--border);
     font-family: var(--font-sans);
     font-size: 0.875rem;
   }
@@ -352,12 +347,7 @@
       height: auto;
       width: var(--lb-rail-w);
       border-top: 0;
-      border-left: 1px solid
-        color-mix(
-          in oklch,
-          currentColor calc(var(--alpha-hairline) * 100%),
-          transparent
-        );
+      border-left: 1px solid var(--border);
     }
   }
   .ag-lb-facts {
@@ -383,12 +373,7 @@
     border-radius: 12px;
     background: var(--popover);
     color: var(--popover-foreground);
-    border: 1px solid
-      color-mix(
-        in oklch,
-        currentColor calc(var(--alpha-hairline) * 100%),
-        transparent
-      );
+    border: 1px solid var(--border);
     font-family: var(--font-mono);
     font-size: 0.75rem;
     text-transform: lowercase;
@@ -423,11 +408,8 @@
     padding: 0 4px;
     border-radius: 4px;
     text-align: center;
-    background: color-mix(
-      in oklch,
-      currentColor calc(var(--alpha-wash) * 100%),
-      transparent
-    );
+    --fill-ink: currentColor;
+    background: var(--color-fill-band);
     font: inherit;
   }
 
