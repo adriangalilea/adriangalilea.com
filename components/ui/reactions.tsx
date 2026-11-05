@@ -16,6 +16,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { Tip } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
 // REACTIONS UNDER A POST (GitHub, Slack, Telegram): each emoji given, how many gave
@@ -27,7 +28,8 @@ import { cn } from "@/lib/utils";
 //
 // With no `onToggle` it is a readout: the same pills as words, not buttons (a page
 // that shows another site's reactions cannot send one, and a button would promise
-// it could). A reaction nobody gave and you did not either is not shown.
+// it could). A reaction nobody gave and you did not either is not shown. A reaction
+// that knows who gave it (`who`, a forum's likers) says so under the hand.
 
 export interface Reaction {
   emoji: string;
@@ -36,6 +38,25 @@ export interface Reaction {
   mine: boolean;
   /** Its name for a reader where the emoji's own is not what is meant ("ship it"). */
   label?: string;
+  /** Who gave it, as many as are known: all of them, or the first few of `count` (a
+   *  forum lists a handful of likers and a number). Shown under the hand ("ana, ben
+   *  and 3 others") and read with the count. */
+  who?: readonly string[];
+}
+
+/** Who gave a reaction, said in a line: every name up to three, then the first two
+ *  and how many others the count holds. */
+export function whoGave(r: Reaction): string {
+  const names = r.who ?? [];
+  const others = r.count - Math.min(names.length, names.length > 3 ? 2 : 3);
+  const shown = names.length > 3 ? names.slice(0, 2) : names;
+  if (shown.length === 0) return "";
+  const rest =
+    others > 0 ? [`${others} ${others === 1 ? "other" : "others"}`] : [];
+  const all = [...shown, ...rest];
+  return all.length === 1
+    ? (all[0] as string)
+    : `${all.slice(0, -1).join(", ")} and ${all.at(-1)}`;
 }
 
 export interface ReactionsProps {
@@ -53,8 +74,10 @@ export interface ReactionsProps {
   className?: string;
 }
 
-const said = (r: Reaction) =>
-  `${r.label ?? r.emoji}, ${r.count} ${r.count === 1 ? "reaction" : "reactions"}`;
+const said = (r: Reaction) => {
+  const who = whoGave(r);
+  return `${r.label ?? r.emoji}, ${r.count} ${r.count === 1 ? "reaction" : "reactions"}${who ? `, from ${who}` : ""}`;
+};
 
 export function Reactions({
   reactions,
@@ -66,11 +89,16 @@ export function Reactions({
   "aria-label": label = "reactions",
   className,
 }: ReactionsProps) {
-  for (const r of reactions)
+  for (const r of reactions) {
     if (r.count < 0 || (r.mine && r.count < 1))
       throw new Error(
         `Reactions: ${r.emoji} counts ${r.count}${r.mine ? ", yours among them" : ""}`,
       );
+    if (r.who && r.who.length > r.count)
+      throw new Error(
+        `Reactions: ${r.emoji} names ${r.who.length} who gave it, of ${r.count}`,
+      );
+  }
   if (offer && !onToggle)
     throw new Error("Reactions: an offer with no onToggle cannot be given");
   const m = useMaterial(material);
@@ -104,7 +132,7 @@ export function Reactions({
         glassVariants({ shape: "surface" }),
         size === "sm" ? "[--glass-radius:14px]" : "[--glass-radius:16px]",
       )
-    : "rounded-full bg-current/6";
+    : "rounded-full bg-fill-rest [--fill-ink:currentColor]";
 
   return (
     <MaterialProvider material={m} scheme={s}>
@@ -119,8 +147,8 @@ export function Reactions({
           className,
         )}
       >
-        {shown.map((r) =>
-          onToggle ? (
+        {shown.map((r) => {
+          const pillOf = onToggle ? (
             <Button
               key={r.emoji}
               variant={pillVariant}
@@ -163,8 +191,17 @@ export function Reactions({
               </span>
               <span className="sr-only">{said(r)}</span>
             </span>
-          ),
-        )}
+          );
+          const who = whoGave(r);
+          // Who gave it, under the hand; the reader hears it in the pill's name.
+          return who ? (
+            <Tip key={r.emoji} content={who}>
+              {pillOf}
+            </Tip>
+          ) : (
+            <React.Fragment key={r.emoji}>{pillOf}</React.Fragment>
+          );
+        })}
         {offer && onToggle && (
           <Popover open={open} onOpenChange={setOpen}>
             <PopoverTrigger

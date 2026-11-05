@@ -63,6 +63,9 @@ const NAMED: Record<string, string> = {
   right: "→",
   home: "home",
   end: "end",
+  pageup: "⇞",
+  pagedown: "⇟",
+  menu: "menu",
 };
 
 /** The caps of named keys (← ↩ ⌫ esc), as against characters typed. */
@@ -118,7 +121,7 @@ export function combo(
     const last = key(parts.at(-1) as string);
     const mods = parts.slice(0, -1).map((p) => modifier(p, platform));
     if (!last || mods.some((m) => m === null)) return null;
-    return [...ordered(mods as string[]), last.toUpperCase()];
+    return [...ordered(mods as string[]), capital(last)];
   }
   // Written in glyphs: modifier glyphs, then one key.
   const chars = [...s];
@@ -129,8 +132,13 @@ export function combo(
   if (!rest) return null;
   const last = key(rest);
   if (!last) return null;
-  return [...ordered(mods), mods.length ? last.toUpperCase() : last];
+  return [...ordered(mods), mods.length ? capital(last) : last];
 }
+
+/** A key under a modifier: a letter capitalised, as a keyboard's caps print it; a
+ *  named key (home, space, esc) stays its own word. */
+const capital = (cap: string) =>
+  NAMED_CAPS.has(cap) ? cap : cap.toUpperCase();
 
 /** Combinations pressed one after another, space-separated ("← →", "g g"), or null
  *  when any of them is not a shortcut. */
@@ -170,6 +178,9 @@ const CAP_OF: Record<string, string> = {
   ArrowRight: "→",
   Home: "home",
   End: "end",
+  PageUp: "⇞",
+  PageDown: "⇟",
+  ContextMenu: "menu",
 };
 
 /** Whether `press` is the one combination `text` names ("mod+backspace", "enter"):
@@ -330,6 +341,9 @@ const ARIA_OF: Record<string, string> = {
   "↓": "ArrowDown",
   home: "Home",
   end: "End",
+  "⇞": "PageUp",
+  "⇟": "PageDown",
+  menu: "ContextMenu",
   // The separator itself, written out (ARIA's own spelling).
   "+": "Plus",
 };
@@ -376,6 +390,9 @@ export function keyName(cap: string, platform: Platform = "mac"): string {
     "↑": "Up Arrow",
     "↓": "Down Arrow",
     space: "Space",
+    "⇞": "Page Up",
+    "⇟": "Page Down",
+    menu: "Menu",
   };
   return names[cap] ?? cap;
 }

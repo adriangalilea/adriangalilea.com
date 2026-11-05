@@ -3,31 +3,35 @@
 // shelf of examples). Nothing here knows what an item is; a component measures or
 // knows the items' shapes and hands them in.
 //
-// THE LANES RULE is one decision, `placeLane`, made by everything that places in lanes:
-// the rect engine below for items whose aspect is known (pictures), and arrange's
-// layout for items measured in the page (cards), which runs it before the first paint
-// as an inline script of its own source. It is self-contained for that reason: no name
-// from outside it. So are the other rules arrange inlines: `laneCount`, the rows rule
-// (`breakRows`) and the bento's packing (`pack`).
+// A GRID LANE is a masonry track, the web standard's name (`display: grid-lanes`): a
+// column every item in it keeps whole, at its own height.
+//
+// THE GRID LANES RULE is one decision, `placeGridLane`, made by everything that places
+// in grid lanes: the rect engine below for items whose aspect is known (pictures), and
+// arrange's layout for items measured in the page (cards), which runs it before the
+// first paint as an inline script of its own source. It is self-contained for that
+// reason: no name from outside it. So are the other rules arrange inlines:
+// `gridLaneCount`, the rows rule (`breakRows`) and the bento's packing (`pack`).
 //
 // The rect engines. In: every item's aspect (width over height) in set order, and a
 // width. Out: one rect per item, in set order, plus what a grid needs to move around
-// them (which lane or row each sits in, the neighbour above and below, a window of what
-// a viewport shows). Two engines behind one interface, so the grid, the keyboard,
+// them (which grid lane or row each sits in, the neighbour above and below, a window of
+// what a viewport shows). Two engines behind one interface, so the grid, the keyboard,
 // selection and virtualization never know which drew the rects:
 //
-// LANES (the default) is the CSS Grid Lanes placement rule with a tolerance and a
-// sweeping cursor: an item goes to the lane with the least running bottom, every lane
-// within `tolerance` of that minimum counts as tied, and among tied lanes it takes the
-// first one at or after the cursor (the lane after the previous item's), else the
-// first. So a level stretch reads 1 2 3 / 4 5 6, and only a lane that is clearly the
-// shortest (a whole hole, more than the tolerance) pulls an item out of reading order.
+// GRID LANES (the default) is the CSS Grid Lanes placement rule with a tolerance and a
+// sweeping cursor: an item goes to the grid lane with the least running bottom, every
+// grid lane within `tolerance` of that minimum counts as tied, and among tied ones it
+// takes the first at or after the cursor (the grid lane after the previous item's),
+// else the first. So a level stretch reads 1 2 3 / 4 5 6, and only a grid lane that is
+// clearly the shortest (a whole hole, more than the tolerance) pulls an item out of
+// reading order.
 //
-// Every DECISION is made in units of the lane width: a height is 1 / aspect, the
-// tolerance is a share of the lane, the gap is converted at the lane count's reference
-// width (where a lane is exactly `laneWidth`). The decisions are therefore the same at
-// every container width that keeps the lane count: resizing scales pixels and never
-// moves an item to another lane. The PIXELS are then laid with the real gap.
+// Every DECISION is made in units of the grid lane's width: a height is 1 / aspect, the
+// tolerance is a share of the grid lane, the gap is converted at the count's reference
+// width (where a grid lane is exactly `gridLaneWidth`). The decisions are therefore the
+// same at every container width that keeps the count: resizing scales pixels and never
+// moves an item to another grid lane. The PIXELS are then laid with the real gap.
 //
 // JUSTIFIED is loom's greedy rows (`breakRows`): fill a row until its exact-fit height
 // drops to the target, emit it, repeat; the last row never stretches past the target.
@@ -36,15 +40,16 @@
 // appending a page never moves an earlier item (justified excepted for its last row,
 // which re-breaks; the price of rows).
 
-export type Engine = "lanes" | "justified";
+export type Engine = "gridLanes" | "justified";
 
 /** The narrowest and widest aspect a cell is drawn at: a panorama never becomes a
  *  sliver, a tall screenshot never owns a screen. The cell crops to it. */
 export const ASPECT_MIN = 0.5;
 export const ASPECT_MAX = 2.4;
-/** The default tolerance, a share of the lane width: lanes this close count as level. */
+/** The default tolerance, a share of the grid lane's width: grid lanes this close
+ *  count as level. */
 export const TOLERANCE = 0.15;
-export const LANE_WIDTH = 240;
+export const GRID_LANE_WIDTH = 240;
 export const ROW_HEIGHT = 200;
 export const GAP = 8;
 
@@ -52,12 +57,12 @@ export interface LayoutOptions {
   engine?: Engine;
   /** The container's inner width, css px. */
   width: number;
-  /** Lanes: the target lane width; the count is how many fit. */
-  laneWidth?: number;
+  /** Grid lanes: the target width of one; the count is how many fit. */
+  gridLaneWidth?: number;
   /** Justified: the target row height. */
   rowHeight?: number;
   gap?: number;
-  /** Lanes: how close two lanes must be to count as level, as a share of the lane. */
+  /** Grid lanes: how close two must be to count as level, as a share of one's width. */
   tolerance?: number;
   clamp?: readonly [min: number, max: number];
 }
@@ -70,15 +75,15 @@ export interface Layout {
   y: Float64Array;
   w: Float64Array;
   h: Float64Array;
-  /** The lane an item sits in (lanes) or its row (justified). */
+  /** The grid lane an item sits in (grid lanes) or its row (justified). */
   line: Int32Array;
-  /** How many lanes, or rows. */
+  /** How many grid lanes, or rows. */
   lines: number;
-  /** The item drawn directly above / below in the same lane; -1 at the ends. Lanes
-   *  only (rows find their neighbour by x, `step`). */
+  /** The item drawn directly above / below in the same grid lane; -1 at the ends.
+   *  Grid lanes only (rows find their neighbour by x, `step`). */
   above: Int32Array;
   below: Int32Array;
-  /** Justified: where each row starts, `lines + 1` long. Lanes: empty. */
+  /** Justified: where each row starts, `lines + 1` long. Grid lanes: empty. */
   rowStart: Int32Array;
   /** The whole content's height. */
   height: number;
@@ -94,23 +99,27 @@ export function clampAspect(
   clamp: readonly [number, number] = [ASPECT_MIN, ASPECT_MAX],
 ): number {
   if (!(aspect > 0) || !Number.isFinite(aspect))
-    throw new Error(`layouts: aspect ${aspect} is not a positive number`);
+    throw new Error(`arrangement: aspect ${aspect} is not a positive number`);
   return Math.min(clamp[1], Math.max(clamp[0], aspect));
 }
 
-/** How many lanes of about `laneWidth` fit: at least one. Self-contained, like
- *  `placeLane`: arrange inlines its source into the page. */
-export function laneCount(width: number, laneWidth: number, gap: number) {
-  return Math.max(1, Math.floor((width + gap) / (laneWidth + gap)));
+/** How many grid lanes of about `gridLaneWidth` fit: at least one. Self-contained,
+ *  like `placeGridLane`: arrange inlines its source into the page. */
+export function gridLaneCount(
+  width: number,
+  gridLaneWidth: number,
+  gap: number,
+) {
+  return Math.max(1, Math.floor((width + gap) / (gridLaneWidth + gap)));
 }
 
-/** THE RULE, one decision: which lane the next item takes, given every lane's running
- *  bottom, the cursor (the lane after the previous item's) and the tolerance, all in
- *  one unit. The tied lanes are those within `tolerance` of the lowest bottom; the
- *  item takes the first tied lane at or after the cursor, else the first tied lane.
- *  Self-contained (no name from outside it): arrange inlines its source into the page
- *  to place cards before the first paint. */
-export function placeLane(
+/** THE RULE, one decision: which grid lane the next item takes, given every one's
+ *  running bottom, the cursor (the grid lane after the previous item's) and the
+ *  tolerance, all in one unit. The tied ones are those within `tolerance` of the
+ *  lowest bottom; the item takes the first tied one at or after the cursor, else the
+ *  first tied one. Self-contained (no name from outside it): arrange inlines its source
+ *  into the page to place cards before the first paint. */
+export function placeGridLane(
   bottoms: ArrayLike<number>,
   cursor: number,
   tolerance: number,
@@ -170,19 +179,19 @@ function finish(out: Layout): Layout {
   return out;
 }
 
-/** Lanes: the grid-lanes rule, decided in lane units, laid in pixels. */
-export function layoutLanes(
+/** Grid lanes: the grid-lanes rule, decided in grid lane units, laid in pixels. */
+export function layoutGridLanes(
   aspects: ArrayLike<number>,
   options: LayoutOptions,
 ): Layout {
   const gap = options.gap ?? GAP;
-  const target = options.laneWidth ?? LANE_WIDTH;
+  const target = options.gridLaneWidth ?? GRID_LANE_WIDTH;
   const tolerance = options.tolerance ?? TOLERANCE;
   const width = Math.max(0, options.width);
-  const n = laneCount(width, target, gap);
-  const lane = (width - (n - 1) * gap) / n;
+  const n = gridLaneCount(width, target, gap);
+  const column = (width - (n - 1) * gap) / n;
   const gapUnits = gap / target;
-  const out = empty("lanes", width, aspects.length);
+  const out = empty("gridLanes", width, aspects.length);
   out.lines = n;
   const units = new Float64Array(n);
   const pixels = new Float64Array(n);
@@ -190,11 +199,11 @@ export function layoutLanes(
   let cursor = 0;
   for (let i = 0; i < aspects.length; i++) {
     const a = clampAspect(aspects[i] as number, options.clamp);
-    const l = placeLane(units, cursor, tolerance);
-    const h = lane / a;
-    out.x[i] = l * (lane + gap);
+    const l = placeGridLane(units, cursor, tolerance);
+    const h = column / a;
+    out.x[i] = l * (column + gap);
     out.y[i] = pixels[l] as number;
-    out.w[i] = lane;
+    out.w[i] = column;
     out.h[i] = h;
     out.line[i] = l;
     const prev = last[l] as number;
@@ -281,8 +290,8 @@ export function layout(
   aspects: ArrayLike<number>,
   options: LayoutOptions,
 ): Layout {
-  return (options.engine ?? "lanes") === "lanes"
-    ? layoutLanes(aspects, options)
+  return (options.engine ?? "gridLanes") === "gridLanes"
+    ? layoutGridLanes(aspects, options)
     : layoutJustified(aspects, options);
 }
 
@@ -330,7 +339,7 @@ export function inArea(out: Layout, area: Rect): number[] {
 export type Direction = "left" | "right" | "up" | "down";
 
 /** Where an arrow goes from `index`. Left and right walk the set order (reading
- *  order). Up and down stay in the lane (lanes) or take the item of the next row
+ *  order). Up and down stay in the grid lane (grid lanes) or take the item of the next row
  *  nearest `goal`, the x the hand is keeping (justified), so a column of presses does
  *  not drift. Returns the same index at an end, and the goal to keep. */
 export function step(
@@ -349,7 +358,7 @@ export function step(
     return { index: next, goal: center(next) };
   }
   const keep = goal ?? center(index);
-  if (out.engine === "lanes") {
+  if (out.engine === "gridLanes") {
     const next = (direction === "up" ? out.above : out.below)[index] as number;
     return { index: next < 0 ? index : next, goal: keep };
   }
@@ -361,7 +370,7 @@ export function step(
   return { index: best, goal: keep };
 }
 
-/** A viewport at a time: the item in the same lane (or nearest `goal` in a row) whose
+/** A viewport at a time: the item in the same grid lane (or nearest `goal` in a row) whose
  *  top is nearest `distance` px above or below this one's. */
 export function page(
   out: Layout,

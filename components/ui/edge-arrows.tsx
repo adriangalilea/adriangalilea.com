@@ -31,7 +31,7 @@ const PATH = { left: "M10 3L5 8l5 5", right: "M6 3l5 5-5 5" } as const;
 const LABEL = { left: "previous", right: "next" } as const;
 
 /** One arrow, for a stage that names its own (the lightbox labels them from its
- *  action table). `enabled={false}` is the end of the reel. */
+ *  action table). `enabled={false}` is the end of the set. */
 export function EdgeArrow({
   side,
   enabled = true,

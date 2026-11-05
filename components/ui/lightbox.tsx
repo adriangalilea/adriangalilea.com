@@ -27,7 +27,11 @@ import { useRender } from "@base-ui/react/use-render";
 import * as React from "react";
 import { Copy } from "@/components/ui/copy";
 import { EdgeArrow } from "@/components/ui/edge-arrows";
-import { ownedHere, registerKeys } from "@/components/ui/key-router";
+import {
+  ownedHere,
+  platformNow,
+  registerKeys,
+} from "@/components/ui/key-router";
 import {
   INSET_Y,
   measureBand,
@@ -39,16 +43,15 @@ import {
 import { createSlideTrack } from "@/components/ui/slide-track";
 import { ThumbStrip, type ThumbStripItem } from "@/components/ui/thumb-strip";
 import { Video } from "@/components/ui/video";
+import { ariaOf } from "@/lib/actions";
+import { combo, pressed } from "@/lib/keys";
 import {
   type Action,
   type ActionId,
   type Layer as ActionLayer,
   action,
+  bound,
   escRung,
-  KEYS,
-  keycap,
-  keyOf,
-  keyshortcuts,
   resolve,
   sheet as sheetOf,
 } from "@/lib/lightbox-actions";
@@ -135,6 +138,10 @@ export type Media =
       start?: number;
       muted?: boolean;
       loop?: boolean;
+      /** Plays the moment its slide becomes the one on screen: a viewer opened by a
+       *  press on a video is that press asking to watch it (the gesture the browser
+       *  wants for sound). Default false, the poster and the bar wait. */
+      autoplay?: boolean;
     }
   | {
       kind: "frame";
@@ -545,11 +552,11 @@ export function LightboxTrigger({
 }
 
 /** A picture that opens ALONE: its own provider around its own trigger, so it is never
- *  a slide in whatever reel surrounds it. The grouping model has no prop for this on
- *  purpose (the reel IS the provider); this is that model applied to one figure, and it
+ *  a slide in whatever set surrounds it. The grouping model has no prop for this on
+ *  purpose (the set IS the provider); this is that model applied to one figure, and it
  *  is exported because an avatar in an attribution, an inline image in prose and a
  *  cover on a card all want exactly it. Arrows, strip and counter stand down on their
- *  own: the count is 1. The nearest provider wins, so it nests inside a page reel
+ *  own: the count is 1. The nearest provider wins, so it nests inside a page set
  *  without joining it. `label` is what the dialog is announced as. */
 export function LightboxSolo({
   label,
@@ -773,7 +780,7 @@ function Stage(props: StageProps) {
   // ABSENT is not UNAVAILABLE. Unavailable is a STATE — prev at the first slide, zoom on
   // a frame — and its control shows dimmed, because it says where you are and it comes
   // back. Absent can never happen in this session: a rail nobody provided, arrows and a
-  // strip on a reel of one, fullscreen where the browser has none. A control with nothing
+  // strip on a set of one, fullscreen where the browser has none. A control with nothing
   // behind it does not appear, in the bar or in the `?` sheet: a lightbox around one
   // portrait must draw no arrows and no "i" at all.
   const absent = React.useMemo(() => {
@@ -2017,10 +2024,12 @@ function Stage(props: StageProps) {
     const onKey = (e: KeyboardEvent) => {
       if (e.isComposing || e.keyCode === 229) return;
       S.input = "key";
-      const key = keyOf(e);
+      // A chord with ⌘, ⌃ or ⌥ is the browser's: the lightbox binds none.
+      const plain = !e.altKey && !e.ctrlKey && !e.metaKey;
+      const platform = platformNow();
       const { layerSet, unavailable } = L.current;
       const target = e.target instanceof Element ? e.target : null;
-      if (key === "Escape") {
+      if (plain && e.key === "Escape") {
         const rung = escRung(layerSet);
         if (rung) {
           e.preventDefault();
@@ -2048,19 +2057,22 @@ function Stage(props: StageProps) {
       // and Enter, a popup's arrows never reach here at all: `ownedHere` is asked
       // before a press is offered to the lightbox.
       if (target?.closest(".ag-lb-rail")) return;
-      if (key === null) return;
+      if (!plain) return;
       if (layerSet.has("sheet")) {
         // The sheet owns the keyboard: registry keys are inert behind it, and the
-        // keys that scroll or tab through the sheet itself keep their default.
-        if (key === "?") {
+        // keys that scroll or tab through the sheet itself keep their default (⇧space
+        // too; ⇧ with a named key is a binding of its own).
+        const scrolls =
+          SHEET_SCROLLS.has(e.key) && (!e.shiftKey || e.key === " ");
+        if (pressed("?", e, platform)) {
           e.preventDefault();
           dispatch("sheet");
-        } else if (KEYS.has(key) && !SHEET_SCROLLS.has(key)) e.preventDefault();
+        } else if (bound(e, platform) && !scrolls) e.preventDefault();
         return;
       }
-      const a = resolve(key, layerSet);
+      const a = resolve(e, layerSet, platform);
       if (!a) {
-        if (KEYS.has(key)) e.preventDefault();
+        if (bound(e, platform)) e.preventDefault();
         return;
       }
       e.preventDefault();
@@ -2409,7 +2421,7 @@ function Stage(props: StageProps) {
           ))}
         </div>
       </div>
-      {/* The chrome lives in the media lane, the band the stage measures, so it is
+      {/* The chrome lives in the media's band, the one the stage measures, so it is
           never under the rail. */}
       <div
         ref={chromeEl}
@@ -2424,9 +2436,9 @@ function Stage(props: StageProps) {
         }}
       >
         <div className="ag-lb-bar">
-          {/* A reel of ONE has no position to report, and "1 / 1" is the decorative
+          {/* A set of ONE has no position to report, and "1 / 1" is the decorative
               text the brand rules forbid. A lightbox around a single prose figure is
-              a normal, deliberate use: the provider is the reel, so a post puts one
+              a normal, deliberate use: the provider is the set, so a post puts one
               around a gallery and one around each standalone image. */}
           {count > 1 && (
             <span className="ag-lb-counter">
@@ -2516,7 +2528,7 @@ function Stage(props: StageProps) {
                   <div key={row.label}>
                     <dt>
                       {row.keys.map((k) => (
-                        <kbd key={k}>{keycap(k)}</kbd>
+                        <kbd key={k}>{capOfKey(k)}</kbd>
                       ))}
                     </dt>
                     <dd>{row.label}</dd>
@@ -2650,13 +2662,17 @@ function factsLine(f: Facts): string {
   return parts.join(" · ");
 }
 
+/** A binding's key as its caps ("⇧←", "space"). The lightbox binds no `mod`, so the
+ *  platform never changes what a cap says. */
+const capOfKey = (k: string) => (combo(k, platformNow()) as string[]).join("");
+
 /** A control's name, keys and tooltip, from the action table. */
 function actionAria(id: ActionId) {
   const a: Action = action(id);
   return {
     "aria-label": a.label,
-    "aria-keyshortcuts": keyshortcuts(a),
-    title: `${a.label} · ${a.keys.map(keycap).join(" ")}`,
+    "aria-keyshortcuts": ariaOf(a, platformNow()),
+    title: `${a.label} · ${a.keys.map(capOfKey).join(" ")}`,
   };
 }
 
@@ -2852,6 +2868,22 @@ function SlideVideo({
   m: VideoMedia;
   video: React.RefObject<HTMLVideoElement | null>;
 }) {
+  // Mounted on the active slide only, so mounting IS arriving on screen.
+  React.useEffect(() => {
+    const el = video.current;
+    if (!m.autoplay || !el) return;
+    el.play().catch((e: unknown) => {
+      // Refused (no gesture left for sound) or interrupted by a step away: the
+      // poster and the bar stand, the person presses play. Anything else is real.
+      if (
+        !(
+          e instanceof DOMException &&
+          (e.name === "NotAllowedError" || e.name === "AbortError")
+        )
+      )
+        throw e;
+    });
+  }, [m.autoplay, video]);
   return (
     <Video
       ref={video}

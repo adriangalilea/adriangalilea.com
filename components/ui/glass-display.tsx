@@ -10,7 +10,7 @@ import {
 import { Playback } from "@/components/ui/playback";
 import { Scrims } from "@/components/ui/scrims";
 import { Video } from "@/components/ui/video";
-import type { Clip } from "@/lib/clip";
+import type { Playable } from "@/lib/playable";
 import { cn } from "@/lib/utils";
 
 // A glass frame for media (GlassFrame), and the display made of it that is a
@@ -21,11 +21,11 @@ import { cn } from "@/lib/utils";
 // the curve, `bendLayers`), with no fill and no frame around it. A caption
 // sits at the foot on the scrim (scrims); `cover` makes the whole display one target.
 // Its own item, not a part of `video`: the media inside is anything (a picture, a
-// clip on a playhead, a terminal session), and a frame round a picture installs no
+// playable on a playhead, a terminal session), and a frame round a picture installs no
 // player; not liquid-glass either, whose pane and glide need no media at all.
 // The display knows when it is being looked at (the pointer over it while the
 // page is still, or focus inside it), and the media reads that: DisplayPlayback
-// plays any clip on the
+// plays any playable on the
 // playhead (a terminal session, a device stage, a chat), DisplayVideo plays an
 // uploaded video, both at rest otherwise. Layers, bottom to top: media, cover,
 // scrim, caption, edge.
@@ -35,7 +35,7 @@ const Looked = React.createContext(false);
 // Whether the page is scrolling, one listener for every display: true from a
 // scroll anywhere until it has been still for SETTLE ms. A display under the
 // pointer waits for it: scrolling down the index used to wake every display
-// the cursor crossed, each lifting and starting its clip as it passed, and the
+// the cursor crossed, each lifting and starting its playable as it passed, and the
 // scroll lost its frames rebuilding layers for them. Once the page settles,
 // the one under the pointer wakes without the pointer having to move.
 const SETTLE = 150;
@@ -283,7 +283,7 @@ export function GlassDisplay({ className, ...props }: GlassDisplayProps) {
   );
 }
 
-/** A clip on the playhead, played while its display is looked at. The one
+/** A playable on the playhead, played while its display is looked at. The one
  *  contract every display keeps (DisplayVideo too): it first stands at
  *  `rest` (ms); looked at, it plays on from the frame it stands on, round to
  *  the top at the end; looked away, it holds that frame. It never moves once
@@ -291,19 +291,19 @@ export function GlassDisplay({ className, ...props }: GlassDisplayProps) {
  *  never cuts. Any component that reads the playhead goes inside (a terminal
  *  session, a device stage, a chat). */
 export function DisplayPlayback({
-  clip,
+  playable,
   rest,
   className,
   children,
 }: {
-  clip: Clip;
+  playable: Playable;
   rest: number;
   className?: string;
   children: React.ReactNode;
 }) {
   return (
     <Playback
-      clip={clip}
+      playable={playable}
       playing={useDisplayHover()}
       start={rest}
       className={className}

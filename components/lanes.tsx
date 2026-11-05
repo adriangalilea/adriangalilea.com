@@ -21,7 +21,7 @@ export function Lanes({
 }) {
   return (
     <Arrange
-      laneWidth={LANE_PX}
+      gridLaneWidth={LANE_PX}
       filter={filterable ? "tag" : undefined}
       className="gap-0 sm:gap-6"
     >

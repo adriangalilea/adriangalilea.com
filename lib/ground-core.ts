@@ -1,5 +1,5 @@
 // WHAT THE PIXELS BEHIND A SURFACE ASK FOR: light ink or dark, read off the picture it
-// stands over. Framework-free arithmetic; the side holding the pixels (ui/backdrop:
+// stands over. Framework-free arithmetic; the side holding the pixels (ui/ground:
 // a video, a picture) samples a frame into a small grid and asks here, per surface.
 //
 // The unit is the one contrast is felt in: CIE lightness L* (0 black, 100 white,
@@ -32,6 +32,10 @@ export interface Grid {
    *  light, as the eye mixes them, never in sRGB's encoded numbers (which darken a
    *  mix). */
   rgb: Float32Array;
+  /** The darkest and the brightest of each cell's `GROUND.fine` × `fine` samples,
+   *  L*: what a glass's words can stand over inside the cell, which its mean hides. */
+  lo: Float32Array;
+  hi: Float32Array;
 }
 
 /** A colour, sRGB 0..255. */
@@ -45,8 +49,8 @@ export interface Area {
   h: number;
 }
 
-/** What an area of the frame is like: its mean lightness, the band most of it lies
- *  in, and its mean colour (what an edge of glass over it picks up). */
+/** What an area of the frame is like: its mean lightness, its darkest and brightest
+ *  cell, and its mean colour (what an edge of glass over it picks up). */
 export interface Reading {
   mean: number;
   low: number;
@@ -54,11 +58,16 @@ export interface Reading {
   color: Rgb;
 }
 
-export const BACKDROP = {
+export const GROUND = {
   /** The grid a frame is sampled into: enough for a control's area to span cells,
    *  little enough to read every frame. */
   cols: 32,
   rows: 18,
+  /** Samples per side of each cell, read for its darkest and brightest part: a cell
+   *  of a wide picture spans 40 px, and its mean let a bright cliff inside it through
+   *  dark glass at 3.5:1, where the glass's own blur (6 to 14 px) shows the cliff
+   *  nearly whole. Four a side is a sample about the blur's size. */
+  fine: 4,
   /** Over this the light scheme; under `darkBelow` the dark one; between, kept. */
   lightAbove: 62,
   darkBelow: 48,
@@ -124,26 +133,52 @@ export function oklchGrain(rgb: Rgb): string {
   return `oklch(${step(l, OKLCH_GRAIN.l).toFixed(2)} ${sc.toFixed(2)} ${sc === 0 ? 0 : step(h, OKLCH_GRAIN.h) % 360})`;
 }
 
-/** A frame's pixels (RGBA, `cols` × `rows`, as a canvas hands them) as a grid. */
+/** A frame's pixels (RGBA, `cols × fine` by `rows × fine`, as a canvas hands them)
+ *  as a grid of `cols` × `rows` cells, each the mean of its `fine` × `fine` samples in
+ *  light, with the darkest and brightest of them. */
 export function gridOf(
   rgba: ArrayLike<number>,
   cols: number,
   rows: number,
+  fine = 1,
 ): Grid {
-  if (rgba.length !== cols * rows * 4)
+  const width = cols * fine;
+  if (rgba.length !== width * rows * fine * 4)
     throw new Error(
-      `backdrop: ${rgba.length} values for a ${cols}×${rows} frame, expected ${cols * rows * 4}`,
+      `ground: ${rgba.length} values for a ${width}×${rows * fine} frame, expected ${width * rows * fine * 4}`,
     );
   const l = new Float32Array(cols * rows);
   const rgb = new Float32Array(cols * rows * 3);
+  const lo = new Float32Array(cols * rows);
+  const hi = new Float32Array(cols * rows);
+  const n = fine * fine;
   for (let i = 0; i < l.length; i++) {
-    const r = linear(rgba[i * 4] as number);
-    const g = linear(rgba[i * 4 + 1] as number);
-    const b = linear(rgba[i * 4 + 2] as number);
-    rgb.set([r, g, b], i * 3);
-    l[i] = lOf(0.2126 * r + 0.7152 * g + 0.0722 * b);
+    const cx = (i % cols) * fine;
+    const cy = Math.floor(i / cols) * fine;
+    let r = 0;
+    let g = 0;
+    let b = 0;
+    let dark = 100;
+    let light = 0;
+    for (let y = cy; y < cy + fine; y++)
+      for (let x = cx; x < cx + fine; x++) {
+        const p = (y * width + x) * 4;
+        const sr = linear(rgba[p] as number);
+        const sg = linear(rgba[p + 1] as number);
+        const sb = linear(rgba[p + 2] as number);
+        r += sr;
+        g += sg;
+        b += sb;
+        const sl = lOf(0.2126 * sr + 0.7152 * sg + 0.0722 * sb);
+        dark = Math.min(dark, sl);
+        light = Math.max(light, sl);
+      }
+    rgb.set([r / n, g / n, b / n], i * 3);
+    l[i] = lOf((0.2126 * r + 0.7152 * g + 0.0722 * b) / n);
+    lo[i] = dark;
+    hi[i] = light;
   }
-  return { cols, rows, l, rgb };
+  return { cols, rows, l, rgb, lo, hi };
 }
 
 /** A cell's lightness and colour (linear RGB) and how much of an area it covers (in
@@ -152,6 +187,9 @@ export interface Cell {
   l: number;
   rgb: readonly [number, number, number];
   weight: number;
+  /** Its darkest and brightest sample, L* (its mean `l` unless given). */
+  lo?: number;
+  hi?: number;
 }
 
 /** The cells of a frame an area covers, each weighted by how much of it the area
@@ -184,6 +222,8 @@ export function cellsUnder(grid: Grid, area: Area): Cell[] {
             grid.rgb[i * 3 + 2] as number,
           ],
           weight,
+          lo: grid.lo[i] as number,
+          hi: grid.hi[i] as number,
         });
     }
   return cells;
@@ -198,12 +238,11 @@ export function reading(
   total: number,
   outside: number,
 ): Reading {
-  if (!(total > 0))
-    throw new Error(`backdrop: an area with no size (${total})`);
+  if (!(total > 0)) throw new Error(`ground: an area with no size (${total})`);
   const covered = cells.reduce((s, c) => s + c.weight, 0);
   if (covered > total * (1 + 1e-6))
     throw new Error(
-      `backdrop: cells cover ${covered} of an area of ${total}: two pictures of one source overlap, and only one of them shows`,
+      `ground: cells cover ${covered} of an area of ${total}: two pictures of one source overlap, and only one of them shows`,
     );
   const grey = yOf(outside);
   const all =
@@ -223,22 +262,18 @@ export function reading(
       encoded(all.reduce((s, c) => s + c.rgb[k] * c.weight, 0) / total),
     );
   const color: Rgb = [channel(0), channel(1), channel(2)];
-  all.sort((a, b) => a.l - b.l);
-  const at = (q: number) => {
-    let acc = 0;
-    for (const c of all) {
-      acc += c.weight;
-      if (acc >= q * total) return c.l;
-    }
-    return (all.at(-1) as Cell).l;
-  };
-  return { mean, low: at(0.1), high: at(0.9), color };
+  // The darkest and the brightest part, never a band of most of it: a glass's words
+  // may stand over any part of it, and thickness solved for the 90th percentile of
+  // cell means left a line over a bright cliff in a sky at 3.5:1.
+  const low = Math.min(...all.map((c) => c.lo ?? c.l));
+  const high = Math.max(...all.map((c) => c.hi ?? c.l));
+  return { mean, low, high, color };
 }
 
 /** One frame's area read, off-frame as `outside`. */
 export function readArea(grid: Grid, area: Area, outside: number): Reading {
   if (!(area.w > 0 && area.h > 0))
-    throw new Error(`backdrop: an area with no size (${area.w}×${area.h})`);
+    throw new Error(`ground: an area with no size (${area.w}×${area.h})`);
   return reading(cellsUnder(grid, area), area.w * area.h, outside);
 }
 
@@ -259,50 +294,81 @@ export function judge(
   visible: boolean,
 ): Verdict {
   const want: Worn =
-    read.mean > BACKDROP.lightAbove
+    read.mean > GROUND.lightAbove
       ? "light"
-      : read.mean < BACKDROP.darkBelow
+      : read.mean < GROUND.darkBelow
         ? "dark"
         : (prev?.worn ?? (read.mean >= 55 ? "light" : "dark"));
   if (!prev || !visible || want === prev.worn)
     return { worn: want, pending: null, since: now };
   if (prev.pending !== want) return { ...prev, pending: want, since: now };
-  if (now - prev.since >= BACKDROP.holdMs)
+  if (now - prev.since >= GROUND.holdMs)
     return { worn: want, pending: null, since: now };
   return prev;
 }
 
 /** The contrast every glass keeps its words at against the part of the picture
- *  least in their favour, as WCAG measures it: 7:1, its AAA. One number for both
- *  faces, white words on dark glass and dark ones (zinc-950) on light, in the unit
- *  the words are read in. Each face's target lightness was its own number once (L*
- *  46 under white words, 5:1; 66 under dark ones, 7:1), and the dark face's let a
- *  white rock through as a washed mid-grey ("why is it gray", Adrian, 2026-10-11). */
+ *  least in their favour, as WCAG measures it: 4.5:1, AA for body text, held by the
+ *  QUIETEST words that are still content, a secondary line at `muted` of the words'
+ *  ink (a description, a name, a count). The words whole then reach 7:1 and more.
+ *  One rule for both faces, white words on dark glass and dark ones (zinc-950) on
+ *  light. Apple's Liquid Glass keeps text legible the same way, adjusting the
+ *  luminosity of what is under it and growing more opaque where text needs it (HIG,
+ *  Materials: "the regular variant blurs and adjusts the luminosity of background
+ *  content to maintain legibility"; Color: "Liquid Glass appears more opaque in
+ *  larger elements like sidebars to preserve legibility"). Held by the words whole
+ *  at 7:1 until 2026-11-04, the secondary lines fell to 3:1 over a bright canyon and
+ *  a white page (measured on the kanban, the panel and the cards). */
 export const WORDS = {
-  contrast: 7,
+  contrast: 4.5,
+  muted: 0.65,
   light: [255, 255, 255],
   dark: [9, 9, 11],
 } as const;
 const luminance = ([r, g, b]: readonly [number, number, number]) =>
   0.2126 * linear(r) + 0.7152 * linear(g) + 0.0722 * linear(b);
+const ratioOf = (a: number, b: number) =>
+  (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+/** The contrast of `words` at `WORDS.muted` over a grey ground of lightness `l`, as
+ *  the render composites them: in encoded sRGB. */
+function mutedContrast(words: readonly [number, number, number], l: number) {
+  const ground = encoded(yOf(l));
+  const mixed = words.map(
+    (c) => ground + (c - ground) * WORDS.muted,
+  ) as unknown as [number, number, number];
+  return ratioOf(luminance(mixed), yOf(l));
+}
 /** The lightest a ground may be under white words, and the darkest under dark
- *  ones, at `WORDS.contrast`. */
-const UNDER_WHITE = lOf(
-  (luminance(WORDS.light) + 0.05) / WORDS.contrast - 0.05,
-);
-const OVER_INK = lOf(WORDS.contrast * (luminance(WORDS.dark) + 0.05) - 0.05);
+ *  ones, for the muted words to reach `WORDS.contrast`: found by halving. */
+function solveGround(
+  words: readonly [number, number, number],
+  under: boolean,
+): number {
+  let lo = 0;
+  let hi = 100;
+  for (let i = 0; i < 30; i++) {
+    const mid = (lo + hi) / 2;
+    const reaches = mutedContrast(words, mid) >= WORDS.contrast;
+    if (reaches === under) lo = mid;
+    else hi = mid;
+  }
+  return under ? lo : hi;
+}
+const UNDER_WHITE = solveGround(WORDS.light, true);
+const OVER_INK = solveGround(WORDS.dark, false);
 
 /** How thick a glass must be for its words, and no thicker: the opacity of its
  *  tint over a picture read as `read`. Dark glass (white words) darkens what is under
  *  it toward black; enough that its BRIGHTEST part (`high`) comes down to `under`.
  *  Light glass (dark words) lightens toward its own pale tint; enough that its
  *  DARKEST part (`low`) comes up to `over`. Both from `WORDS`. Each held between a
- *  floor (the glass always has a body) and a ceiling (it stays glass). Lightness
- *  mixes about linearly in L* at these opacities, so the tint is the share of the
- *  way to go. */
+ *  floor (the glass always has a body) and a ceiling (it stays glass, though over
+ *  a white sky the dark face may need nearly all of it: the light face is what such
+ *  a sky asks for, and `judge` gives it). Lightness mixes about linearly in L* at
+ *  these opacities, so the tint is the share of the way to go. */
 export const TINT = {
-  dark: { under: UNDER_WHITE, min: 0.42, max: 0.78, ground: 4 },
-  light: { over: OVER_INK, min: 0.5, max: 0.86, ground: 96 },
+  dark: { under: UNDER_WHITE, min: 0.42, max: 0.86, ground: 4 },
+  light: { over: OVER_INK, min: 0.5, max: 0.92, ground: 96 },
 } as const;
 export function tintFor(worn: Worn, read: Reading): number {
   const clamp = (a: number, lo: number, hi: number) =>

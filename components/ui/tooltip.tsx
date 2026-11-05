@@ -31,6 +31,7 @@
 import { Tooltip as Base } from "@base-ui/react/tooltip";
 import type * as React from "react";
 import { Kbd } from "@/components/ui/kbd";
+import { useAction } from "@/components/ui/key-router";
 import {
   type Material,
   MaterialProvider,
@@ -40,13 +41,24 @@ import {
 } from "@/components/ui/material";
 import { glassVariants, schemeOf } from "@/components/ui/material-glass";
 import { usePortalTarget } from "@/components/ui/portal";
+import { usePlatform } from "@/components/ui/shortcut";
+import { ariaOf } from "@/lib/actions";
 import { cn } from "@/lib/utils";
+
+/** ms the pointer rests on a control before its tooltip opens: passing over a row of
+ *  buttons should not flash a line under each. A host that opens one tooltip itself
+ *  (a table's cells, `anchor`) waits the same. */
+export const TIP_DELAY = 200;
+/** ms after a tooltip closes during which the next opens without waiting (Base UI's
+ *  own default), so a pointer crossing a gap between two controls never waits twice. */
+export const TIP_WARM = 400;
 
 /** Shares the waiting between the tooltips inside it: after one opens, the next opens
  *  at once, so a row of controls reads as you move along it. */
 export function TooltipProvider({
   delay = 500,
   closeDelay = 0,
+  timeout = TIP_WARM,
   ...props
 }: React.ComponentProps<typeof Base.Provider>) {
   return (
@@ -54,6 +66,7 @@ export function TooltipProvider({
       data-slot="tooltip-provider"
       delay={delay}
       closeDelay={closeDelay}
+      timeout={timeout}
       {...props}
     />
   );
@@ -66,7 +79,7 @@ export function Tooltip(props: React.ComponentProps<typeof Base.Root>) {
 /** The control. `render` makes any element the trigger (shadcn's Radix `asChild`);
  *  `delay` is ms the pointer rests before it opens. */
 export function TooltipTrigger({
-  delay = 200,
+  delay = TIP_DELAY,
   closeDelay = 0,
   ...props
 }: React.ComponentProps<typeof Base.Trigger>) {
@@ -86,6 +99,9 @@ export interface TooltipContentProps
   side?: React.ComponentProps<typeof Base.Positioner>["side"];
   align?: React.ComponentProps<typeof Base.Positioner>["align"];
   sideOffset?: number;
+  /** What it stands beside when it has no trigger: one tooltip a host opens itself
+   *  (`open` on `Tooltip`) and moves between many places, a table's cells. */
+  anchor?: React.ComponentProps<typeof Base.Positioner>["anchor"];
   /** The keys that do the same, in any notation `kbd` reads (`space`, `J`, `⇧J`). */
   keys?: string;
   /** A card rather than a line: the content laid out as it comes (a table of keys, a
@@ -123,6 +139,7 @@ export function TooltipContent({
   side = "top",
   align = "center",
   sideOffset = 8,
+  anchor,
   keys,
   card = false,
   container,
@@ -142,6 +159,7 @@ export function TooltipContent({
         side={side}
         align={align}
         sideOffset={sideOffset}
+        anchor={anchor}
         className="z-50"
       >
         <Base.Popup
@@ -191,8 +209,14 @@ export interface TipProps
     | "material"
     | "scheme"
   > {
-  /** What the control does, in a few words. */
-  content: React.ReactNode;
+  /** What the control does, in a few words. With `action`, the action's own label
+   *  unless given. */
+  content?: React.ReactNode;
+  /** The action the control runs, by id in the enclosing `ActionScope` (key-router):
+   *  the tip says its label and draws its key, and the control carries its
+   *  `aria-keyshortcuts` and the key which-key shows beside it, so what is taught is
+   *  what answers. */
+  action?: string;
   /** ms the pointer rests before it opens: 200 on a control (passing over a row of
    *  buttons should not flash a line under each), less where the pointer came to
    *  read (a hint). */
@@ -202,11 +226,53 @@ export interface TipProps
 }
 
 /** A control's tooltip in one line: its name, and its keys drawn as keys. */
-export function Tip({ content, delay, children, ...content_ }: TipProps) {
+export function Tip(props: TipProps) {
+  return props.action ? (
+    <ActionTip {...props} action={props.action} />
+  ) : (
+    <PlainTip {...props} />
+  );
+}
+
+function PlainTip({
+  content,
+  delay,
+  children,
+  action: _,
+  ...content_
+}: TipProps) {
+  if (content === undefined)
+    throw new Error("Tip: a tip says something: `content`, or an `action`");
   return (
     <Tooltip>
       <TooltipTrigger render={children} delay={delay} />
       <TooltipContent {...content_}>{content}</TooltipContent>
+    </Tooltip>
+  );
+}
+
+function ActionTip({
+  action: id,
+  content,
+  delay,
+  children,
+  keys,
+  ...content_
+}: TipProps & { action: string }) {
+  const action = useAction(id);
+  const platform = usePlatform();
+  const key = keys ?? action.keys[0];
+  return (
+    <Tooltip>
+      <TooltipTrigger
+        render={children}
+        delay={delay}
+        aria-keyshortcuts={ariaOf(action, platform)}
+        data-key={key}
+      />
+      <TooltipContent keys={key} {...content_}>
+        {content ?? action.label}
+      </TooltipContent>
     </Tooltip>
   );
 }

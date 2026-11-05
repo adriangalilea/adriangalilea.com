@@ -7,7 +7,7 @@
 //
 // A FACE WORTH A CLOSER LOOK: the avatar (the same look, `avatarLook`), and a press opens
 // the full portrait ALONE (`LightboxSolo`: its own provider, so three faces on a page are
-// three viewers, never a reel with a strip and arrows), with the person's name as the
+// three viewers, never a set with a strip and arrows), with the person's name as the
 // caption (the lightbox's figcaption fallback would read a quote's whole attribution).
 // Needs nothing above it. The lightbox's code loads only once a face is on the page,
 // after the page is live, the plain face standing in until it has. A face that never
@@ -36,6 +36,8 @@ const loadSolo = () => {
 };
 
 export interface AvatarPortraitProps extends AvatarProps {
+  /** The rendition the page paints: a portrait that opens has a picture. */
+  src: string;
   /** The original, worth opening: the avatar opens it, alone. */
   full: { src: string; width: number; height: number };
 }

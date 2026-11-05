@@ -747,14 +747,14 @@ export function visitHits(
 // --- reading -------------------------------------------------------------------
 
 /**
- * One visit, as the views read it: the places it moved through in order (a page's
- * place, else its path), a move within a place being no new one, and how many pages it
- * saw.
+ * One visit, as the views read it: the steps it took in order, the places it moved
+ * through (a page's place, else its path; a move within a place being no new one) and
+ * the named events asked for (`eventStep`), and how many pages it saw.
  */
 export interface VisitRow {
   readonly id: string;
   readonly started: number;
-  readonly places: readonly string[];
+  readonly steps: readonly string[];
   readonly pages: number;
   /** The outside host it landed from. */
   readonly referrer?: string;
@@ -815,7 +815,7 @@ export async function readVisits(
   }
   const visits = new Map<
     string,
-    VisitRow & { places: string[]; pages: number; at: string | undefined }
+    VisitRow & { steps: string[]; pages: number; at: string | undefined }
   >();
   for (const r of rows) {
     const id = String(r.id);
@@ -824,7 +824,7 @@ export async function readVisits(
       v = {
         id,
         started: Number(r.started),
-        places: [],
+        steps: [],
         pages: 0,
         at: undefined,
         referrer: str(r.referrer) ?? undefined,
@@ -838,13 +838,13 @@ export async function readVisits(
     }
     // A move within a place is no new step, even past an event written there.
     const place = str(r.place) ?? String(r.path);
-    if (v.at !== place) v.places.push(place);
+    if (v.at !== place) v.steps.push(place);
     v.at = place;
     v.pages += 1;
     // Pressed twice in a row is one step.
     for (const name of events.get(String(r.trace_id)) ?? []) {
       const step = eventStep(place, name);
-      if (v.places.at(-1) !== step) v.places.push(step);
+      if (v.steps.at(-1) !== step) v.steps.push(step);
     }
   }
   return [...visits.values()].map(({ at: _, ...v }) => v);

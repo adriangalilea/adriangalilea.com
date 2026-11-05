@@ -12,7 +12,7 @@
 //     <PlayerKeys />
 //   </VideoPlayback>
 //
-// The element's ownership (the clock, coalesced seeks, steps, previews, the loop, the
+// The element's ownership (the clock, coalesced seeks, steps, skims, the loop, the
 // remembered volume, a refused autoplay) is ui/media-timebase's, shared with
 // ui/audio's AudioPlayback; what is a video's alone lives here: the instant is the
 // frame the browser PRESENTED (requestVideoFrameCallback), never the clock's coarse
@@ -20,8 +20,8 @@
 // picture's stage; and its zoom.
 
 import * as React from "react";
-import { useBackdropSource } from "@/components/ui/backdrop";
-import { BackdropScope, MaterialProvider } from "@/components/ui/material";
+import { useGroundSource } from "@/components/ui/ground";
+import { GroundScope, MaterialProvider } from "@/components/ui/material";
 import {
   Caption,
   CaptionLines,
@@ -57,7 +57,6 @@ import {
 } from "@/components/ui/sound-source";
 import { Video, type VideoProps } from "@/components/ui/video";
 import { type Captions, linesAt } from "@/lib/captions";
-import { type Chapter, type Outline, outlineOf, type Span } from "@/lib/clip";
 import { zoomAt } from "@/lib/lightbox-motion";
 import {
   centreOn,
@@ -78,6 +77,8 @@ import {
   type View,
   zoomLabel,
 } from "@/lib/picture-zoom";
+import { type Chapter, type Outline, outlineOf } from "@/lib/playable";
+import type { Span } from "@/lib/span";
 import { msOf, shownAt } from "@/lib/timebase";
 import { cn } from "@/lib/utils";
 
@@ -330,10 +331,10 @@ export function VideoPlayback({
 
 const NO_CAPTIONS: readonly Captions[] = [];
 
-/** The lines being said over the picture, at the shown instant (a preview on the bar
+/** The lines being said over the picture, at the shown instant (a skim on the bar
  *  shows that instant's line), each in the shared caption look, the file's own line
  *  breaks kept. Low over the picture while it plays untouched; risen above the
- *  chrome's foot while the chrome shows (awake, focused, paused, previewing), by the
+ *  chrome's foot while the chrome shows (awake, focused, paused, skimming), by the
  *  foot's own measured height (`--ag-player-foot`, set by PlayerFoot). Takes no
  *  pointer. */
 function PictureCaptions() {
@@ -346,7 +347,7 @@ function PictureCaptions() {
       .map((l) => lines.indexOf(l))
       .join(","),
   );
-  const raised = useTimebaseState((s) => !s.playing || s.preview !== null);
+  const raised = useTimebaseState((s) => !s.playing || s.skim !== null);
   const showing = key ? key.split(",").map((i) => lines[Number(i)]) : [];
   return (
     <CaptionLines
@@ -572,7 +573,7 @@ export function VideoPicture({
   // origin, or CORS with `crossOrigin` (the rule the sound's spectrum keeps). The black
   // stage round a letterboxed frame reads as black.
   const readable = soundReadable(ctx.picture.src, ctx.picture.crossOrigin);
-  const backdrop = useBackdropSource(readable ? el : null, {
+  const ground = useGroundSource(readable ? el : null, {
     fit: "contain",
     outside: 0,
   });
@@ -717,21 +718,21 @@ export function VideoPicture({
       {captions?.shown && <PictureCaptions />}
       {/* What stands over a picture (PlayerChrome and its parts, a zoom finder, their
           tooltips and menus) wears the scheme the frame under it asks for, read
-          live (ui/backdrop): light glass over snow, dark over night, with no part
+          live (ui/ground): light glass over snow, dark over night, with no part
           saying so. A picture whose pixels cannot be read (another origin, no
           CORS) stands it all in the dark scheme. Popups open inside the picture
           only while it is the fullscreen element (the only place they show then);
           otherwise in the player's layer, unclipped by a picture narrower than
           they are. */}
-      <BackdropScope source={backdrop}>
-        <MaterialProvider scheme={readable ? "backdrop" : "dark"}>
+      <GroundScope source={ground}>
+        <MaterialProvider scheme={readable ? "ground" : "dark"}>
           {fullscreen ? (
             <PlayerLayer active={full}>{children}</PlayerLayer>
           ) : (
             children
           )}
         </MaterialProvider>
-      </BackdropScope>
+      </GroundScope>
       {zoom && (
         <span role="status" className="sr-only">
           {said ? `zoom ${said.text}` : ""}
@@ -837,7 +838,7 @@ export function framed(
   return { x: x / total, y: y / total, r: r / total };
 }
 
-/** Whether a face is in the picture at the instant shown (a preview's too). */
+/** Whether a face is in the picture at the instant shown (a skim's too). */
 export function useInShot(shots: readonly CropShot[]): boolean {
   return useTimebaseState((s) => shotAt(shots, shownAt(s)) !== undefined);
 }

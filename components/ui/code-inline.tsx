@@ -13,7 +13,7 @@ export function InlineCode({
       {...props}
       data-slot="code-inline"
       className={cn(
-        "rounded-md bg-foreground/6 px-1.5 py-0.5 font-mono text-[0.875em] text-foreground/85",
+        "rounded-md bg-fill-rest px-1.5 py-0.5 font-mono text-[0.875em] text-foreground/85",
         className,
       )}
     >

@@ -45,12 +45,12 @@ export function measureBand(rail: boolean): Band {
     );
   }
   const band = stageBand(base, blocks);
-  const lane = !rail
+  const media = !rail
     ? band
     : matchMedia("(min-width: 64rem)").matches
       ? { ...band, w: band.w - RAIL_W }
       : { ...band, h: band.h * (1 - RAIL_H) };
-  return { ...lane, top: lane.top + INSET_Y, h: lane.h - 2 * INSET_Y };
+  return { ...media, top: media.top + INSET_Y, h: media.h - 2 * INSET_Y };
 }
 
 export const sameBand = (a: Band, b: Band) =>

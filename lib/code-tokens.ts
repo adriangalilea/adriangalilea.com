@@ -56,11 +56,98 @@ export interface CodeColours {
   of: Uint16Array;
 }
 
-/** The language a path is written in: its extension (`html`, `ts`, `md`), which
- *  Shiki reads as a language or one of its aliases; `text` with none. */
-export function langOf(path: string): string {
-  return /\.([a-z0-9]+)$/i.exec(path)?.[1]?.toLowerCase() ?? "text";
+/** A language Shiki does not bundle, told to code: its grammar, loaded the first time
+ *  the language is asked for (Shiki's `LanguageInput`: one registration whose `name`
+ *  is the language's id, or a list, the languages it embeds first), and the other
+ *  names a file's extension or a fence calls it by. */
+export interface CodeLanguage {
+  grammar: () => Promise<
+    | import("shiki").LanguageRegistration
+    | import("shiki").LanguageRegistration[]
+  >;
+  /** `cell` for `cells`: what `money.cell` and a ```` ```cell ```` fence say. */
+  aliases?: readonly string[];
 }
+
+/** The languages code colours beyond Shiki's bundle, by id, and every alias to its
+ *  id, filled by `registerLanguage`. `cells` is code's own: the Cells grammar (lib/cells-grammar, vendored from
+ *  github.com/adriangalilea/cells), its columns in rainbow and its types by scope. */
+const LANGUAGES = new Map<string, CodeLanguage>();
+const ALIASES = new Map<string, string>();
+
+/** Tells code a language Shiki does not bundle, so every view that picks a language
+ *  from a file's name or a fence (`code`, `markdown`, `walkthrough`, `ide`,
+ *  `terminal-editor`) colours it. Call it at the top of a module the pages that draw
+ *  it import, once in each place code runs (the server for `Code`, the browser for an
+ *  editor): a language registered in neither is drawn plain. Registering an id again
+ *  replaces its grammar (a module evaluated again in development); an alias another
+ *  language holds, or one that is a registered id, throws. */
+export function registerLanguage(id: string, language: CodeLanguage): void {
+  const lower = id.toLowerCase();
+  if (lower !== id)
+    throw new Error(`code-tokens: a language id is lowercase, not ${id}`);
+  if (ALIASES.has(id))
+    throw new Error(
+      `code-tokens: ${id} is already an alias of ${ALIASES.get(id)}`,
+    );
+  for (const alias of language.aliases ?? []) {
+    const held = ALIASES.get(alias);
+    if (
+      (held !== undefined && held !== id) ||
+      (alias !== id && LANGUAGES.has(alias))
+    )
+      throw new Error(
+        `code-tokens: the alias ${alias} of ${id} already names ${held ?? alias}`,
+      );
+  }
+  for (const [alias, of] of ALIASES) if (of === id) ALIASES.delete(alias);
+  LANGUAGES.set(id, language);
+  for (const alias of language.aliases ?? []) ALIASES.set(alias, id);
+}
+
+registerLanguage("cells", {
+  grammar: () => import("@/lib/cells-grammar").then((m) => m.cellsGrammar),
+  aliases: ["cell"],
+});
+
+/** The id a language name stands for: a registered language's alias resolved
+ *  (`cell` is `cells`), any other name as it is (Shiki reads its own aliases). */
+export const languageOf = (name: string): string => {
+  const lower = name.toLowerCase();
+  return ALIASES.get(lower) ?? lower;
+};
+
+/** The language a path is written in: its extension (`html`, `ts`, `md`, `cell`)
+ *  read through `languageOf`, which Shiki reads as a language or one of its aliases;
+ *  `text` with none. */
+export function langOf(path: string): string {
+  const ext = /\.([a-z0-9]+)$/i.exec(path)?.[1];
+  return ext ? languageOf(ext) : "text";
+}
+
+/** Whether `lang` (an id or an alias) is a registered language. */
+export const registeredLanguage = (lang: string) =>
+  LANGUAGES.has(languageOf(lang));
+
+/** The grammar loaded for `id`, which must name its language `id`: a grammar called
+ *  anything else would load and never be found. */
+async function grammarOf(id: string, language: CodeLanguage) {
+  const g = await language.grammar();
+  const list = Array.isArray(g) ? g : [g];
+  if (!list.some((r) => r.name === id))
+    throw new Error(
+      `code-tokens: the grammar registered as ${id} names itself ${list.map((r) => r.name).join(", ")}`,
+    );
+  return list;
+}
+
+/** A registered language's grammar (an id or an alias), loaded and checked;
+ *  undefined for any other. */
+export const ownGrammar = (lang: string) => {
+  const id = languageOf(lang);
+  const language = LANGUAGES.get(id);
+  return language ? grammarOf(id, language) : undefined;
+};
 
 type Core = import("shiki/core").HighlighterCore;
 
@@ -89,8 +176,10 @@ async function highlighter(lang: string, themes: CodeThemes): Promise<Core> {
   ]);
   const loading: Promise<void>[] = [];
   if (lang !== "text" && !h.getLoadedLanguages().includes(lang)) {
-    const grammar = bundledLanguages[lang as keyof typeof bundledLanguages];
-    if (grammar) loading.push(h.loadLanguage(grammar));
+    const bundled = bundledLanguages[lang as keyof typeof bundledLanguages];
+    const own = ownGrammar(lang);
+    if (bundled) loading.push(h.loadLanguage(bundled));
+    else if (own) loading.push(own.then((g) => h.loadLanguage(...g)));
   }
   for (const name of [themes.light, themes.dark])
     if (!h.getLoadedThemes().includes(name)) {
@@ -108,9 +197,10 @@ async function highlighter(lang: string, themes: CodeThemes): Promise<Core> {
  *  `colours`), or in the browser for text that changes. */
 export async function codeColours(
   text: string,
-  lang: string,
+  name: string,
   themes: CodeThemes = CODE_THEMES,
 ): Promise<CodeColours> {
+  const lang = languageOf(name);
   const h = await highlighter(lang, themes);
   const lines = h.codeToTokensWithThemes(text, {
     lang: h.getLoadedLanguages().includes(lang) ? lang : "text",
@@ -150,6 +240,50 @@ export async function codeColours(
 export interface CodeRun {
   text: string;
   ink: CodeInk | null;
+}
+
+/** A run with what lies over it: the marks of every range it falls in. */
+export interface CodePaint<M> extends CodeRun {
+  marks: M[];
+}
+
+/** A line's runs cut again where `ranges` begin and end (offsets of the whole text;
+ *  the line begins at `start`), each piece carrying the marks of the ranges over it:
+ *  a diagnostic's squiggle, a selection, a flash. */
+export function paintRuns<M>(
+  runs: readonly CodeRun[],
+  start: number,
+  ranges: readonly { from: number; to: number; mark: M }[],
+): CodePaint<M>[] {
+  const end = start + runs.reduce((n, r) => n + r.text.length, 0);
+  const here = ranges.filter((r) => r.from < end && r.to > start);
+  if (!here.length) return runs.map((r) => ({ ...r, marks: [] }));
+  const cuts = new Set<number>();
+  for (const r of here) {
+    cuts.add(Math.max(start, r.from));
+    cuts.add(Math.min(end, r.to));
+  }
+  const out: CodePaint<M>[] = [];
+  let at = start;
+  for (const run of runs) {
+    const runEnd = at + run.text.length;
+    const points = [
+      at,
+      ...[...cuts].filter((c) => c > at && c < runEnd).sort((a, b) => a - b),
+      runEnd,
+    ];
+    for (let i = 0; i + 1 < points.length; i++) {
+      const a = points[i] as number;
+      const b = points[i + 1] as number;
+      out.push({
+        text: run.text.slice(a - at, b - at),
+        ink: run.ink,
+        marks: here.filter((r) => r.from <= a && b <= r.to).map((r) => r.mark),
+      });
+    }
+    at = runEnd;
+  }
+  return out;
 }
 
 /** `text` cut into lines of runs, each character inked by `colours` at its offset

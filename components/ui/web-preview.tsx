@@ -8,7 +8,7 @@
 // FOUR STYLES, one component, chosen by the page it sits on:
 //   card      ours, the default. The image at 16:9, the title at reading size, the
 //             description in two lines, the domain as mono metadata with the site's
-//             icon; the whole card is the link. Its surface is a `Panel`'s, plain or
+//             icon; the whole card is the link. Its surface is a `Card`'s, plain or
 //             glass (`material`, else the nearest MaterialProvider), the picture
 //             running to its edge; inside a frame already drawn it draws no box
 //             (`frame` decides when given). Under the pointer plain lifts a touch,
@@ -28,13 +28,13 @@
 // telegram and x styles are a platform's own look (a bubble's card, X's card), drawn
 // as that platform draws them, in no material of ours.
 
+import { Card, useInFrame } from "@/components/ui/card";
 import { Image } from "@/components/ui/image";
 import {
   type Material,
   type Scheme,
   useMaterial,
 } from "@/components/ui/material";
-import { Panel, useInFrame } from "@/components/ui/panel";
 import { cn } from "@/lib/utils";
 import { hostOf, type Unfurl } from "@/lib/web-preview-facts";
 
@@ -43,23 +43,24 @@ export type WebPreviewStyle = "card" | "compact" | "telegram" | "x";
 export interface WebPreviewProps {
   facts: Unfurl;
   style?: WebPreviewStyle;
-  /** The card style's surface (a panel). Default drawn: inside a frame already
-   *  drawn, the inset one (Panel). */
+  /** The card style's surface (a card). Default drawn: inside a frame already
+   *  drawn, the inset one (Card). */
   frame?: boolean;
   /** The card style's material: default the nearest provider's. */
   material?: Material;
-  /** The colour scheme the card style's panel stands in (material). */
+  /** The colour scheme the card style's card stands in (material). */
   scheme?: Scheme;
   className?: string;
 }
 
 const ANCHOR =
-  "block no-underline text-inherit transition-[background-color,transform,box-shadow] duration-300 ease-out";
+  "block no-underline text-inherit transition-colors duration-300 ease-out";
 
-/** The card under the pointer: plain lifts a touch, glass catches more light. */
+/** The card under the pointer catches more light and never moves: it holds what
+ *  the hand is aiming at (a container never moves). Plain, its face a step toward
+ *  the ink, as `card`'s does; glass, its rim. */
 const LIFT: Record<Material, string> = {
-  plain:
-    "transition-[transform,box-shadow] duration-300 ease-out hover:-translate-y-0.5 hover:shadow-[0_12px_32px_-12px_rgba(0,0,0,0.35)]",
+  plain: "hover:bg-[color-mix(in_srgb,var(--card),var(--foreground)_3%)]",
   glass: "hover:[--glass-rim:1.5]!",
 };
 
@@ -73,7 +74,7 @@ export function WebPreview({
 }: WebPreviewProps) {
   const m = useMaterial(material);
   // A preview has its identity, so it draws its own surface; inside a frame
-  // already drawn, Panel makes it the inset one, which answers the hand itself.
+  // already drawn, Card makes it the inset one, which answers the hand itself.
   const inFrame = useInFrame();
   const framed = frame ?? true;
   const lift = framed && !inFrame && LIFT[m];
@@ -154,7 +155,7 @@ export function WebPreview({
 
   if (style === "compact")
     return (
-      <Panel
+      <Card
         render={
           <a href={facts.url} target="_blank" rel="noopener noreferrer" />
         }
@@ -199,11 +200,11 @@ export function WebPreview({
             <span className="truncate">{host}</span>
           </div>
         </div>
-      </Panel>
+      </Card>
     );
 
   return (
-    <Panel
+    <Card
       render={<a href={facts.url} target="_blank" rel="noopener noreferrer" />}
       data-slot="web-preview"
       data-style={style}
@@ -219,7 +220,7 @@ export function WebPreview({
         <Image
           className={cn(
             "block aspect-video w-full object-cover",
-            framed ? "rounded-t-(--panel-radius)" : "rounded-lg",
+            framed ? "rounded-t-(--card-radius)" : "rounded-lg",
           )}
           src={facts.image}
           alt=""
@@ -239,6 +240,6 @@ export function WebPreview({
           </p>
         )}
       </div>
-    </Panel>
+    </Card>
   );
 }

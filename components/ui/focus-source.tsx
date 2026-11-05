@@ -44,7 +44,15 @@ function listen() {
     "PageDown",
   ];
   let pointer = false;
+  // What held focus when the window or the tab lost it: coming back, the browser
+  // focuses it again (focus, focusin) and calls that focus visible if a key was the
+  // last input, an arrow that scrolled the page say. That is no new focus, so it keeps
+  // the mark it had; marking it from the last input rang the button clicked before.
+  let left: EventTarget | null = null;
   const mark = (on: boolean) => root.toggleAttribute("data-focus-pointer", on);
+  window.addEventListener("blur", () => {
+    left = document.activeElement;
+  });
   document.addEventListener(
     "pointerdown",
     (e) => {
@@ -60,11 +68,22 @@ function listen() {
   document.addEventListener(
     "keydown",
     (e) => {
+      // With ⌘, ⌃ or ⌥ held these are no focus navigation: ⌃Tab and ⌘Tab leave the
+      // tab or the app, ⌘← goes back, ⌥↓ scrolls.
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
       if (navigation.includes(e.key)) pointer = false;
     },
     true,
   );
-  document.addEventListener("focusin", () => mark(pointer), true);
+  document.addEventListener(
+    "focusin",
+    (e) => {
+      const back = e.target === left;
+      left = null;
+      if (!back) mark(pointer);
+    },
+    true,
+  );
 }
 
 const SCRIPT = `(${listen})()`;

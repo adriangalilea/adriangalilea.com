@@ -292,7 +292,7 @@ never redone, a changed processor redoes all. Restart dev after adding media.
 
 ## Feed lanes
 
-Every grid of cards (a collection, the related grid under a piece) is `components/lanes.tsx`, a thin layer over ui's `arrange`: each card rendered ONCE in date order, placed in lanes by its measured height with the lanes rule of ui's `layouts` (the lane with the highest bottom, lanes within 0.15 of a lane's width counted level, ties taken in reading order), the first placement run before the page is painted, so nothing moves once shown. What is the site's own there: a lane about 280 px wide (as many as fit, no breakpoints), the gap, and the hairline between cards on a phone. The tag filter (`?tag=`) is arrange's `filter`, read and written with `useArrangeFilter`/`setArrangeFilter`, never `useSearchParams`, which would make the whole feed render on the client only.
+Every grid of cards (a collection, the related grid under a piece) is `components/lanes.tsx`, a thin layer over ui's `arrange`: each card rendered ONCE in date order, placed in lanes by its measured height with the grid lanes rule of ui's `arrangement` (the lane with the highest bottom, lanes within 0.15 of a lane's width counted level, ties taken in reading order), the first placement run before the page is painted, so nothing moves once shown. What is the site's own there: a lane about 280 px wide (as many as fit, no breakpoints), the gap, and the hairline between cards on a phone. The tag filter (`?tag=`) is arrange's `filter`, read and written with `useArrangeFilter`/`setArrangeFilter`, never `useSearchParams`, which would make the whole feed render on the client only.
 
 ## X-ray cards
 

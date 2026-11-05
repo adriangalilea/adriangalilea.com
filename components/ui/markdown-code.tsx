@@ -19,6 +19,10 @@ export interface HighlightedProps {
   lines?: boolean;
   /** Lines to mark, `"2"` or `"1,4-6"` (a fence's `{2,4-6}`). */
   highlight?: string;
+  /** A path or a name for the bar, in place of the language. */
+  filename?: string;
+  /** The copy control; off for text that is not the whole of what it shows. */
+  copy?: boolean;
   className?: string;
 }
 
@@ -29,6 +33,8 @@ export function Highlighted({
   html: ahead = null,
   lines,
   highlight,
+  filename,
+  copy,
   className,
 }: HighlightedProps) {
   const [html, setHtml] = React.useState<string | null>(ahead);
@@ -50,6 +56,8 @@ export function Highlighted({
       html={html}
       lang={lang}
       lines={lines}
+      filename={filename}
+      copy={copy}
       className={className}
     />
   );

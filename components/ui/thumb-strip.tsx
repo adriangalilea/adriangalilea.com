@@ -1,6 +1,6 @@
 "use client";
 
-// A row of thumbnails with the active one lit, for a reel: the lightbox's top bar, a
+// A row of thumbnails with the active one lit, for a set: the lightbox's top bar, a
 // media page's set. The active thumb is kept centred INSTANTLY (the cursor law: a
 // smooth scroll is a second animation racing the step, and a reader holding an arrow
 // key outruns it, so the strip spends the whole run pointing at a slide that already
@@ -91,7 +91,7 @@ export function ThumbStrip({
   counter?: boolean;
   material?: Material;
   /** The colour scheme it stands in (material): default the nearest provider's;
-   *  a reel over pictures stands in a stage that says dark. */
+   *  a set over pictures stands in a stage that says dark. */
   scheme?: Scheme;
   className?: string;
 }) {

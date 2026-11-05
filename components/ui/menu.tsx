@@ -24,24 +24,45 @@ import {
 import { glassVariants, schemeOf } from "@/components/ui/material-glass";
 import { usePortalTarget } from "@/components/ui/portal";
 import { Shortcut, shortcut, usePlatform } from "@/components/ui/shortcut";
+import type { Action } from "@/lib/actions";
 import { combo, type Platform, type Press, pressed } from "@/lib/keys";
 import { cn } from "@/lib/utils";
 
-/** A verb, or a line between groups. `hint` is the input it stands in for, written as
- *  `shortcut` reads it ("mod+click", "shift+f10"), drawn as keys and a pointer glyph;
- *  any other text is shown as it is. Several are alternatives, each drawn ("open":
- *  double-click, enter). */
-export type MenuEntry =
-  | {
-      /** what it does, as a glyph: every entry has one, the eye finds the verb by it */
-      icon: React.ReactNode;
-      label: React.ReactNode;
-      onSelect: () => void;
-      hint?: string | readonly string[];
-      destructive?: boolean;
-      disabled?: boolean;
-    }
-  | "separator";
+/** A verb. `hint` is the input it stands in for, written as `shortcut` reads it
+ *  ("mod+click", "shift+f10"), drawn as keys and a pointer glyph; any other text is
+ *  shown as it is. Several are alternatives, each drawn ("open": double-click, enter). */
+export type MenuVerb = {
+  /** what it does, as a glyph: every entry has one, the eye finds the verb by it */
+  icon: React.ReactNode;
+  label: React.ReactNode;
+  onSelect: () => void;
+  hint?: string | readonly string[];
+  destructive?: boolean;
+  disabled?: boolean;
+};
+
+/** A verb, a line between groups, or a heading that names what the verbs after it act
+ *  on ("row 5", "column B · category"), so each verb says only what it does: a group
+ *  of its own, a line above it unless it is first. */
+export type MenuEntry = MenuVerb | "separator" | { heading: React.ReactNode };
+
+/** Whether an entry is a verb (neither a line nor a heading). */
+export const isVerb = (entry: MenuEntry): entry is MenuVerb =>
+  entry !== "separator" && !("heading" in entry);
+
+/** A part's action (lib/actions, declared with key-router's `useActions`) as a menu's
+ *  verb: its label, its keys drawn, unavailable dimmed, run when chosen. A menu built
+ *  from a part's actions teaches exactly the keys that answer. */
+export function verbOf(action: Action<React.ReactNode>): MenuVerb {
+  return {
+    icon: action.icon,
+    label: action.label,
+    hint: action.keys.length ? action.keys : undefined,
+    destructive: action.destructive,
+    disabled: action.when ? !action.when() : false,
+    onSelect: action.run,
+  };
+}
 
 /** The verb whose drawn keys are this press, if any: what a menu teaches, it also
  *  answers to, open or not. Pointer hints never match a key. */
@@ -49,9 +70,9 @@ export function verbFor(
   entries: readonly MenuEntry[],
   press: Press,
   platform: Platform,
-): Exclude<MenuEntry, "separator"> | undefined {
+): MenuVerb | undefined {
   for (const entry of entries) {
-    if (entry === "separator" || entry.disabled || !entry.hint) continue;
+    if (!isVerb(entry) || entry.disabled || !entry.hint) continue;
     const hints = typeof entry.hint === "string" ? [entry.hint] : entry.hint;
     if (hints.some((h) => pressed(h, press, platform))) return entry;
   }
@@ -91,6 +112,27 @@ export function Hints({
 
 const ITEM =
   "flex cursor-default select-none items-center gap-4 px-2 py-1.5 text-[13px] text-current/85 outline-none data-[disabled]:opacity-45 data-[highlighted]:text-current";
+/** A group's heading: quieter and smaller than its verbs, on their inset. */
+const HEADING =
+  "cursor-default select-none px-2 pt-1.5 pb-1 text-[11px] text-current/45";
+
+/** Entries as their groups: each heading starts one; what comes before the first
+ *  heading is a group with none. */
+function groupsOf(entries: readonly MenuEntry[]) {
+  const groups: {
+    heading: React.ReactNode | null;
+    entries: (MenuVerb | "separator")[];
+  }[] = [];
+  for (const entry of entries) {
+    if (entry !== "separator" && "heading" in entry) {
+      groups.push({ heading: entry.heading, entries: [] });
+      continue;
+    }
+    if (groups.length === 0) groups.push({ heading: null, entries: [] });
+    (groups.at(-1) as (typeof groups)[number]).entries.push(entry);
+  }
+  return groups.filter((g) => g.entries.length > 0);
+}
 
 /** Each material's popup, row and line between groups. Glass: the material's glass
  *  at a menu's blur, its rows lit in the text's own colour, so it reads on any tone;
@@ -99,8 +141,8 @@ const FACE = {
   plain: {
     popup:
       "rounded-lg border border-border bg-popover text-popover-foreground shadow-md",
-    item: "rounded-md data-[highlighted]:bg-foreground/8",
-    bad: "data-[highlighted]:bg-foreground/8",
+    item: "rounded-md data-[highlighted]:bg-fill-row-hover",
+    bad: "data-[highlighted]:bg-fill-row-hover",
     line: "bg-foreground/10",
   },
   glass: {
@@ -199,43 +241,65 @@ export function Menu({
             )}
           >
             <MaterialProvider material={m} scheme={s}>
-              {entries.map((entry, i) =>
-                entry === "separator" ? (
-                  <Base.Separator
-                    // biome-ignore lint/suspicious/noArrayIndexKey: entries are rebuilt per open, place is identity
-                    key={i}
-                    className={cn("mx-1.5 my-1 h-px", face.line)}
-                  />
-                ) : (
-                  <Base.Item
-                    // biome-ignore lint/suspicious/noArrayIndexKey: entries are rebuilt per open, place is identity
-                    key={i}
-                    disabled={entry.disabled}
-                    onClick={() => {
-                      picked.current = entry.onSelect;
-                    }}
-                    className={cn(
-                      ITEM,
-                      face.item,
-                      entry.destructive && [
-                        "text-tone-bad data-[highlighted]:text-tone-bad",
-                        face.bad,
-                      ],
-                    )}
-                  >
-                    <span
-                      aria-hidden="true"
-                      className="-mr-2 grid size-4 shrink-0 place-items-center [&_svg]:size-3.5"
+              {groupsOf(entries).map((group, g) => {
+                const rows = group.entries.map((entry, i) =>
+                  entry === "separator" ? (
+                    <Base.Separator
+                      // biome-ignore lint/suspicious/noArrayIndexKey: entries are rebuilt per open, place is identity
+                      key={i}
+                      className={cn("mx-1.5 my-1 h-px", face.line)}
+                    />
+                  ) : (
+                    <Base.Item
+                      // biome-ignore lint/suspicious/noArrayIndexKey: entries are rebuilt per open, place is identity
+                      key={i}
+                      disabled={entry.disabled}
+                      onClick={() => {
+                        picked.current = entry.onSelect;
+                      }}
+                      className={cn(
+                        ITEM,
+                        face.item,
+                        entry.destructive && [
+                          "text-tone-bad data-[highlighted]:text-tone-bad",
+                          face.bad,
+                        ],
+                      )}
                     >
-                      {entry.icon}
-                    </span>
-                    {entry.label}
-                    {entry.hint && (
-                      <Hints hint={entry.hint} className="ml-auto" />
+                      <span
+                        aria-hidden="true"
+                        className="-mr-2 grid size-4 shrink-0 place-items-center [&_svg]:size-3.5"
+                      >
+                        {entry.icon}
+                      </span>
+                      {entry.label}
+                      {entry.hint && (
+                        <Hints hint={entry.hint} className="ml-auto" />
+                      )}
+                    </Base.Item>
+                  ),
+                );
+                return (
+                  // biome-ignore lint/suspicious/noArrayIndexKey: entries are rebuilt per open, place is identity
+                  <React.Fragment key={g}>
+                    {g > 0 && (
+                      <Base.Separator
+                        className={cn("mx-1.5 my-1 h-px", face.line)}
+                      />
                     )}
-                  </Base.Item>
-                ),
-              )}
+                    {group.heading === null ? (
+                      rows
+                    ) : (
+                      <Base.Group>
+                        <Base.GroupLabel className={HEADING}>
+                          {group.heading}
+                        </Base.GroupLabel>
+                        {rows}
+                      </Base.Group>
+                    )}
+                  </React.Fragment>
+                );
+              })}
             </MaterialProvider>
           </Base.Popup>
         </Base.Positioner>

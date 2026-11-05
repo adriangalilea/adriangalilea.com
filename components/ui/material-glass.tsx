@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 import "./material-glass.css";
 
 // THE GLASS MATERIAL, the one look every glass face is made of: the base controls'
-// glass faces (button, badge, panel, textarea, …, `material="glass"`) and the whole
+// glass faces (button, badge, card, textarea, …, `material="glass"`) and the whole
 // liquid-glass collection read their glass from here, so glass is one material
 // everywhere and a control that draws it pulls in this file, not the collection.
 // Server-safe (no context, no state): `Glass` and `GlassEdge` render anywhere.
@@ -27,7 +27,7 @@ export const glassLight = [
   // both are invalid and every use falls back to the glass's own.
   "[--glass-hue:oklch(from_var(--glass-stain)_max(l,0.78)_min(calc(c*2),0.2)_h)] [--glass-hue-deep:oklch(from_var(--glass-stain)_min(l,0.5)_min(calc(c*2),0.2)_h)]",
   // The light around the glass: white, leaning toward the colour of what it stands
-  // over (`--glass-ground`, the picture's colour under it, set by ui/backdrop), made
+  // over (`--glass-ground`, the picture's colour under it, set by ui/ground), made
   // light and clear (lightness at least 0.85), by `--glass-ground-share` (35% unless
   // set). Light catching a curve takes the colour around it, a red rock's edge
   // warming, a sky's cooling (Apple's glass does; Adrian, 2026-10-11). No picture
@@ -42,11 +42,11 @@ export const glassLight = [
   // same white catch reads several times stronger on dark glass ("overpowering" as a
   // full outline; as a corner catch alone, a touch less was right, Adrian,
   // 2026-10-11), so the dark face carries 0.8 of it. Over a picture the picture under
-  // the glass decides (`--glass-ground-sheen`, set by ui/backdrop on the surface or on
+  // the glass decides (`--glass-ground-sheen`, set by ui/ground on the surface or on
   // a group round several, and inherited: the face's own number is only the fallback,
   // so a group's reading reaches every glass inside it).
   "[--glass-sheen:var(--glass-ground-sheen,1)] scheme-dark:[--glass-sheen:var(--glass-ground-sheen,0.8)]",
-  // Glass ON glass (a field in a glass panel, a chosen segment in a glass bar):
+  // Glass ON glass (a field in a glass card, a chosen segment in a glass bar):
   // what is under it is the outer glass, already frosted and tinted, never the
   // picture (the outer glass's blur makes it a backdrop root, so the inner one sees
   // only that). A full tint over it doubled the darkening into a flat, washed-out
@@ -206,8 +206,15 @@ const GLASS_BODY = [
   // A ghost's body is a third as thick (`--glass-ghost`): the picture shows through
   // what is only inherited. How much it deepens the colour behind it is
   // `--glass-saturation` (above).
-  "[--glass-face:var(--glass-tint,rgb(242_244_247/calc(var(--glass-thickness,0.7)*var(--glass-stack)*(1-0.65*var(--glass-ghost)))))] [--glass-body-hue:var(--glass-hue)] [--glass-backdrop:blur(var(--glass-blur,14px))_saturate(calc(1+0.4*var(--glass-saturation,1)))]",
-  "scheme-dark:[--glass-face:var(--glass-tint,rgb(16_16_18/calc(var(--glass-thickness,0.6)*var(--glass-stack)*(1-0.65*var(--glass-ghost)))))] scheme-dark:[--glass-body-hue:var(--glass-hue-deep)] scheme-dark:[--glass-backdrop:blur(var(--glass-blur,6px))_saturate(calc(1+0.25*var(--glass-saturation,1)))]",
+  // THICKNESS: `--glass-thickness` when the picture under it is read (ui/ground's
+  // `tintFor`: as thick as its quietest words need over that picture, and no
+  // thicker); unread, 0.75 on either face, what those words need over the worst
+  // ground there is (white under the dark face, black under the light one: words at
+  // 65% of their ink keep 4.5:1, lib/ground-core `WORDS`). Apple's regular glass,
+  // legible over anything; at 0.6 dark and 0.7 light a description on dark glass over
+  // a bright sky fell to 2.6:1.
+  "[--glass-face:var(--glass-tint,rgb(242_244_247/calc(var(--glass-thickness,0.75)*var(--glass-stack)*(1-0.65*var(--glass-ghost)))))] [--glass-body-hue:var(--glass-hue)] [--glass-backdrop:blur(var(--glass-blur,14px))_saturate(calc(1+0.4*var(--glass-saturation,1)))]",
+  "scheme-dark:[--glass-face:var(--glass-tint,rgb(16_16_18/calc(var(--glass-thickness,0.75)*var(--glass-stack)*(1-0.65*var(--glass-ghost)))))] scheme-dark:[--glass-body-hue:var(--glass-hue-deep)] scheme-dark:[--glass-backdrop:blur(var(--glass-blur,6px))_saturate(calc(1+0.25*var(--glass-saturation,1)))]",
   "[-webkit-backdrop-filter:var(--glass-backdrop)] [backdrop-filter:var(--glass-backdrop)]",
   "bg-[color-mix(in_oklab,var(--glass-body-hue,var(--glass-face))_var(--glass-amount),var(--glass-face))] supports-[not(backdrop-filter:blur(1px))]:bg-background/95",
   // The body's SHADE, lit across from the light's corner as its edge is: lighter
@@ -297,7 +304,7 @@ export const glassVariants = cva(
 );
 
 /** The colour scheme a surface WEARS: the page's, or light or dark whatever the page
- *  is. What a control is asked for may also be `backdrop` (material's `Scheme`),
+ *  is. What a control is asked for may also be `ground` (material's `Scheme`),
  *  which is resolved to one of these before anything is drawn. */
 export type WornScheme = NonNullable<
   VariantProps<typeof glassVariants>["scheme"]
@@ -336,10 +343,10 @@ export type GlassStyle = React.CSSProperties & {
   "--glass-front-color"?: string;
   "--glass-tint"?: string;
   /** The opacity of the face's own tint (0..1; 0.7 light, 0.6 dark unless set): a
-   *  backdrop source sets it to what the words over its picture need. */
+   *  ground source sets it to what the words over its picture need. */
   "--glass-thickness"?: number | string;
   /** How strongly the rim reads against its ground, a multiple of its light; unset,
-   *  the face's own (1 light, 0.8 dark). A backdrop source sets it from the picture
+   *  the face's own (1 light, 0.8 dark). A ground source sets it from the picture
    *  under the glass; inherited, so set on a group it reaches every glass inside. */
   "--glass-ground-sheen"?: number | string;
   /** How bright the rim and its inner reflections are, a multiple of the default. */
@@ -390,7 +397,7 @@ export type GlassStyle = React.CSSProperties & {
   /** How much of its edge's light a glass ON glass carries, a multiple (0.85
    *  unless set). */
   "--glass-on-glass-rim"?: number | string;
-  /** The colour of what the glass stands over; a backdrop source sets it from the
+  /** The colour of what the glass stands over; a ground source sets it from the
    *  picture under the glass. Its rim's light leans toward it. */
   "--glass-ground"?: string;
   /** How far the rim's light leans toward `--glass-ground`, a percentage (35%
@@ -507,7 +514,7 @@ export function Glass<T extends React.ElementType = "div">({
  *  placed in (absolute, inset 0), at that box's `radius`. The one edge for glass round
  *  media, a display's frame (glass-display) and anything small that frames a picture
  *  in glass (the player's zoom finder), and for a pane whose edge lies over what it
- *  holds (a glass Panel). `scheme` is the face it shows, as a surface's: unset, the
+ *  holds (a glass Card). `scheme` is the face it shows, as a surface's: unset, the
  *  page's. Its brightness is `--glass-rim`, set on it or above it. */
 export function GlassEdge({
   radius,
@@ -537,10 +544,11 @@ export function GlassEdge({
 }
 
 /** Which side of its glass a front surface lies along. */
-export type GlassFrontAt = "top" | "bottom";
+export type GlassFrontAt = "top" | "bottom" | "end";
 
-/** THE FRONT SURFACE: a strip of glass in FRONT of what a glass holds, across its top
- *  or along its foot, part of the glass and not a piece laid on it. Content passing
+/** THE FRONT SURFACE: a strip of glass in FRONT of what a glass holds, across its top,
+ *  along its foot, or down its end (a field's buttons at its right), part of the glass
+ *  and not a piece laid on it. Content passing
  *  under it (a board's columns under their names, a list scrolling under its tabs) is
  *  seen through it only as light: it blurs what is under it (`--glass-front-blur`,
  *  12px unless set) on a face of its own (`--glass-front-color`; unset, the page's
@@ -558,17 +566,66 @@ export type GlassFrontAt = "top" | "bottom";
  *  that scrolls wears the classes on its own element (`sticky top-0`). Its glass must
  *  not blur on the element that holds it: a backdrop blur inside another sees only
  *  what is between the two, so a front inside a blurring body blurs nothing that
- *  passes under it (a glass Panel blurs on a back layer for that reason). */
+ *  passes under it (a glass Card blurs on a back layer for that reason). */
 const GLASS_FRONT = [
   "backdrop-blur-[var(--glass-front-blur,12px)] backdrop-saturate-[calc(1+0.25*var(--glass-saturation,1))]",
   glassLight,
-  "bg-[color:var(--glass-front-color,color-mix(in_oklab,var(--glass-hue,color-mix(in_oklab,var(--background)_55%,transparent))_var(--glass-amount),color-mix(in_oklab,var(--background)_55%,transparent)))]",
-  "after:pointer-events-none after:absolute after:inset-x-0 after:h-(--glass-width) after:content-[''] after:bg-[linear-gradient(90deg,color-mix(in_oklab,var(--glass-catch)_27.5%,transparent),color-mix(in_oklab,var(--glass-catch)_7.5%,transparent))]",
+  // Its base is the glass's own face at 55%, by the scheme it wears, never the page's
+  // background: a light glass on a dark page (`light` flips no page variable) drew
+  // its head and foot as grey bands of the dark page.
+  "[--glass-front-base:rgb(242_244_247/0.55)] scheme-dark:[--glass-front-base:rgb(16_16_18/0.55)]",
+  "bg-[color:var(--glass-front-color,color-mix(in_oklab,var(--glass-hue,var(--glass-front-base))_var(--glass-amount),var(--glass-front-base)))]",
+  "after:pointer-events-none after:absolute after:content-['']",
 ].join(" ");
+/** The inner edge: lying across (a top or a foot), lit from the left; standing
+ *  (an end), lit from the top, where the same light comes from. */
+const FRONT_EDGE_ACROSS =
+  "after:inset-x-0 after:h-(--glass-width) after:bg-[linear-gradient(90deg,color-mix(in_oklab,var(--glass-catch)_27.5%,transparent),color-mix(in_oklab,var(--glass-catch)_7.5%,transparent))]";
+const FRONT_EDGE_DOWN =
+  "after:inset-y-0 after:w-(--glass-width) after:bg-[linear-gradient(180deg,color-mix(in_oklab,var(--glass-catch)_27.5%,transparent),color-mix(in_oklab,var(--glass-catch)_7.5%,transparent))]";
 export const glassFront: Record<GlassFrontAt, string> = {
-  top: `${GLASS_FRONT} rounded-tl-[inherit] rounded-tr-[inherit] after:bottom-0`,
-  bottom: `${GLASS_FRONT} rounded-bl-[inherit] rounded-br-[inherit] after:top-0`,
+  top: `${GLASS_FRONT} ${FRONT_EDGE_ACROSS} rounded-tl-[inherit] rounded-tr-[inherit] after:bottom-0`,
+  bottom: `${GLASS_FRONT} ${FRONT_EDGE_ACROSS} rounded-bl-[inherit] rounded-br-[inherit] after:top-0`,
+  end: `${GLASS_FRONT} ${FRONT_EDGE_DOWN} rounded-tr-[inherit] rounded-br-[inherit] after:left-0`,
 };
+
+/** The same front, plain: a solid strip a step darker than what it is part of
+ *  (black over the card: 4% on a light one, 25% on a dark one, where steps must be
+ *  wider apart to read), its inner edge the page's hairline. A front of the card's
+ *  own colour read as one flat box with a line in it, and one lighter than the card
+ *  made a chosen tab a dark hole in it (Adrian, 2026-10-12). Its corners and its
+ *  edge's side are its wearer's (`border-b`, `rounded-r-[inherit]`). */
+export const PLAIN_FRONT =
+  "border-border bg-background bg-[linear-gradient(rgb(0_0_0/0.04),rgb(0_0_0/0.04)),linear-gradient(var(--color-card),var(--color-card))] scheme-dark:bg-[linear-gradient(rgb(0_0_0/0.25),rgb(0_0_0/0.25)),linear-gradient(var(--color-card),var(--color-card))]";
+
+/** A band along a surface's foot or head where what it holds is answered (a dialog's
+ *  actions, a form's save), plain: a wash of the words' own colour over the surface,
+ *  so it steps toward the text in either scheme (darker in the light, lighter in the
+ *  dark), as the site's example frames do; its inner edge the page's hairline. Opaque,
+ *  the wash mixed into the surface it stands on (`--band-base`, the page's ground
+ *  unless its wearer says: a dialog's popover), since it stays put while what it is
+ *  part of scrolls under it. Its corners and its edge's side are its wearer's. */
+export const PLAIN_BAND =
+  "border-border bg-[color-mix(in_oklab,currentColor_5%,var(--band-base,var(--background)))]";
+
+/** THE FLARE RULE (tokens.css), for any surface that carries one hue (a card, a
+ *  toast): it wears that ONE hue, alpha the only variable. The surface sets the hue
+ *  as `--flare-hue` and wears `FLARE_LIGHT` in glass: the hue stains the glass at 6%
+ *  and its rim catches it, a step more of both under the hand or held (`data-lifted`),
+ *  nothing moving. Plain wears no light of the hue: never a tinted fill nor a coloured
+ *  edge. `FLARE_INK` gives the marks inside (a kind's word, a status's icon, a count
+ *  that is yours) `--flare-ink`: the hue made readable on the face it stands on, by
+ *  lightness, in either material (at least 0.84 in the dark scheme, at most 0.4 in
+ *  the light: the lightness of 4.5:1 over the grounds glass keeps under its words,
+ *  L* 34 and 71, lib/ground-core `TINT`), so a dark blue holds on black and a
+ *  yellow on white, on the page and on glass over any picture. Mixed 25% toward black or white, a pale green fell to
+ *  2.8:1 on light glass. Worked out from `--flare-hue` on the surface itself: the
+ *  rim's own ink is computed on the glass's body, a layer inside, and read on the
+ *  surface it was empty. */
+export const FLARE_LIGHT =
+  "[--glass-stain:var(--flare-hue)] [--glass-stain-amount:6%] [--glass-rim:1] hover:[--glass-stain-amount:9%] hover:[--glass-rim:1.6] data-[lifted]:[--glass-stain-amount:9%] data-[lifted]:[--glass-rim:1.6]";
+export const FLARE_INK =
+  "[--flare-ink:oklch(from_var(--flare-hue)_min(l,0.4)_c_h)] scheme-dark:[--flare-ink:oklch(from_var(--flare-hue)_max(l,0.84)_min(calc(c*1.5),0.2)_h)]";
 
 /** A front surface over its glass: absolute across the side it lies along (`at`),
  *  `--glass-front-height` tall (set by its owner, who pads what the glass holds by
@@ -594,8 +651,13 @@ export function GlassFront({
       data-slot="glass-front"
       data-at={at}
       className={cn(
-        "absolute inset-x-0 z-10 h-(--glass-front-height)",
-        at === "top" ? "top-0" : "bottom-0",
+        "absolute z-10",
+        at === "end"
+          ? "inset-y-0 right-0 w-(--glass-front-width)"
+          : [
+              "inset-x-0 h-(--glass-front-height)",
+              at === "top" ? "top-0" : "bottom-0",
+            ],
         glassFront[at],
         className,
       )}
@@ -723,7 +785,7 @@ export function bendLayers(
  *  content's light out, never the glass's in) needs the content's light drawn
  *  under it, which no backdrop can do; until then it stays this subtle.
  *
- *  A glass CONTAINER wears it by default (`Panel material="glass"`), so nothing
+ *  A glass CONTAINER wears it by default (`Card material="glass"`), so nothing
  *  places it by hand. Placing one: inside the container, over
  *  what it holds and under its front surface and edge (absolute, inset 0, its
  *  corners the container's), with the same `radius` its `GlassEdge` takes. What it
@@ -757,7 +819,7 @@ export function GlassSpill({
   const reach = width * 2;
   // A backdrop is blurred over its element's whole box before any mask cuts it,
   // so one layer the size of the container blurred all of it every frame (a
-  // 632×475 panel: 300,000 pixels for a band of 10). The band is four strips
+  // 632×475 card: 300,000 pixels for a band of 10). The band is four strips
   // instead, each blurring only the edge it lies along: the top and the foot as
   // deep as the corner and the band (`side`), the sides between them. Each wears
   // the one mask, sized to the whole container (its `cq` units: the wrapper is

@@ -4,47 +4,48 @@ import * as React from "react";
 import {
   type BentoSize,
   breakRows,
-  laneCount,
+  gridLaneCount,
   pack,
-  placeLane,
+  placeGridLane,
   TOLERANCE,
-} from "@/lib/layouts";
+} from "@/lib/arrangement";
 import { cn } from "@/lib/utils";
 
 // THINGS ARRANGED: any cards, in the page's flow, placed by one of the registry's
-// arrangements (`layouts`). What a cell holds is the consumer's (a quote, a post, a
+// arrangements (`arrangement`). What a cell holds is the consumer's (a quote, a post, a
 // card-link, a picture); the arrangement never knows, and a cell never knows which
-// arrangement it is in, so the same cards go into lanes on a feed and a plain grid on a
-// shelf. What a layout needs to know about a cell is a fact about what the cell holds,
-// said on `ArrangeCell`: its `size` in a bento's cells, its `aspect` in justified rows.
+// arrangement it is in, so the same cards go into grid lanes on a feed and a plain grid
+// on a shelf. What a layout needs to know about a cell is a fact about what the cell
+// holds, said on `ArrangeCell`: its `size` in a bento's cells, its `aspect` in justified
+// rows.
 //
-//   lanes      masonry: every cell at the lane's width, placed by its real height with
-//              the lanes rule (`placeLane`: the lane whose bottom is highest, lanes
-//              within a tolerance counted level and taken in reading order, so a level
-//              stretch reads 1 2 3 / 4 5 6 and only a clearly shorter lane pulls a cell
-//              out of order)
-//   grid       rows of equal lanes, each row as tall as its tallest cell
+//   gridLanes  masonry: every cell at the grid lane's width, placed by its real height
+//              with the grid lanes rule (`placeGridLane`: the grid lane whose bottom is
+//              highest, those within a tolerance counted level and taken in reading
+//              order, so a level stretch reads 1 2 3 / 4 5 6 and only a clearly shorter
+//              grid lane pulls a cell out of order)
+//   grid       rows of equal columns, each row as tall as its tallest cell
 //   bento      an ordered bento (`pack`): rows of one height, cells of one, two side by
 //              side or two by two (`size`), every cell aligned to the rows, none
-//              stretched; two or three columns, and one lane (a phone) is no bento,
+//              stretched; two or three columns, and one column (a phone) is no bento,
 //              every cell at its natural height in the set's order
 //   justified  rows filled edge to edge (`breakRows`, loom's greedy rows): every cell at
 //              its `aspect`, every row as tall as fills the width, toward `rowHeight`,
 //              the last row never taller
 //
-// THE LANE IS THE UNIT (lanes, grid, bento): `laneWidth` is the width a lane should
-// have, and as many fit as do (the same count CSS's auto-fill gives, `laneCount`; a
-// bento takes at most three), so one number holds on a phone (one lane, the cells
-// flowing) and on a wide screen, with no breakpoints. A justified row's unit is its
-// height. The gap is the container's own (`gap-*` in its className).
+// THE COLUMN IS THE UNIT (grid lanes, grid, bento): `gridLaneWidth` is the width a
+// column should have, and as many fit as do (the same count CSS's auto-fill gives,
+// `gridLaneCount`; a bento takes at most three), so one number holds on a phone (one
+// column, the cells flowing) and on a wide screen, with no breakpoints. A justified
+// row's unit is its height. The gap is the container's own (`gap-*` in its className).
 //
-// PLACED BEFORE THE FIRST PAINT: lanes need the cells' heights and every layout the
+// PLACED BEFORE THE FIRST PAINT: grid lanes need the cells' heights and every layout the
 // container's width, which exist only in the page, so the first placement is an inline
 // script right after the container, run while the page is still parsing; nothing moves
 // once shown. It is `lay` below, given the rules its layout needs as arguments, each
 // inlined as its own source (all of them self-contained), so the rule the script runs
 // is the one the library runs. After hydration the same `lay` runs again on every
-// render, whenever the container changes size, and in lanes whenever a cell does
+// render, whenever the container changes size, and in grid lanes whenever a cell does
 // (fonts arriving, an image, a comment loading). Without JavaScript the cells stand in
 // the grid CSS draws from the same numbers (justified: wrapped rows, each cell grown in
 // proportion to its aspect).
@@ -63,11 +64,11 @@ import { cn } from "@/lib/utils";
 // a cell's `order`: the cells stay mounted and in place in the document, so what they
 // hold keeps its state (a switch flipped, a video playing).
 
-export type ArrangeLayout = "lanes" | "grid" | "bento" | "justified";
+export type ArrangeLayout = "gridLanes" | "grid" | "bento" | "justified";
 
 type Lay = {
   layout: ArrangeLayout;
-  laneWidth: number;
+  gridLaneWidth: number;
   rowHeight: number;
   tolerance: number;
   filter: string | null;
@@ -75,16 +76,16 @@ type Lay = {
 
 /** The rules a layout places by, inlined into the page as their own source. */
 type Rules = {
-  count?: typeof laneCount;
-  place?: typeof placeLane;
+  count?: typeof gridLaneCount;
+  place?: typeof placeGridLane;
   pack?: typeof pack;
   rows?: typeof breakRows;
 };
 
 const RULES: Record<ArrangeLayout, Rules> = {
-  lanes: { count: laneCount, place: placeLane },
+  gridLanes: { count: gridLaneCount, place: placeGridLane },
   grid: {},
-  bento: { count: laneCount, pack },
+  bento: { count: gridLaneCount, pack },
   justified: { rows: breakRows },
 };
 
@@ -201,12 +202,13 @@ function lay(container: HTMLElement, rules: Rules, o: Lay): void {
     return;
   }
 
-  if (!rules.count) throw new Error(`arrange: ${o.layout} without laneCount`);
-  const lanes = rules.count(width, o.laneWidth, gapX);
+  if (!rules.count)
+    throw new Error(`arrange: ${o.layout} without gridLaneCount`);
+  const columns = rules.count(width, o.gridLaneWidth, gapX);
 
   if (o.layout === "bento") {
     if (!rules.pack) throw new Error("arrange: bento without pack");
-    const cols = Math.min(3, lanes);
+    const cols = Math.min(3, columns);
     if (cols === 1) {
       flow();
       return;
@@ -233,30 +235,35 @@ function lay(container: HTMLElement, rules: Rules, o: Lay): void {
     return;
   }
 
-  if (!rules.place) throw new Error("arrange: lanes without placeLane");
-  if (lanes === 1) {
+  if (!rules.place) throw new Error("arrange: gridLanes without placeGridLane");
+  if (columns === 1) {
     flow();
     return;
   }
-  const lane = (width - gapX * (lanes - 1)) / lanes;
+  const column = (width - gapX * (columns - 1)) / columns;
   container.style.display = "block";
   for (const cell of shown) {
     cell.style.position = "absolute";
     cell.style.top = "0";
     cell.style.left = "0";
-    cell.style.width = `${lane}px`;
+    cell.style.width = `${column}px`;
   }
-  // Decided in lane units, as the library decides: a height is a share of the lane.
+  // Decided in grid lane units, as the library decides: a height is a share of the
+  // grid lane's width.
   const heights = shown.map((cell) => cell.getBoundingClientRect().height);
-  const bottoms: number[] = new Array(lanes).fill(0);
+  const bottoms: number[] = new Array(columns).fill(0);
   let cursor = 0;
   shown.forEach((cell, i) => {
-    const l = (rules.place as typeof placeLane)(bottoms, cursor, o.tolerance);
-    cell.style.transform = `translate(${l * (lane + gapX)}px, ${(bottoms[l] ?? 0) * lane}px)`;
-    bottoms[l] = (bottoms[l] ?? 0) + ((heights[i] ?? 0) + gapY) / lane;
+    const l = (rules.place as typeof placeGridLane)(
+      bottoms,
+      cursor,
+      o.tolerance,
+    );
+    cell.style.transform = `translate(${l * (column + gapX)}px, ${(bottoms[l] ?? 0) * column}px)`;
+    bottoms[l] = (bottoms[l] ?? 0) + ((heights[i] ?? 0) + gapY) / column;
     cursor = l + 1;
   });
-  container.style.height = `${Math.max(0, Math.max(...bottoms) * lane - gapY)}px`;
+  container.style.height = `${Math.max(0, Math.max(...bottoms) * column - gapY)}px`;
 }
 
 /** The rules' source, as the inline script passes them to `lay`. */
@@ -306,21 +313,21 @@ type Shared = {
 export type ArrangeProps = Shared &
   (
     | {
-        layout?: "lanes";
-        /** The width a lane should have, css px: as many lanes fit as do. */
-        laneWidth: number;
-        /** How close two lanes count as level, a share of the lane's width. */
+        layout?: "gridLanes";
+        /** The width a grid lane should have, css px: as many fit as do. */
+        gridLaneWidth: number;
+        /** How close two grid lanes count as level, a share of one's width. */
         tolerance?: number;
       }
     | {
         layout: "grid";
-        /** The width a lane should have, css px: as many lanes fit as do. */
-        laneWidth: number;
+        /** The width a column should have, css px: as many fit as do. */
+        gridLaneWidth: number;
       }
     | {
         layout: "bento";
         /** The width a column should have, css px: as many fit as do, at most three. */
-        laneWidth: number;
+        gridLaneWidth: number;
         /** A row's height, css px, the height of a one-cell card; a row grows only
          *  when what a cell holds needs more. */
         rowHeight: number;
@@ -335,16 +342,16 @@ export type ArrangeProps = Shared &
 
 export function Arrange(props: ArrangeProps) {
   const { filter, className, children } = props;
-  const layout = props.layout ?? "lanes";
+  const layout = props.layout ?? "gridLanes";
   const ref = React.useRef<HTMLDivElement>(null);
   const observer = React.useRef<ResizeObserver | null>(null);
   // Subscribed so a filter set elsewhere renders this, which lays out again below.
   useArrangeFilter(filter ?? "");
-  const laneWidth = "laneWidth" in props ? props.laneWidth : 0;
+  const gridLaneWidth = "gridLaneWidth" in props ? props.gridLaneWidth : 0;
   const rowHeight = "rowHeight" in props ? props.rowHeight : 0;
   const key = JSON.stringify({
     layout,
-    laneWidth,
+    gridLaneWidth,
     rowHeight,
     tolerance:
       ("tolerance" in props ? props.tolerance : undefined) ?? TOLERANCE,
@@ -375,13 +382,13 @@ export function Arrange(props: ArrangeProps) {
   }, [key, rules]);
 
   // Every render: a cell added, removed, hidden or ranked, a filter set. Measuring n
-  // cells is cheap. Only lanes place by a cell's height, so only lanes watch every cell,
-  // a new one included (observing twice is a no-op).
+  // cells is cheap. Only grid lanes place by a cell's height, so only grid lanes watch
+  // every cell, a new one included (observing twice is a no-op).
   React.useLayoutEffect(() => {
     const container = ref.current;
     if (!container) throw new Error("arrange: no container to lay out");
     lay(container, rules, JSON.parse(key) as Lay);
-    if (layout === "lanes")
+    if (layout === "gridLanes")
       for (const cell of Array.from(container.children))
         observer.current?.observe(cell);
   });
@@ -396,13 +403,18 @@ export function Arrange(props: ArrangeProps) {
         className={cn(
           layout === "justified"
             ? "relative flex flex-wrap"
-            : "relative grid grid-cols-[repeat(auto-fill,minmax(min(var(--ag-arrange-lane),100%),1fr))] items-start",
+            : "relative grid grid-cols-[repeat(auto-fill,minmax(min(var(--ag-arrange-grid-lane),100%),1fr))]",
+          // A grid's cells stretch to their row; grid lanes place by each cell's own
+          // height, and a bento stretches only once packed into columns (`lay`).
+          layout !== "grid" && "items-start",
           className,
         )}
         style={
           layout === "justified"
             ? ({ "--ag-arrange-row": `${rowHeight}px` } as React.CSSProperties)
-            : ({ "--ag-arrange-lane": `${laneWidth}px` } as React.CSSProperties)
+            : ({
+                "--ag-arrange-grid-lane": `${gridLaneWidth}px`,
+              } as React.CSSProperties)
         }
       >
         {children}
@@ -426,6 +438,11 @@ export function Arrange(props: ArrangeProps) {
 const JUSTIFIED_FALLBACK =
   "[[data-layout=justified]>&]:aspect-(--ag-arrange-aspect) [[data-layout=justified]>&]:grow-(--ag-arrange-aspect) [[data-layout=justified]>&]:basis-[calc(var(--ag-arrange-aspect)*var(--ag-arrange-row))]";
 
+/** Where a cell stands stretched to its row (a grid's, a bento's in columns), what it
+ *  holds fills it: the cell is a grid of one area, so its child stretches as a grid item
+ *  does, and a card is as tall as the tallest of its row with nothing said on it. */
+const FILLED = "[[data-layout=grid]>&]:grid [[data-bento]>&]:grid";
+
 /** One cell of an arrangement: what it holds is anything. The first cell shown
  *  carries `data-first` (a divider drawn above every cell but the first:
  *  `[[data-first]>&]:hidden`). */
@@ -444,7 +461,7 @@ export function ArrangeCell({
    *  taller (`wide`) or two by two (`large`). */
   size?: BentoSize;
   /** Justified: the cell's shape, its width over its height (a picture's own, or
-   *  layouts' `clampAspect` of it to keep a panorama from becoming a sliver); what it
+   *  arrangement's `clampAspect` of it to keep a panorama from becoming a sliver); what it
    *  holds fills the cell. */
   aspect?: number;
   /** Left out by a filter of the consumer's own: still mounted, its state kept, and
@@ -466,7 +483,11 @@ export function ArrangeCell({
       data-hidden={hidden || undefined}
       data-order={order}
       suppressHydrationWarning
-      className={cn(aspect !== undefined && JUSTIFIED_FALLBACK, className)}
+      className={cn(
+        FILLED,
+        aspect !== undefined && JUSTIFIED_FALLBACK,
+        className,
+      )}
       style={
         aspect === undefined
           ? undefined

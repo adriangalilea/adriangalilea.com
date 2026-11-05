@@ -39,6 +39,19 @@ import { cn } from "@/lib/utils";
 // and no aria-pressed, which would say it twice. `loading` keeps its width (the label
 // stays, unseen but still its name) and turns a spinner in its middle; it cannot be
 // pressed again. `scheme` is the colour scheme it stands in (material).
+//
+// ANSWERS: two actions that answer one thing (a card's foot, a dialog's, a form's, a
+// toast's), as macOS lays a sheet's and swift-utils' Ink its `InkScreenActions`:
+//
+//   <Button variant="secondary">later</Button>
+//   <Button>publish</Button>
+//
+// The secondary keeps a resting fill (`secondary`, Ink's `.ink`), never `ghost`: words
+// with no fill read as loose text a padding's width away from the pill beside them.
+// The answering one is `default` (Ink's `.inkProminent`), or `destructive`. One gap
+// between them (gap-2, 8 px, Ink's `.inkGap`), both at the trailing end, the answering
+// one last; a note or a status takes the leading side. CardFooter (a card's `footer`)
+// and its `foot`, DialogFooter and FormFooter lay them so; the caller gives the variants and the order.
 
 export type ButtonVariant =
   | "default"
@@ -56,7 +69,8 @@ export type ButtonSize =
   | "3xl"
   | "icon-sm"
   | "icon"
-  | "icon-lg";
+  | "icon-lg"
+  | "icon-xl";
 export type ButtonCorners = "pill" | "soft";
 
 /** Every button, whatever it wears. An icon inside takes the size's icon size unless
@@ -83,6 +97,8 @@ const SIZE: Record<ButtonSize, string> = {
   "icon-sm": "size-7 [&_svg:not([class*='size-'])]:size-3.5",
   icon: "size-8 [&_svg:not([class*='size-'])]:size-4",
   "icon-lg": "size-10 [&_svg:not([class*='size-'])]:size-[18px]",
+  // The one press over a picture (play a video, open a reading), at `xl`'s height.
+  "icon-xl": "size-12 [&_svg:not([class*='size-'])]:size-5",
 };
 
 /** A glass pill's radius, half of `SIZE`'s height. */
@@ -96,6 +112,7 @@ const GLASS_PILL: Record<ButtonSize, string> = {
   "icon-sm": "[--glass-radius:14px]",
   icon: "[--glass-radius:16px]",
   "icon-lg": "[--glass-radius:20px]",
+  "icon-xl": "[--glass-radius:24px]",
 };
 
 const SPINNER: Record<ButtonSize, SpinnerSize> = {
@@ -108,20 +125,26 @@ const SPINNER: Record<ButtonSize, SpinnerSize> = {
   "icon-sm": "sm",
   icon: "md",
   "icon-lg": "lg",
+  "icon-xl": "lg",
 };
 
-/** The plain faces: shadcn's default as the page's primary, the rest at the
- *  foreground's alpha tiers. */
+/** Inside a light surface on a dark page (light glass over a bright picture, which
+ *  flips no page variable): the page's foreground is white there, so the quiet faces
+ *  take the surface's own words and fill in them. A vote's count on a card on light
+ *  glass read white on white, 1.3:1. */
+const ON_LIGHT =
+  "[.dark_.light_&]:text-current [.dark_.light_&]:[--fill-ink:currentColor]";
+
+/** The plain faces: shadcn's default as the page's primary, the rest on the
+ *  fill ladder. */
 const PLAIN: Record<ButtonVariant, string> = {
   default:
     "bg-primary text-primary-foreground hover:bg-primary/90 data-pressed:shadow-[inset_0_1px_3px_rgb(0_0_0/0.35)]",
-  secondary:
-    "bg-foreground/8 text-foreground hover:bg-foreground/12 data-pressed:bg-foreground/16",
-  outline:
-    "text-foreground ring-1 ring-foreground/15 ring-inset hover:bg-foreground/5 data-pressed:bg-foreground/10",
-  ghost: "text-foreground hover:bg-foreground/8 data-pressed:bg-foreground/10",
+  secondary: `bg-fill-rest text-foreground hover:bg-fill-raised data-pressed:bg-fill-pressed ${ON_LIGHT}`,
+  outline: `text-foreground ring-1 ring-foreground/15 ring-inset hover:bg-fill-row-hover data-pressed:bg-fill-row-on ${ON_LIGHT} [.dark_.light_&]:ring-current/15`,
+  ghost: `text-foreground hover:bg-fill-row-hover data-pressed:bg-fill-row-on ${ON_LIGHT}`,
   destructive:
-    "bg-tone-bad text-white hover:bg-tone-bad/90 data-pressed:shadow-[inset_0_1px_3px_rgb(0_0_0/0.35)]",
+    "bg-tone-bad-fill text-white hover:bg-tone-bad-fill/90 data-pressed:shadow-[inset_0_1px_3px_rgb(0_0_0/0.35)]",
   link: "h-auto px-0 text-foreground underline-offset-4 hover:underline",
 };
 

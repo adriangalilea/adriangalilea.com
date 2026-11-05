@@ -34,8 +34,8 @@ import "./edge-fade";
 //   <ScrollArea className="max-h-80 space-y-2 px-4 py-5">{rows}</ScrollArea>
 //   <ScrollArea thumb cover="3rem" className="max-h-[40rem]">{long}</ScrollArea>
 //
-// A panel that scrolls (`Panel` `maxHeight`, `height`) is one already: reach for this
-// inside a panel only for a part of it that scrolls on its own (a board's columns).
+// A card that scrolls (`Card` `maxHeight`, `height`) is one already: reach for this
+// inside a card only for a part of it that scrolls on its own (a board's columns).
 
 /** How deep a capped scroller's end fades: one length for every container that
  *  scrolls, so their ends read the same. */

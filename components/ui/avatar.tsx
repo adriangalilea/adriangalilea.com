@@ -25,10 +25,14 @@ import { cn } from "@/lib/utils";
 export type AvatarSize = "sm" | "md" | "lg";
 
 export interface AvatarProps {
-  /** The rendition the page paints. */
-  src: string;
+  /** The rendition the page paints. Absent (a person with no picture, a forum's
+   *  default), the name's initial on a wash, in the same round. */
+  src?: string;
   /** The person's name: the accessible name of the picture. */
   alt: string;
+  /** Whose initial is drawn when there is no picture, where `alt` is empty (the
+   *  name stands beside the face). Default `alt`. */
+  name?: string;
   /** On the studio's rungs: 24, 40, 64 px. */
   size?: AvatarSize;
   /** Where the subject sits across the picture, 0 to 1: the sidecar's number. */
@@ -44,6 +48,19 @@ export const AVATAR_SIZES: Record<AvatarSize, string> = {
   md: "2.5rem",
   lg: "4rem",
 };
+
+/** The initial's size on each rung, a little under half the round. */
+const INITIAL_SIZES: Record<AvatarSize, string> = {
+  sm: "0.6875rem",
+  md: "1.0625rem",
+  lg: "1.75rem",
+};
+
+/** The round with no picture: a wash at the alpha ladder, the initial in its middle.
+ *  In the words' own colour, never the page's foreground: on light glass over a dark
+ *  page the page's foreground is white, and the initial vanished on its wash. */
+const INITIAL =
+  "inline-grid place-items-center bg-current/8 font-medium text-(length:--ag-avatar-initial) text-current/70 leading-none";
 
 /** A HAIRLINE IN THE PICTURE'S OWN COLOUR. On a dark ground a dark portrait has no edge;
  *  the ring gives it one, and taking the colour from the picture keeps it belonging to the
@@ -93,11 +110,40 @@ export function AvatarImage({ src, alt }: { src: string; alt: string }) {
   );
 }
 
-export function Avatar({ src, alt, ...look }: AvatarProps) {
-  const { className, style } = avatarLook(look);
+export function Avatar({ src, alt, name = alt, ...look }: AvatarProps) {
+  if (src) {
+    const { className, style } = avatarLook(look);
+    return (
+      <span data-slot="avatar" className={className} style={style}>
+        <AvatarImage src={src} alt={alt} />
+      </span>
+    );
+  }
+  // No picture: the name's first letter, named by `alt` as the picture would be
+  // (decorative with an empty `alt`, the name standing beside it).
+  const { className, style } = avatarLook({
+    ...look,
+    className: cn(INITIAL, look.className),
+  });
+  const initial = [...name.trim()][0]?.toUpperCase() ?? "";
+  const named = alt
+    ? ({ role: "img", "aria-label": alt } as const)
+    : ({ "aria-hidden": true } as const);
   return (
-    <span data-slot="avatar" className={className} style={style}>
-      <AvatarImage src={src} alt={alt} />
+    <span
+      data-slot="avatar"
+      {...named}
+      className={className}
+      style={
+        {
+          ...style,
+          "--ag-avatar-initial": INITIAL_SIZES[look.size ?? "md"],
+        } as React.CSSProperties
+      }
+    >
+      <span aria-hidden data-slot="avatar-initial">
+        {initial}
+      </span>
     </span>
   );
 }

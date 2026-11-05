@@ -1,6 +1,7 @@
 "use client";
 
 import type * as React from "react";
+import { Card } from "@/components/ui/card";
 import {
   type Material,
   type Scheme,
@@ -8,7 +9,6 @@ import {
   useSurfaceScheme,
 } from "@/components/ui/material";
 import { schemeOf } from "@/components/ui/material-glass";
-import { Panel } from "@/components/ui/panel";
 import { cn } from "@/lib/utils";
 
 // The surface a quote stands on in `prose` and `feature`, and nothing else: the one
@@ -19,8 +19,8 @@ import { cn } from "@/lib/utils";
 /** ONE STEP UP FROM THE PAGE: an embed is a thing quoted INTO the article, and a
  *  surface is what says so: the same words flat on the page read as the author's
  *  own. Plain, a mix off the foreground rather than a theme token, so it is one step
- *  up on any ground without a variable to wire. Glass, a glass Panel, rounder. */
-const PLAIN = "rounded-xl bg-foreground/4";
+ *  up on any ground without a variable to wire. Glass, a glass Card, rounder. */
+const PLAIN = "rounded-xl bg-fill-group";
 
 export function QuoteSurface({
   variant,
@@ -40,10 +40,10 @@ export function QuoteSurface({
 }) {
   const m = useMaterial(material);
   const [s, here] = useSurfaceScheme<HTMLElement>(scheme);
-  // Glass is the one glass container's (Panel), its body, spill and edge.
+  // Glass is the one glass container's (Card), its body, spill and edge.
   if (m === "glass")
     return (
-      <Panel
+      <Card
         render={<figure />}
         ref={here}
         data-slot="quote"
@@ -56,7 +56,7 @@ export function QuoteSurface({
         style={style}
       >
         {children}
-      </Panel>
+      </Card>
     );
   return (
     <figure

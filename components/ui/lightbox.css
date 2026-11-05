@@ -219,7 +219,7 @@
 
   /* Chrome reads --lb-p; the group carries its own compositor layer for the open
    lifetime so a fade never restyles text per frame. Mono, lowercase, alpha ladder.
-   Its box is the media lane, set inline from the same band the stage measures. */
+   Its box is the media's band, set inline from the same band the stage measures. */
   .ag-lb-chrome {
     position: absolute;
     pointer-events: none;

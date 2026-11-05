@@ -49,7 +49,7 @@ import { Image } from "@/components/ui/image";
 import { useMediaIntent } from "@/components/ui/image-intent";
 import { useWater } from "@/components/ui/water";
 import { claim, type VoiceKey } from "@/lib/audible";
-import type { Span } from "@/lib/clip";
+import type { Span } from "@/lib/span";
 import { msOf, seekSeconds } from "@/lib/timebase";
 import { cn } from "@/lib/utils";
 
