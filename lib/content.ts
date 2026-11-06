@@ -3,6 +3,7 @@ import { join, parse, relative } from "node:path";
 import matter from "gray-matter";
 import imageSize from "image-size";
 import { prepared } from "@/lib/markdown";
+import type { Heading } from "@/lib/markdown-prepare";
 import {
   ANIMATED_EXTENSIONS,
   AVATAR_EXTENSIONS,
@@ -37,12 +38,6 @@ const warnedCovers = new Set<string>();
 
 export type Status = "soon" | "shipped" | "lab" | "sunset";
 export type Verdict = "pending" | "partial" | "confirmed" | "missed";
-
-export type TOCItem = {
-  depth: number;
-  title: string;
-  id: string;
-};
 
 // Shared fields all content has
 type ContentBase = {
@@ -79,7 +74,8 @@ export type Page = PostBase & {
   type: "page";
   title: string;
   description: string | null;
-  toc: TOCItem[];
+  /** The headings its table of contents lists, as the body anchors them. */
+  toc: Heading[];
   updatedAt: Date | null;
   verdict: Verdict | null;
   deadline: string | null;
@@ -269,9 +265,7 @@ function parseContent(filePath: string, slug: string[]): Content | null {
     // fails the build as content loads.
     const read = prepared(rewritten);
     const textContent = read.text;
-    const toc: TOCItem[] = read.headings
-      .filter((h) => h.depth >= 2 && h.depth <= 4)
-      .map((h) => ({ depth: h.depth, title: h.text, id: h.id }));
+    const toc = read.headings.filter((h) => h.depth >= 2 && h.depth <= 4);
     const embedCount = read.tags.ContentQuote ?? 0;
     // A directory's index owns what lies beside it (cover, poster, avatar, og.png); a
     // sibling file shares the directory and owns none of it.

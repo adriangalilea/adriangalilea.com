@@ -7,8 +7,8 @@ import { CoverImage } from "@/components/cover-image";
 import { Lanes } from "@/components/lanes";
 import { Body, QUOTED } from "@/components/markdown";
 import { RelatedSection } from "@/components/related-section";
-import { TOC } from "@/components/toc";
 import { Quote } from "@/components/ui/quote";
+import { TableOfContents } from "@/components/ui/table-of-contents";
 import { VerdictInline } from "@/components/verdict-badge";
 import { ViewCounter } from "@/components/view-counter";
 import {
@@ -212,7 +212,12 @@ async function PageView({ page }: { page: Page }) {
 
         <div className="relative">
           <aside className="hidden xl:block absolute left-0 top-0 bottom-0">
-            <TOC items={page.toc} />
+            <TableOfContents
+              headings={page.toc}
+              depth={4}
+              trail
+              className="sticky top-20 max-h-[calc(100vh-6rem)] w-[200px] overflow-y-auto"
+            />
           </aside>
 
           <div className="min-w-0 mx-auto max-w-2xl">
