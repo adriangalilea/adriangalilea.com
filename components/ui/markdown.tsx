@@ -85,6 +85,9 @@ export const MARKDOWN = [
   // Their colour is `--ag-markdown-link` when set (a site's accent: the hairline and
   // the wash follow it), else the page's own at 90. A link that holds a picture (a
   // figure's lightbox, a badge) is the picture's, and wears none of it.
+  // a heading's link to itself (linkHeadings): faint, after its words, seen under the
+  // hand or on focus, and none of a link's underline
+  "[&_[data-slot=markdown-anchor]]:ml-[0.35em] [&_[data-slot=markdown-anchor]]:font-sans [&_[data-slot=markdown-anchor]]:text-foreground/30! [&_[data-slot=markdown-anchor]]:shadow-none! [&_[data-slot=markdown-anchor]]:opacity-0 [&_[data-slot=markdown-anchor]]:transition-opacity [&_:is(h1,h2,h3,h4,h5,h6):hover_[data-slot=markdown-anchor]]:opacity-100 [&_[data-slot=markdown-anchor]:focus-visible]:opacity-100 [&_[data-slot=markdown-anchor]:hover]:text-foreground/70!",
   "[&_a:not(:is([data-embed],[data-slot=quote-by])_*):not(:has(img))]:text-[var(--ag-markdown-link,color-mix(in_oklab,var(--color-foreground)_90%,transparent))] [&_a:not(:is([data-embed],[data-slot=quote-by])_*):not(:has(img))]:no-underline [&_a:not(:is([data-embed],[data-slot=quote-by])_*):not(:has(img))]:shadow-[inset_0_-1px_0_0_color-mix(in_oklab,currentColor_35%,transparent)] [&_a:not(:is([data-embed],[data-slot=quote-by])_*):not(:has(img))]:transition-shadow [&_a:not(:is([data-embed],[data-slot=quote-by])_*):not(:has(img))]:duration-150 [&_a:not(:is([data-embed],[data-slot=quote-by])_*):not(:has(img)):hover]:shadow-[inset_0_-0.5em_0_0_color-mix(in_oklab,currentColor_12%,transparent)]",
   // lists, tight: an item's own paragraph (the editor wraps items in one) adds nothing
   "[&_ul:not(:is([data-embed],[data-slot=quote-by])_*)]:list-disc [&_ol:not(:is([data-embed],[data-slot=quote-by])_*)]:list-decimal [&_:is(ul,ol):not(:is([data-embed],[data-slot=quote-by])_*)]:my-[1em] [&_:is(ul,ol):not(:is([data-embed],[data-slot=quote-by])_*)]:pl-[1.5em] [&_:is(ul,ol)_:is(ul,ol):not(:is([data-embed],[data-slot=quote-by])_*)]:my-[0.25em]",
@@ -185,6 +188,9 @@ export type MarkdownProps = (
   /** The tree, changed before it is drawn: autolinking a ticket number or a mention
    *  (`mapText`), dropping a section. A pure function, the given tree untouched. */
   transform?: (tree: M.Root) => M.Root;
+  /** Each heading a link to itself, shown under the hand or on focus: a page others
+   *  link into (docs, a long post). Off by default, a tab stop a heading. */
+  linkHeadings?: boolean;
   className?: string;
 };
 
@@ -273,6 +279,7 @@ export function Markdown({
   elements,
   embeds,
   transform,
+  linkHeadings = false,
   className,
 }: MarkdownProps) {
   const tree = React.useMemo(() => {
@@ -294,7 +301,7 @@ export function Markdown({
     const own = embeds?.(url);
     return own === undefined ? builtInEmbed(url) : own;
   };
-  const draw = drawer(tree, tags, elements ?? {}, embed);
+  const draw = drawer(tree, tags, elements ?? {}, embed, linkHeadings);
   return (
     <div data-slot="markdown" className={cn(MARKDOWN, className)}>
       <QuoteMarkMask />
@@ -320,6 +327,7 @@ function drawer(
   tags: Tags,
   elements: Record<string, React.ElementType>,
   embed: (url: string) => React.ReactNode,
+  linkHeadings: boolean,
 ) {
   const definitions = new Map<string, M.Definition>();
   const notes: M.FootnoteDefinition[] = [];
@@ -510,9 +518,19 @@ function drawer(
         const Tag = `h${node.depth}` as const;
         // Asked in order either way, so a parsed heading numbers as a prepared one.
         const own = anchor(textOf(node.children));
+        const id = dataOf(node).id ?? own;
         return (
-          <Tag key={key} id={dataOf(node).id ?? own}>
+          <Tag key={key} id={id}>
             {node.children.map(inline)}
+            {linkHeadings && (
+              <a
+                data-slot="markdown-anchor"
+                href={`#${id}`}
+                aria-label={`link to ${textOf(node.children)}`}
+              >
+                #
+              </a>
+            )}
           </Tag>
         );
       }

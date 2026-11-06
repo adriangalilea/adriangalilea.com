@@ -11,6 +11,13 @@
 // size or null for one that is not its own (another site's), and THROWS for one of its
 // own that is missing, the broken post a build should refuse.
 //
+// LINKS ARE CHECKED the same way. A link to a heading of the text (`#open`) must find
+// one, or it throws; every other link goes through the host's `resolve`, which knows
+// its files: a file of its own becomes its page, one that is missing throws. So a
+// heading renamed, or a file moved, breaks the build, never a reader's click.
+// `sectionsOf` cuts a prepared text into a page per heading, each keeping the text's
+// anchors.
+//
 // TAGS ARE DATA. A text that names components (`<Bars unit="s" data={[…]} />`) says
 // which with `tags`; a tag not among them throws, and so does a prop that is not a
 // literal (a string, a number, true, false, null, an array or an object of them): a
@@ -52,6 +59,8 @@ export type PreparedMarkdown = {
   images: (Size & { src: string })[];
   /** How many times each tag is used, by name. */
   tags: Record<string, number>;
+  /** Every link and link definition, as written and as a reader follows it. */
+  links: { url: string; href: string }[];
 };
 
 export type PrepareOptions = {
@@ -60,6 +69,12 @@ export type PrepareOptions = {
   measure?: (src: string) => Size | null;
   /** The components the text may name as tags. None: the text is plain markdown. */
   tags?: readonly string[];
+  /** A link's target as the host holds its files: the URL a reader follows (a file
+   *  of its own as its page, `SPEC.md#open` as `/docs/spec/open`), null for one that
+   *  is not the host's (it stays as written); throws for one of its own that is
+   *  missing, the broken link a build should refuse. A link to a heading of the text
+   *  itself (`#open`) is checked first, and one to no heading throws. */
+  resolve?: (url: string) => string | null;
 };
 
 /** A node prepare annotates: its `data` carries what was worked out. */
@@ -69,7 +84,7 @@ type Annotated = { data?: Record<string, unknown> };
  *  its tags' props read. */
 export function prepareMarkdown(
   source: string,
-  { measure, tags }: PrepareOptions = {},
+  { measure, tags, resolve }: PrepareOptions = {},
 ): PreparedMarkdown {
   const allowed = new Set(tags ?? []);
   const tree = fromMarkdown(source, {
@@ -122,7 +137,101 @@ export function prepareMarkdown(
     if ("children" in node) for (const child of node.children) walk(child);
   };
   walk(tree);
-  return { tree, headings, text: plainOf(tree).trim(), images, tags: used };
+  // Links once every heading is known: one may point at a heading below it.
+  const own = new Set(headings.map((h) => h.id));
+  const links: PreparedMarkdown["links"] = [];
+  const follow = (node: M.Nodes) => {
+    if (node.type === "link" || node.type === "definition") {
+      const url = node.url;
+      if (url.startsWith("#") && !own.has(url.slice(1)))
+        throw new Error(
+          `markdown-prepare: [${plainOf(node) || url}](${url}) points at no heading of this text`,
+        );
+      const href = resolve?.(url) ?? url;
+      links.push({ url, href });
+      if (href !== url) {
+        node.url = href;
+        annotate(node, { written: url });
+      }
+    }
+    if ("children" in node) for (const child of node.children) follow(child);
+  };
+  follow(tree);
+  return {
+    tree,
+    headings,
+    text: plainOf(tree).trim(),
+    images,
+    tags: used,
+    links,
+  };
+}
+
+/** A part of a text, cut at a heading: the heading it opens with (none for what comes
+ *  before the first), the tree `Markdown` draws, its headings and its words. */
+export type MarkdownSection = {
+  heading: Heading | null;
+  tree: M.Root;
+  headings: Heading[];
+  text: string;
+};
+
+/** A prepared text cut into parts at its headings of `depth` or shallower (2: a part
+ *  for each `##`), each part keeping the text's anchors, so a link from one part to
+ *  another lands where its heading now is (the host's `resolve` says on which page);
+ *  and each carrying the link definitions the whole text has and the footnotes it
+ *  refers to, so its links resolve and its notes gather at its own foot. */
+export function sectionsOf(
+  prepared: PreparedMarkdown,
+  depth: number,
+): MarkdownSection[] {
+  const definitions: M.RootContent[] = [];
+  const notes = new Map<string, M.FootnoteDefinition>();
+  const parts: M.RootContent[][] = [[]];
+  for (const node of prepared.tree.children) {
+    if (node.type === "definition") definitions.push(node);
+    else if (node.type === "footnoteDefinition")
+      notes.set(node.identifier, node);
+    else {
+      if (node.type === "heading" && node.depth <= depth) parts.push([]);
+      (parts.at(-1) as M.RootContent[]).push(node);
+    }
+  }
+  return parts
+    .filter((children) => children.length > 0)
+    .map((children) => {
+      const cited = new Set<string>();
+      const found: Heading[] = [];
+      const walk = (node: M.Nodes) => {
+        if (node.type === "footnoteReference") cited.add(node.identifier);
+        if (node.type === "heading")
+          found.push({
+            depth: node.depth,
+            text: plainOf(node),
+            id: (node.data as { id?: string } | undefined)?.id as string,
+          });
+        if ("children" in node) for (const child of node.children) walk(child);
+      };
+      for (const child of children) walk(child);
+      const first = children[0];
+      const root: M.Root = { type: "root", children };
+      return {
+        heading:
+          first?.type === "heading" && first.depth <= depth
+            ? (found[0] as Heading)
+            : null,
+        tree: {
+          type: "root",
+          children: [
+            ...children,
+            ...definitions,
+            ...[...cited].flatMap((id) => notes.get(id) ?? []),
+          ],
+        },
+        headings: found,
+        text: plainOf(root).trim(),
+      };
+    });
 }
 
 function annotate(node: M.Nodes | MdxJsxFlowElement, data: object) {

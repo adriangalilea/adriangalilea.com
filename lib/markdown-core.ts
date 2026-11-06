@@ -69,7 +69,8 @@ export function safeSrc(url: string): string | null {
   return SAFE_SRC.test(u) ? u : null;
 }
 
-/** A heading's anchor: its words, lowercased, joined by dashes. */
+/** A name for a file or a route: its words, lowercased, accents gone, joined by
+ *  dashes. A heading's anchor is GitHub's (`anchorOf`). */
 export function slugOf(text: string): string {
   return text
     .toLowerCase()
@@ -96,12 +97,24 @@ export function fenceOf(meta: string | null | undefined): {
   };
 }
 
-/** Anchors for one document's headings, asked in their order: a title used twice
- *  takes `-1` the second time, so every anchor is the page's own. */
+/** A heading's anchor as GitHub writes it, so a link written against a file on GitHub
+ *  lands on the same heading here: lowercased, every character that is no letter,
+ *  digit, space, `-` or `_` dropped, each space a dash (`A column's formula` is
+ *  `a-columns-formula`, `a — b` is `a--b`). */
+export function anchorOf(text: string): string {
+  return text
+    .trim()
+    .toLowerCase()
+    .replace(/[^\p{L}\p{M}\p{N}\s_-]/gu, "")
+    .replace(/\s/g, "-");
+}
+
+/** Anchors for one document's headings, asked in their order (GitHub's, `anchorOf`): a
+ *  title used twice takes `-1` the second time, so every anchor is the page's own. */
 export function anchors(): (text: string) => string {
   const seen = new Map<string, number>();
   return (text) => {
-    const base = slugOf(text) || "section";
+    const base = anchorOf(text) || "section";
     const n = seen.get(base) ?? 0;
     seen.set(base, n + 1);
     return n === 0 ? base : `${base}-${n}`;
