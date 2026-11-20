@@ -10,6 +10,8 @@ Next.js personal site.
 `pnpm format`
 `pnpm build`
 
+A fresh clone needs two things once per machine, both gitignored: `vercel link --yes --project adriangalilea-com --scope adriangalileas-projects` (the Vercel project, for `vercel env pull` and CLI ops), and the paid files opened with `SEALED_KEY=$(op read 'op://Private/sealed key/credential') node --experimental-strip-types scripts/sealed.mts open`, without which `pnpm lint` fails.
+
 Commits are conventional, `type(scope): description`; `.githooks/commit-msg` refuses anything else, wired once per clone with `git config core.hooksPath .githooks`. `pnpm lint` is the gate and it covers `package.json` too; the `avatar.json` sidecars under `content/` are written by ui's `mise portrait` and excluded from it.
 
 ## Design references
@@ -395,6 +397,5 @@ These were copied into `content/` and adapted. The originals at source are stale
 
 - Recommendations (`getRecommendations` in `lib/content.ts`) score only folder, tags and type, so they miss connections by meaning. Test case: `ai-as-an-api` should rank `ai-feelings-in-practice` first (both about a model's "feelings"), but every `ai`-tagged Page outranks it because of the same-type bonus. Fix: embeddings (one model call per piece at build, vectors cached in the repo), cosine over them, tags as a minor bonus, no type bonus. A piece's text should include the notes it embeds, and what it embeds or is embedded by is already on screen, so never recommend it. TF-IDF was tried (2026-10-06) and rejected: the note only reached #6 because the link is one shared word, and short quotes (Rumi above all) matched on single words and flooded every list. Judge by listing the top 6 for every piece, not just the test case.
 - Clean up stale duplicates at source locations after confirming site versions are canonical
-- Run `vercel link` — the Vercel project exists and is live (`adriangalilea-com`, team adriangalileas-projects) but this local repo is unlinked, so `vercel env pull` / CLI ops won't work until linked
 
 @AGENTS.md
